@@ -273,6 +273,7 @@ function Panel({
 
 function WorkloadTable({ workloads }: { workloads: Workload[] }) {
   const [inspected, setInspected] = useState<string | null>(null);
+  const [diagnosed, setDiagnosed] = useState<string | null>(null);
 
   return (
     <Table
@@ -317,13 +318,26 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
             {workload.imageRef || "—"}
           </td>
           <td className="px-5 py-3">
-            <button
-              type="button"
-              onClick={() => setInspected(inspected === workload.uid ? null : workload.uid)}
-              className="rounded-lg border border-edge px-2 py-1 font-mono text-[11px] text-muted hover:border-primary hover:text-ink"
-            >
-              {inspected === workload.uid ? "hide" : "provenance"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setInspected(inspected === workload.uid ? null : workload.uid)}
+                className="rounded-lg border border-edge px-2 py-1 font-mono text-[11px] text-muted hover:border-primary hover:text-ink"
+              >
+                {inspected === workload.uid ? "hide" : "provenance"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiagnosed(diagnosed === workload.uid ? null : workload.uid)}
+                className={`rounded-lg border px-2 py-1 font-mono text-[11px] hover:border-primary hover:text-ink ${
+                  workload.health === Workload_Health.DEGRADED
+                    ? "border-degraded/60 text-degraded"
+                    : "border-edge text-muted"
+                }`}
+              >
+                {diagnosed === workload.uid ? "hide" : "diagnose"}
+              </button>
+            </div>
           </td>
         </tr>,
         inspected === workload.uid ? (
@@ -333,8 +347,90 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
             </td>
           </tr>
         ) : null,
+        diagnosed === workload.uid ? (
+          <tr key={`${workload.uid}-diagnose`} className="border-b border-edge/60 bg-canvas">
+            <td colSpan={9} className="px-5 py-4">
+              <DiagnosePanel uid={workload.uid} />
+            </td>
+          </tr>
+        ) : null,
       ])}
     </Table>
+  );
+}
+
+function DiagnosePanel({ uid }: { uid: string }) {
+  const explanation = useQuery({
+    queryKey: ["explain", uid],
+    queryFn: () => catalog.explainFailure({ uid }),
+    retry: false,
+  });
+
+  const timeline = useQuery({
+    queryKey: ["timeline", uid],
+    queryFn: () => catalog.getTimeline({ uid }),
+    retry: false,
+  });
+
+  if (explanation.error) {
+    return (
+      <p className="font-mono text-xs text-progressing">
+        {ConnectError.from(explanation.error).message}
+      </p>
+    );
+  }
+
+  const found = explanation.data?.explanation;
+  if (!found) {
+    return <p className="font-mono text-xs text-muted">reading the pods…</p>;
+  }
+
+  const regression = found.regression;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm">{found.cause}</p>
+      <p className="font-mono text-xs text-muted">{found.evidence}</p>
+
+      {regression ? (
+        <p
+          className={`font-mono text-xs ${
+            regression.latencyP99After > regression.latencyP99Before * 1.2
+              ? "text-degraded"
+              : "text-muted"
+          }`}
+        >
+          revision {regression.rolloutRevision} rolled out{" "}
+          {regression.rolloutAt
+            ? new Date(Number(regression.rolloutAt.seconds) * 1000).toLocaleString()
+            : "recently"}
+          : p99 {(regression.latencyP99Before * 1000).toFixed(0)}ms →{" "}
+          {(regression.latencyP99After * 1000).toFixed(0)}ms · errors{" "}
+          {(regression.errorRatioBefore * 100).toFixed(2)}% →{" "}
+          {(regression.errorRatioAfter * 100).toFixed(2)}%
+        </p>
+      ) : null}
+
+      {found.reproduceCommands.length > 0 ? (
+        <pre className="overflow-auto rounded-xl border border-edge bg-surface p-4 font-mono text-[11px] text-muted">
+          {found.reproduceCommands.join("\n")}
+        </pre>
+      ) : null}
+
+      {(timeline.data?.events ?? []).length > 0 ? (
+        <div className="flex flex-col gap-1">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-muted">timeline</p>
+          {(timeline.data?.events ?? []).slice(0, 8).map((event, index) => (
+            <p key={index} className="font-mono text-xs text-muted">
+              {event.occurredAt
+                ? new Date(Number(event.occurredAt.seconds) * 1000).toLocaleString()
+                : "—"}{" "}
+              · {event.summary}
+            </p>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 

@@ -19,6 +19,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/db"
+	"github.com/marstack-labs/marstack-govern/internal/diagnostics"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
 	"github.com/marstack-labs/marstack-govern/internal/metrics"
@@ -232,7 +233,11 @@ func runServe(ctx context.Context, opts serveOptions) error {
 						Insecure: opts.registryInsecure,
 					}),
 					supplychain.NewScanner(manager.GetClient()),
-				)),
+				)).
+				WithDiagnostics(diagnoser{
+					collector:  &diagnostics.Collector{Client: manager.GetClient()},
+					correlator: &diagnostics.Correlator{Metrics: metricsClient},
+				}),
 			Tenancy:       tenancy.NewService(divisions).WithScope(sessions),
 			Session:       sessions,
 			Requests:      requestService,

@@ -48,11 +48,20 @@ func (c *Client) Available() bool {
 }
 
 func (c *Client) Scalar(ctx context.Context, query string) (float64, bool, error) {
+	return c.ScalarAt(ctx, query, time.Time{})
+}
+
+func (c *Client) ScalarAt(ctx context.Context, query string, at time.Time) (float64, bool, error) {
 	if !c.Available() {
 		return 0, false, ErrUnavailable
 	}
 
-	endpoint := c.baseURL + "/api/v1/query?" + url.Values{"query": {query}}.Encode()
+	values := url.Values{"query": {query}}
+	if !at.IsZero() {
+		values.Set("time", strconv.FormatInt(at.Unix(), 10))
+	}
+
+	endpoint := c.baseURL + "/api/v1/query?" + values.Encode()
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {

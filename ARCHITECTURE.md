@@ -278,7 +278,7 @@ asking, so putting it anywhere else would mean domain modules importing one anot
 | `finops` | consumption, rates, chargeback, invoices, idle, right-sizing | `PricingPolicy` |
 | `catalog` | workload discovery, classification, ownership | `TierOverride` |
 | `signals` | golden signals, SLOs, error budgets, burn rate | `ServiceLevelObjective` |
-| `diagnostics` | failure explainer, timeline views, deploy correlation, logs and exec | — |
+| `diagnostics` | failure explainer, timeline, rollout correlation | — |
 | `delivery` | curated templates, Argo CD integration, rollout status | — |
 | `supplychain` | provenance, signatures, SBOM, vulnerabilities | — |
 | `policy` | Kyverno policy catalog, evaluation results, violations per division | — |
@@ -329,6 +329,27 @@ because a calendar date passed would turn a governance control into an outage.
 The expiry therefore means *this grant is due for review*, and the review is visible rather than
 automatic. Grants that genuinely should revoke themselves — access, peering — behave differently,
 because taking those back breaks nothing that was not already borrowed.
+
+### A failure is explained, not displayed
+
+`Explain` is a pure function over pods, container states and warning events, and its rules are tried
+in order of how much they actually explain:
+
+```
+unschedulable   → the scheduler's own sentence, verbatim
+out of memory   → the container, its restart count, the limit it hit
+crash loop      → the exit code, not just "CrashLoopBackOff"
+image pull      → which image, and the registry's reason
+failing probe   → running but never ready, with the probe's own message
+otherwise       → how many replicas are ready, and the newest warning
+```
+
+Order is the design. A container that is OOM killed also shows `CrashLoopBackOff`, and a UI that
+renders the first status it finds reports the symptom instead of the cause. The rule that explains
+more wins, and there is a test that feeds both signals and asserts the answer is memory.
+
+Every explanation carries the `kubectl` commands that reproduce it — including `logs --previous`
+when the evidence is in a container that already died.
 
 ### Decisions are time-bound and evidenced
 

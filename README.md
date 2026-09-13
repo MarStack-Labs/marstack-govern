@@ -34,6 +34,7 @@ Kubernetes API, and an approval shows a simulation of its own effect before it i
 | **Records decisions** | with the evidence the approver saw, in a hash-chained, WORM-backed audit trail |
 | **Traces images** | registry digest, cosign signature, source repository and revision from OCI labels, and CVE counts from Trivy — nobody links a repository by hand |
 | **Explains failures** | events, exit codes, OOM kills, probe failures and scheduler reasons into one causal sentence, with the `kubectl` command to reproduce it |
+| **Blames the rollout** | p99 latency and error ratio compared across the windows before and after each rollout, so a regression names its own revision |
 
 ## The rule
 

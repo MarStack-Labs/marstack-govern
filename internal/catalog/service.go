@@ -21,10 +21,16 @@ type Prover interface {
 	Of(ctx context.Context, namespace, image string) (*governv1.Provenance, error)
 }
 
+type Diagnoser interface {
+	Explain(ctx context.Context, workload Workload) (*governv1.FailureExplanation, error)
+	Timeline(ctx context.Context, workload Workload) ([]*governv1.TimelineEvent, error)
+}
+
 type Service struct {
-	store  *Store
-	scoper Scoper
-	prover Prover
+	store     *Store
+	scoper    Scoper
+	prover    Prover
+	diagnoser Diagnoser
 }
 
 func NewService(store *Store) *Service {
@@ -41,6 +47,32 @@ func (s *Service) WithProvenance(prover Prover) *Service {
 	s.prover = prover
 
 	return s
+}
+
+func (s *Service) WithDiagnostics(diagnoser Diagnoser) *Service {
+	s.diagnoser = diagnoser
+
+	return s
+}
+
+func (s *Service) visibleWorkload(ctx context.Context, uid string) (Workload, error) {
+	workload, err := s.store.GetWorkload(ctx, uid)
+	if errors.Is(err, ErrNotFound) {
+		return Workload{}, connect.NewError(connect.CodeNotFound, fmt.Errorf("workload %s not found", uid))
+	}
+	if err != nil {
+		return Workload{}, connect.NewError(connect.CodeInternal, err)
+	}
+
+	scope, scoped, err := s.scopeOf(ctx)
+	if err != nil {
+		return Workload{}, err
+	}
+	if scoped && !scope.Allows(workload.Namespace) {
+		return Workload{}, connect.NewError(connect.CodeNotFound, fmt.Errorf("workload %s not found", uid))
+	}
+
+	return workload, nil
 }
 
 func (s *Service) scopeOf(ctx context.Context) (identity.Scope, bool, error) {
@@ -201,17 +233,62 @@ func (s *Service) GetProvenance(
 }
 
 func (s *Service) GetTimeline(
-	context.Context,
-	*connect.Request[governv1.GetTimelineRequest],
+	ctx context.Context,
+	req *connect.Request[governv1.GetTimelineRequest],
 ) (*connect.Response[governv1.GetTimelineResponse], error) {
-	return nil, unimplemented("timeline")
+	if s.diagnoser == nil {
+		return nil, unimplemented("timeline")
+	}
+
+	workload, err := s.visibleWorkload(ctx, req.Msg.GetUid())
+	if err != nil {
+		return nil, err
+	}
+
+	events, err := s.diagnoser.Timeline(ctx, workload)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
+
+	freshness, err := s.freshness(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&governv1.GetTimelineResponse{
+		Events:    events,
+		Page:      &governv1.PageInfo{},
+		Freshness: freshness,
+	}), nil
 }
 
 func (s *Service) ExplainFailure(
-	context.Context,
-	*connect.Request[governv1.ExplainFailureRequest],
+	ctx context.Context,
+	req *connect.Request[governv1.ExplainFailureRequest],
 ) (*connect.Response[governv1.ExplainFailureResponse], error) {
-	return nil, unimplemented("failure explanation")
+	if s.diagnoser == nil {
+		return nil, unimplemented("failure explanation")
+	}
+
+	workload, err := s.visibleWorkload(ctx, req.Msg.GetUid())
+	if err != nil {
+		return nil, err
+	}
+
+	explanation, err := s.diagnoser.Explain(ctx, workload)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
+
+	freshness, err := s.freshness(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&governv1.ExplainFailureResponse{
+		Explanation: explanation,
+		Freshness:   freshness,
+	}), nil
 }
 
 func (s *Service) GetDrift(
