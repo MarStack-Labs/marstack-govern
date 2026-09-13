@@ -29,12 +29,14 @@ type serveOptions struct {
 	kubeContext string
 	resync      time.Duration
 	logLevel    string
+	auth        authOptions
 }
 
 func newServeCommand() *cobra.Command {
 	opts := serveOptions{
 		addr:   ":8080",
 		resync: 10 * time.Minute,
+		auth:   authOptions{secureCookies: true},
 	}
 
 	cmd := &cobra.Command{
@@ -53,6 +55,16 @@ func newServeCommand() *cobra.Command {
 	flags.StringVar(&opts.kubeContext, "kube-context", "", "kubeconfig context to use")
 	flags.DurationVar(&opts.resync, "resync", opts.resync, "informer resync period")
 	flags.StringVar(&opts.logLevel, "log-level", "info", "debug, info, warn or error")
+
+	flags.StringVar(&opts.auth.sessionKey, "session-key", "", "32 byte session key, hex or base64 (falls back to GOVERN_SESSION_KEY)")
+	flags.BoolVar(&opts.auth.secureCookies, "secure-cookies", opts.auth.secureCookies, "only send the session cookie over https")
+	flags.StringVar(&opts.auth.issuer, "oidc-issuer", "", "OIDC issuer url")
+	flags.StringVar(&opts.auth.clientID, "oidc-client-id", "", "OIDC client id")
+	flags.StringVar(&opts.auth.clientSecret, "oidc-client-secret", "", "OIDC client secret (falls back to GOVERN_OIDC_CLIENT_SECRET)")
+	flags.StringVar(&opts.auth.redirectURL, "oidc-redirect-url", "", "OIDC redirect url, ending in /auth/callback")
+	flags.StringVar(&opts.auth.groupsClaim, "oidc-groups-claim", "groups", "id token claim carrying group membership")
+	flags.StringVar(&opts.auth.usernameClaim, "oidc-username-claim", "email", "id token claim carrying the display name")
+	flags.StringVar(&opts.auth.devIdentity, "insecure-dev-identity", "", `sign every visitor in as "subject:group-a,group-b" without an identity provider`)
 
 	return cmd
 }
@@ -102,6 +114,11 @@ func runServe(ctx context.Context, opts serveOptions) error {
 		return err
 	}
 
+	sealer, registerAuth, err := buildAuth(ctx, opts.auth, logger)
+	if err != nil {
+		return err
+	}
+
 	store := catalog.NewStore(pool)
 	divisions := tenancy.NewStore(pool)
 	hub := api.NewHub(0)
@@ -122,11 +139,13 @@ func runServe(ctx context.Context, opts serveOptions) error {
 	server := &http.Server{
 		Addr: opts.addr,
 		Handler: api.NewHandler(api.Options{
-			Catalog: catalog.NewService(store),
-			Tenancy: tenancy.NewService(divisions),
-			Hub:     hub,
-			Web:     assets,
-			Logger:  logger,
+			Catalog:      catalog.NewService(store),
+			Tenancy:      tenancy.NewService(divisions),
+			Hub:          hub,
+			Web:          assets,
+			Logger:       logger,
+			Sealer:       sealer,
+			RegisterAuth: registerAuth,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,

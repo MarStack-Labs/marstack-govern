@@ -11,6 +11,8 @@ import (
 	"time"
 
 	governv1 "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1"
+	"github.com/marstack-labs/marstack-govern/internal/catalog"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/web"
 )
 
@@ -198,4 +200,40 @@ func readAll(t *testing.T, body io.Reader) string {
 	}
 
 	return string(raw)
+}
+
+func TestRpcsRefuseAnonymousCallersWhenSessionsAreOn(t *testing.T) {
+	key, err := identity.NewKey()
+	if err != nil {
+		t.Fatalf("generate key: %v", err)
+	}
+
+	sealer, err := identity.NewSealer(key, false)
+	if err != nil {
+		t.Fatalf("build sealer: %v", err)
+	}
+
+	server := httptest.NewServer(NewHandler(Options{
+		Catalog: catalog.NewService(nil),
+		Sealer:  sealer,
+	}))
+	defer server.Close()
+
+	request, err := http.NewRequestWithContext(t.Context(), http.MethodPost,
+		server.URL+"/marstack.govern.v1.CatalogService/ListWorkloads",
+		strings.NewReader("{}"))
+	if err != nil {
+		t.Fatalf("build request: %v", err)
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := server.Client().Do(request)
+	if err != nil {
+		t.Fatalf("call rpc: %v", err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("status: got %d, want 401 (%s)", response.StatusCode, readAll(t, response.Body))
+	}
 }

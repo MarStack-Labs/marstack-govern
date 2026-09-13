@@ -6,19 +6,24 @@ import (
 	"net/http"
 	"time"
 
+	"connectrpc.com/connect"
+
 	"github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1/governv1connect"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/version"
 )
 
 type Options struct {
-	Catalog   *catalog.Service
-	Tenancy   *tenancy.Service
-	Hub       *Hub
-	Web       fs.FS
-	Logger    *slog.Logger
-	Heartbeat time.Duration
+	Catalog      *catalog.Service
+	Tenancy      *tenancy.Service
+	Hub          *Hub
+	Web          fs.FS
+	Logger       *slog.Logger
+	Heartbeat    time.Duration
+	Sealer       *identity.Sealer
+	RegisterAuth func(*http.ServeMux)
 }
 
 func NewHandler(opts Options) http.Handler {
@@ -34,13 +39,22 @@ func NewHandler(opts Options) http.Handler {
 
 	mux := http.NewServeMux()
 
+	options := []connect.HandlerOption{}
+	if opts.Sealer != nil {
+		options = append(options, connect.WithInterceptors(identity.RequireActor()))
+	}
+
+	if opts.RegisterAuth != nil {
+		opts.RegisterAuth(mux)
+	}
+
 	if opts.Catalog != nil {
-		path, handler := governv1connect.NewCatalogServiceHandler(opts.Catalog)
+		path, handler := governv1connect.NewCatalogServiceHandler(opts.Catalog, options...)
 		mux.Handle(path, handler)
 	}
 
 	if opts.Tenancy != nil {
-		path, handler := governv1connect.NewTenancyServiceHandler(opts.Tenancy)
+		path, handler := governv1connect.NewTenancyServiceHandler(opts.Tenancy, options...)
 		mux.Handle(path, handler)
 	}
 
@@ -57,7 +71,12 @@ func NewHandler(opts Options) http.Handler {
 		mux.Handle("GET /", singlePageHandler(opts.Web))
 	}
 
-	return withLogging(mux, logger)
+	var handler http.Handler = mux
+	if opts.Sealer != nil {
+		handler = opts.Sealer.Middleware(handler)
+	}
+
+	return withLogging(handler, logger)
 }
 
 func Protocols() *http.Protocols {

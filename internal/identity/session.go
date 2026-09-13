@@ -85,9 +85,22 @@ func NewKey() ([]byte, error) {
 }
 
 func (s *Sealer) Seal(session Session) (string, error) {
-	payload, err := json.Marshal(session)
+	return s.SealJSON(session)
+}
+
+func (s *Sealer) Open(value string) (Session, error) {
+	var session Session
+	if err := s.OpenJSON(value, &session); err != nil {
+		return Session{}, err
+	}
+
+	return session, nil
+}
+
+func (s *Sealer) SealJSON(value any) (string, error) {
+	payload, err := json.Marshal(value)
 	if err != nil {
-		return "", fmt.Errorf("encode session: %w", err)
+		return "", fmt.Errorf("encode sealed value: %w", err)
 	}
 
 	nonce := make([]byte, s.aead.NonceSize())
@@ -100,29 +113,28 @@ func (s *Sealer) Seal(session Session) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(sealed), nil
 }
 
-func (s *Sealer) Open(value string) (Session, error) {
+func (s *Sealer) OpenJSON(value string, target any) error {
 	raw, err := base64.RawURLEncoding.DecodeString(value)
 	if err != nil {
-		return Session{}, ErrTampered
+		return ErrTampered
 	}
 
 	if len(raw) < s.aead.NonceSize() {
-		return Session{}, ErrTampered
+		return ErrTampered
 	}
 
 	nonce, ciphertext := raw[:s.aead.NonceSize()], raw[s.aead.NonceSize():]
 
 	payload, err := s.aead.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return Session{}, ErrTampered
+		return ErrTampered
 	}
 
-	var session Session
-	if err := json.Unmarshal(payload, &session); err != nil {
-		return Session{}, ErrTampered
+	if err := json.Unmarshal(payload, target); err != nil {
+		return ErrTampered
 	}
 
-	return session, nil
+	return nil
 }
 
 func (s *Sealer) Write(w http.ResponseWriter, session Session) error {
