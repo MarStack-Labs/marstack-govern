@@ -26,6 +26,7 @@ type Usage struct {
 	StorageGiHours         *big.Rat
 	LoadBalancerHours      *big.Rat
 	Window                 time.Duration
+	Resolution             time.Duration
 	Observed               bool
 }
 
@@ -51,20 +52,22 @@ func (r *Reader) Usage(ctx context.Context, namespaces []string, window time.Dur
 
 	selector := namespaceSelector(namespaces)
 	step := promWindow(window)
+	resolution := Resolution(window)
+	sampled := promWindow(resolution)
 
 	queries := map[string]string{
 		"cpuRequested": fmt.Sprintf(
-			`sum_over_time(sum(kube_pod_container_resource_requests{%s,resource="cpu"})[%s:1h])`, selector, step),
+			`sum_over_time(sum(kube_pod_container_resource_requests{%s,resource="cpu"})[%s:%s])`, selector, step, sampled),
 		"cpuUsed": fmt.Sprintf(
-			`sum_over_time(sum(rate(container_cpu_usage_seconds_total{%s,container!=""}[5m]))[%s:1h])`, selector, step),
+			`sum_over_time(sum(rate(container_cpu_usage_seconds_total{%s,container!=""}[5m]))[%s:%s])`, selector, step, sampled),
 		"memoryRequested": fmt.Sprintf(
-			`sum_over_time(sum(kube_pod_container_resource_requests{%s,resource="memory"})[%s:1h])`, selector, step),
+			`sum_over_time(sum(kube_pod_container_resource_requests{%s,resource="memory"})[%s:%s])`, selector, step, sampled),
 		"memoryUsed": fmt.Sprintf(
-			`sum_over_time(sum(container_memory_working_set_bytes{%s,container!=""})[%s:1h])`, selector, step),
+			`sum_over_time(sum(container_memory_working_set_bytes{%s,container!=""})[%s:%s])`, selector, step, sampled),
 		"storage": fmt.Sprintf(
-			`sum_over_time(sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{%s})[%s:1h])`, selector, step),
+			`sum_over_time(sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{%s})[%s:%s])`, selector, step, sampled),
 		"loadBalancers": fmt.Sprintf(
-			`sum_over_time(count(kube_service_spec_type{%s,type="LoadBalancer"})[%s:1h])`, selector, step),
+			`sum_over_time(count(kube_service_spec_type{%s,type="LoadBalancer"})[%s:%s])`, selector, step, sampled),
 	}
 
 	values := map[string]float64{}
@@ -81,16 +84,39 @@ func (r *Reader) Usage(ctx context.Context, namespaces []string, window time.Dur
 		}
 	}
 
+	perSample := new(big.Rat).SetFloat64(resolution.Hours())
+	if perSample == nil {
+		perSample = new(big.Rat).SetInt64(1)
+	}
+
+	hours := func(value float64) *big.Rat {
+		return new(big.Rat).Mul(FromFloat(value), perSample)
+	}
+
 	return Usage{
-		CPUCoreHoursRequested:  FromFloat(values["cpuRequested"]),
-		CPUCoreHoursUsed:       FromFloat(values["cpuUsed"]),
-		MemoryGiHoursRequested: bytesToGi(values["memoryRequested"]),
-		MemoryGiHoursUsed:      bytesToGi(values["memoryUsed"]),
-		StorageGiHours:         bytesToGi(values["storage"]),
-		LoadBalancerHours:      FromFloat(values["loadBalancers"]),
+		CPUCoreHoursRequested:  hours(values["cpuRequested"]),
+		CPUCoreHoursUsed:       hours(values["cpuUsed"]),
+		MemoryGiHoursRequested: new(big.Rat).Mul(bytesToGi(values["memoryRequested"]), perSample),
+		MemoryGiHoursUsed:      new(big.Rat).Mul(bytesToGi(values["memoryUsed"]), perSample),
+		StorageGiHours:         new(big.Rat).Mul(bytesToGi(values["storage"]), perSample),
+		LoadBalancerHours:      hours(values["loadBalancers"]),
 		Window:                 window,
+		Resolution:             resolution,
 		Observed:               observed,
 	}, nil
+}
+
+func Resolution(window time.Duration) time.Duration {
+	step := window / 60
+
+	switch {
+	case step >= time.Hour:
+		return time.Hour
+	case step <= time.Minute:
+		return time.Minute
+	default:
+		return step.Round(time.Minute)
+	}
 }
 
 func bytesToGi(value float64) *big.Rat {
@@ -107,6 +133,15 @@ func namespaceSelector(namespaces []string) string {
 }
 
 func promWindow(window time.Duration) string {
+	if window < time.Hour {
+		minutes := int(window.Minutes())
+		if minutes <= 0 {
+			minutes = 1
+		}
+
+		return fmt.Sprintf("%dm", minutes)
+	}
+
 	hours := int(window.Hours())
 	if hours <= 0 {
 		hours = 1

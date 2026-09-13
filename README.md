@@ -80,6 +80,10 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 | [Argo CD](https://argo-cd.readthedocs.io) | GitOps, and desired-versus-live for drift | for delivery features |
 | Mimir / Loki / Tempo | metrics, logs, traces | for signals, recommendations and chargeback |
 
+Each module that reads one of these carries a `cluster_test.go` that runs against the real component
+and skips without it. Point `GOVERN_TEST_KUBE_CONTEXT` at a cluster and `GOVERN_TEST_METRICS_URL` at
+a Prometheus to exercise them.
+
 Missing optional components degrade specific features and say so in the UI. They never produce a
 guess. Without Capsule the platform falls back to a `ResourceQuota` in each namespace, which caps
 each namespace but not the division as a whole; `kubectl get division` shows which backend is

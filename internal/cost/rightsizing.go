@@ -66,17 +66,18 @@ func (r *Reader) ObservedByWorkload(
 
 	selector := namespaceSelector(namespaces)
 	step := promWindow(window)
+	sampled := promWindow(Resolution(window))
 
 	cpu, err := r.quantiles(ctx, fmt.Sprintf(
-		`quantile_over_time(0.95, sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{%s,container!=""}[5m]))[%s:5m])`,
-		selector, step))
+		`quantile_over_time(0.95, sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{%s,container!=""}[5m]))[%s:%s])`,
+		selector, step, sampled))
 	if err != nil {
 		return nil, err
 	}
 
 	memory, err := r.quantiles(ctx, fmt.Sprintf(
-		`quantile_over_time(0.95, sum by (namespace, pod) (container_memory_working_set_bytes{%s,container!=""})[%s:5m])`,
-		selector, step))
+		`quantile_over_time(0.95, sum by (namespace, pod) (container_memory_working_set_bytes{%s,container!=""})[%s:%s])`,
+		selector, step, sampled))
 	if err != nil {
 		return nil, err
 	}

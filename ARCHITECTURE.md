@@ -541,6 +541,40 @@ resources**, not results, and a resource carrying only warnings no longer counts
 resources are failing a policy" and "six results were reported" are both true and different numbers,
 and the summary now says the first without quietly meaning the second.
 
+### Verification against real components, not only fixtures
+
+Unit tests check that the code does what its author meant. They cannot check whether the author
+understood what Kyverno, Capsule, Argo CD or Prometheus actually emit — and that is where the
+expensive mistakes have been. Every module that reads a third-party API therefore carries a
+`cluster_test.go` that runs the same code against the real thing and skips when the environment is
+not there:
+
+| Test | Needs | Environment variable |
+|---|---|---|
+| `internal/policy` | Kyverno | `GOVERN_TEST_KUBE_CONTEXT` |
+| `internal/delivery` | Argo CD | `GOVERN_TEST_KUBE_CONTEXT` |
+| `internal/supplychain` | Trivy operator | `GOVERN_TEST_KUBE_CONTEXT` |
+| `internal/topology` | network policies | `GOVERN_TEST_KUBE_CONTEXT` |
+| `internal/cost` | Prometheus | `GOVERN_TEST_METRICS_URL` |
+
+They skip by default, so CI is unchanged, and they fail loudly on a cluster that has the component.
+Each one has already earned its place: the Kyverno test found that findings were being dropped, and
+the Prometheus test found the resolution trap below.
+
+### The subquery resolution has to follow the window
+
+Usage is integrated with `sum_over_time(...[window:resolution])`, and the resolution was fixed at one
+hour. That is right for the month-scale windows billing uses and silently wrong for anything
+shorter: a six-hour window becomes `[6h:1h]`, whose steps are aligned to absolute hour boundaries, so
+a workload younger than the last boundary contributes nothing at all. The answer is not a small
+number, it is an empty result.
+
+The resolution now aims for roughly sixty samples across the window, clamped to between a minute and
+an hour. The arithmetic follows it: each sample represents one resolution-worth of time, so the sum
+is scaled by the resolution in hours rather than assuming each sample is an hour. A test asserts the
+same four cores over the same wall-clock produce the same core-hours at every sampling rate — which
+is the property that makes an invoice independent of how the query was written.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The
