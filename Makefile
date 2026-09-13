@@ -9,7 +9,7 @@ PREFIX ?= /usr/local
 DIST    ?= dist
 TARGETS ?= linux/amd64 linux/arm64 darwin/arm64
 
-.PHONY: build install uninstall test vet fmt cross dist proto proto-lint staticcheck vuln gosec secrets security check tools hooks run clean
+.PHONY: build install uninstall test vet fmt cross dist proto proto-lint web web-dev staticcheck vuln gosec secrets security check tools hooks run clean
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/margov ./cmd/margov
@@ -22,7 +22,13 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/margov
 
 run: build
-	./bin/margov
+	./bin/margov serve
+
+web:
+	cd web && npm ci && npm run build
+
+web-dev:
+	cd web && npm run dev
 
 test:
 	go test -race ./...

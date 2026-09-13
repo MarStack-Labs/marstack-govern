@@ -1,5 +1,5 @@
 bin/
-dist/
+/dist/
 data/
 coverage.out
 *.db
@@ -8,4 +8,3 @@ coverage.out
 .DS_Store
 CLAUDE.md
 node_modules/
-web/dist/

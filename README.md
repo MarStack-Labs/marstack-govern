@@ -48,8 +48,9 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 
 ## Status
 
-Early. The scaffold, the architecture, the data model and the API contracts are in place; the control
-plane is being built slice by slice. Not usable yet.
+Early, but the vertical axis runs: workloads are discovered by informers, projected into PostgreSQL,
+served over ConnectRPC, streamed to the browser over SSE, and rendered in a live table. Tenancy,
+requests, decisions, simulation and FinOps arrive in the slices after this one.
 
 ## Prerequisites
 
@@ -72,31 +73,80 @@ guess.
 ## Quickstart
 
 ```sh
-make tools     # staticcheck, govulncheck, gosec
+make tools     # staticcheck, govulncheck, gosec, buf
 make hooks     # point git at .githooks
-make build     # ./bin/margov
-make check     # vet, cross build, test, staticcheck, security
+make build     # ./bin/margov, with the web UI embedded
 ```
+
+Point it at a database and a cluster:
 
 ```sh
-./bin/margov version
+createdb govern
+
+./bin/margov serve \
+  --database-url postgres://localhost:5432/govern \
+  --kube-context kind-govern
 ```
 
-A local cluster with the required components, and the control plane running against it, arrives with
-the first slice.
+Migrations run on start. Open `http://localhost:8080` and the table fills itself from whatever the
+cluster is already running — scale a deployment in another terminal and the row updates without a
+refresh.
+
+A throwaway cluster to try it against:
+
+```sh
+kind create cluster --name govern
+kubectl create namespace payments-dev
+kubectl label namespace payments-dev govern.marstack.io/division=payments
+kubectl -n payments-dev create deployment api --image ghcr.io/nginxinc/nginx-unprivileged:alpine
+```
+
+Working on the UI:
+
+```sh
+make web-dev   # vite on :5173, proxying the API to :8080
+make web       # production build into internal/web/dist
+```
 
 ## Repository map
 
 ```
-cmd/margov/        the binary
+cmd/margov/          the binary
+proto/               service contracts, the single source for Go and TypeScript clients
+gen/                 generated Go bindings
 internal/
-  cli/             command tree
-  version/         build metadata
-ARCHITECTURE.md    design, invariants, and the reasoning behind each boundary
+  api/               ConnectRPC handler, SSE hub, static assets
+  catalog/           workload discovery: store, projector, service
+  cli/               command tree
+  db/                connection pool, embedded migrations, migration runner
+  kube/              client, impersonation, informers, workload conversion
+  version/           build metadata
+  web/dist/          built UI, embedded into the binary
+web/                 the UI source
+docs/                data model and API contracts
+ARCHITECTURE.md      design, invariants, and the reasoning behind each boundary
 ```
 
 Modules land under `internal/` as they are built. Each one owns its custom resources, controller,
 projector, queries and handlers as a vertical slice; domain modules do not import one another.
+
+## Tests
+
+```sh
+make test
+```
+
+Tests that need PostgreSQL skip themselves unless `GOVERN_TEST_DATABASE_URL` points at a throwaway
+database — they reset its `public` schema on every run.
+
+```sh
+GOVERN_TEST_DATABASE_URL=postgres://localhost:5432/govern_test make test
+```
+
+The one worth reading first is `TestClusterReachesTheApiWithoutAnyoneTypingAnything` in
+`internal/catalog`: it starts a fake Kubernetes API, runs the real informers, projector, store and
+handler, and asserts that a deployment reaches the API and the event stream without any registration
+step.
 
 ## Development
 

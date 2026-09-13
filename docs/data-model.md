@@ -119,6 +119,17 @@ the chain is what proves the copy matches it.
 Because the chain is strictly ordered, audit ingestion is single-writer. That is a deliberate
 throughput ceiling in exchange for a property that is otherwise impossible to state honestly.
 
+### A workload carries its division twice
+
+`workloads.division_uid` references the projected `Division`, and `workloads.division_name` holds the
+name read straight off the namespace or workload label. The name is available the moment a workload
+is discovered; the uid only exists once the `Division` custom resource has been projected. Keeping
+both means the catalog is useful before tenancy is configured, and joins stay cheap once it is.
+
+This is also the first example of the forward-only rule in practice: rather than editing
+`0002_catalog.sql`, the column arrived in `0006_workload_division_name.sql`. Editing an applied
+migration is what the checksum check in the runner exists to catch.
+
 ### Foreign keys point at what is stable
 
 `workloads.division_uid` is `ON DELETE SET NULL`, not `CASCADE`: a workload can be observed before

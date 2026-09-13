@@ -1,18 +1,16 @@
-package db
+package db_test
 
 import (
-	"context"
 	"crypto/sha256"
 	"errors"
-	"os"
 	"testing"
-	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marstack-labs/marstack-govern/internal/db"
+	"github.com/marstack-labs/marstack-govern/internal/db/dbtest"
 )
 
 func TestMigrationsAreOrderedAndUnique(t *testing.T) {
-	migrations, err := Migrations()
+	migrations, err := db.Migrations()
 	if err != nil {
 		t.Fatalf("read migrations: %v", err)
 	}
@@ -38,15 +36,15 @@ func TestMigrationsAreOrderedAndUnique(t *testing.T) {
 }
 
 func TestMigrateIsIdempotent(t *testing.T) {
-	pool := testPool(t)
+	pool := dbtest.Pool(t)
 	ctx := t.Context()
 
-	first, err := Migrate(ctx, pool)
+	first, err := db.Migrate(ctx, pool)
 	if err != nil {
 		t.Fatalf("first migrate: %v", err)
 	}
 
-	all, err := Migrations()
+	all, err := db.Migrations()
 	if err != nil {
 		t.Fatalf("read migrations: %v", err)
 	}
@@ -54,7 +52,7 @@ func TestMigrateIsIdempotent(t *testing.T) {
 		t.Fatalf("applied %d migrations, embedded %d", len(first), len(all))
 	}
 
-	second, err := Migrate(ctx, pool)
+	second, err := db.Migrate(ctx, pool)
 	if err != nil {
 		t.Fatalf("second migrate: %v", err)
 	}
@@ -64,12 +62,8 @@ func TestMigrateIsIdempotent(t *testing.T) {
 }
 
 func TestMigrateBuildsTheReadModel(t *testing.T) {
-	pool := testPool(t)
+	pool := dbtest.Migrated(t)
 	ctx := t.Context()
-
-	if _, err := Migrate(ctx, pool); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
 
 	for _, table := range []string{
 		"divisions", "namespaces", "division_members",
@@ -78,27 +72,19 @@ func TestMigrateBuildsTheReadModel(t *testing.T) {
 		"pricing_policies", "cost_samples", "invoices", "invoice_lines",
 		"audit_events", "timeline_events", "policy_violations",
 	} {
-		var exists bool
-		err := pool.QueryRow(ctx,
-			`SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = $1)`,
-			table,
-		).Scan(&exists)
-		if err != nil {
+		var found *string
+		if err := pool.QueryRow(ctx, `SELECT to_regclass($1)::text`, table).Scan(&found); err != nil {
 			t.Fatalf("check %s: %v", table, err)
 		}
-		if !exists {
+		if found == nil {
 			t.Errorf("table %s is missing", table)
 		}
 	}
 }
 
 func TestMigrateDetectsAnEditedMigration(t *testing.T) {
-	pool := testPool(t)
+	pool := dbtest.Migrated(t)
 	ctx := t.Context()
-
-	if _, err := Migrate(ctx, pool); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
 
 	if _, err := pool.Exec(ctx,
 		`UPDATE schema_migrations SET checksum = sha256('tampered') WHERE version = (SELECT min(version) FROM schema_migrations)`,
@@ -106,19 +92,15 @@ func TestMigrateDetectsAnEditedMigration(t *testing.T) {
 		t.Fatalf("tamper: %v", err)
 	}
 
-	_, err := Migrate(ctx, pool)
-	if !errors.Is(err, ErrMigrationChanged) {
+	_, err := db.Migrate(ctx, pool)
+	if !errors.Is(err, db.ErrMigrationChanged) {
 		t.Fatalf("got %v, want ErrMigrationChanged", err)
 	}
 }
 
 func TestAuditChainRejectsABrokenLink(t *testing.T) {
-	pool := testPool(t)
+	pool := dbtest.Migrated(t)
 	ctx := t.Context()
-
-	if _, err := Migrate(ctx, pool); err != nil {
-		t.Fatalf("migrate: %v", err)
-	}
 
 	insert := `INSERT INTO audit_events (audit_id, event_at, stage, actor, verb, resource, payload, prev_hash, hash)
 	           VALUES (gen_random_uuid(), now(), 'ResponseComplete', 'a@example.test', $1, 'quotarequests', '{}'::jsonb, $2, $3)`
@@ -141,30 +123,6 @@ func TestAuditChainRejectsABrokenLink(t *testing.T) {
 	if _, err := pool.Exec(ctx, `DELETE FROM audit_events`); err == nil {
 		t.Fatal("a delete from audit_events was accepted")
 	}
-}
-
-func testPool(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-
-	dsn := os.Getenv("GOVERN_TEST_DATABASE_URL")
-	if dsn == "" {
-		t.Skip("set GOVERN_TEST_DATABASE_URL to a throwaway database to run migration tests")
-	}
-
-	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
-	defer cancel()
-
-	pool, err := Open(ctx, Config{DSN: dsn, MaxConns: 4})
-	if err != nil {
-		t.Fatalf("open test database: %v", err)
-	}
-	t.Cleanup(pool.Close)
-
-	if _, err := pool.Exec(ctx, `DROP SCHEMA public CASCADE; CREATE SCHEMA public`); err != nil {
-		t.Fatalf("reset test schema: %v", err)
-	}
-
-	return pool
 }
 
 func sha256Of(seed string) []byte {
