@@ -14,6 +14,7 @@
   <b class="ms-wordmark">marstack</b>
   <span class="ms-eyebrow">govern</span>
   <span class="grow"></span>
+  <a href="#demo">Demo</a>
   <a href="#rule">The rule</a>
   <a href="#quickstart">Quickstart</a>
   <a href="#decisions">Decisions</a>
@@ -54,6 +55,7 @@
 <div class="page">
   <aside class="toc">
     <ol>
+      <li><a href="#demo">Watch it run</a></li>
       <li><a href="#rule">The one rule</a></li>
       <li><a href="#what">What it is</a></li>
       <li><a href="#quickstart">Quickstart</a></li>
@@ -68,6 +70,39 @@
   </aside>
 
   <main class="body">
+
+    <section id="demo">
+      <h2>Watch it run</h2>
+
+      <p>
+        Unedited, against a real cluster. A division is already reconciled; a quota request is
+        filed claiming to be someone else, and the API server writes who actually sent it. The
+        controller then gathers the evidence an approver will decide against — preflight through
+        the real admission chain, and a simulation that packs real nodes.
+      </p>
+
+      <figure class="demo">
+        <img src="demo.gif" alt="A terminal session filing a Kubernetes quota request under one identity while the manifest claims another, and the API server overwriting the claim"
+             width="741" height="525" loading="lazy">
+        <figcaption>
+          Recorded by
+          <a href="https://github.com/MarStack-Labs/marstack-govern/blob/main/site/demo.sh">site/demo.sh</a>
+          into <a href="demo.cast">demo.cast</a>, an asciinema recording that is plain text you can
+          read line by line. Point the script at your own cluster and you get your own copy,
+          with your own numbers:
+        </figcaption>
+        <pre><code>asciinema rec --command ./site/demo.sh site/demo.cast
+agg site/demo.cast site/demo.gif</code></pre>
+      </figure>
+
+      <div class="note" data-tone="info">
+        <p>
+          The preflight and simulation numbers in that recording come from the cluster it ran
+          against — two nodes with 20 cores allocatable. Against your cluster they will be
+          different numbers, which is the point.
+        </p>
+      </div>
+    </section>
 
     <section id="rule">
       <h2>The one rule</h2>
