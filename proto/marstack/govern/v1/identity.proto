@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+import "marstack/govern/v1/tenancy.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service SessionService {
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
+  rpc SwitchDivision(SwitchDivisionRequest) returns (SwitchDivisionResponse);
+}
+
+message Session {
+  Actor actor = 1;
+  repeated DivisionMembership memberships = 2;
+  string active_division = 3;
+  bool platform_approver = 4;
+  AuthMode auth_mode = 5;
+  google.protobuf.Timestamp expires_at = 6;
+
+  enum AuthMode {
+    AUTH_MODE_UNSPECIFIED = 0;
+    AUTH_MODE_OIDC = 1;
+    AUTH_MODE_DEV = 2;
+  }
+}
+
+message DivisionMembership {
+  string division = 1;
+  string display_name = 2;
+  repeated Member.Role roles = 3;
+  repeated string namespaces = 4;
+}
+
+message GetSessionRequest {}
+
+message GetSessionResponse {
+  Session session = 1;
+}
+
+message SwitchDivisionRequest {
+  string division = 1;
+}
+
+message SwitchDivisionResponse {
+  Session session = 1;
+}
