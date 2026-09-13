@@ -462,6 +462,40 @@ and the change number, so a name collision with something a human created by han
 reference, not name, decides whether the controller may delete — a TTL sweeper that deletes by naming
 convention is one collision away from removing production.
 
+### An invoice is a snapshot, not a query
+
+A running total is recomputed on every request. An invoice is not: it is generated once after the
+month has ended, stored with the lines it was built from, and never recalculated. It records which
+`PricingPolicy` name **and revision** priced it, so a rate approved in March cannot quietly restate
+February.
+
+Two rules make that hold:
+
+```
+a period still running    → refused, because it would be a forecast
+no policy in force        → refused, because zero is not a price
+```
+
+Each invoice carries a digest over its own inputs — division, period, policy revision, and every
+line. The biller regenerates the month before saving and compares: an identical digest means the
+invoice already on file is the same answer, so nothing is written. A different digest means an input
+genuinely changed and the stored record is superseded. Without the digest, a nightly job either
+rewrites finished invoices forever or refuses to correct one that was wrong.
+
+A line keeps its workload label even when the workload UID cannot be resolved. Workloads are deleted;
+charges for the month they ran are not. Billing must never fail because a deployment was removed
+after the period closed.
+
+### Right sizing proposes, and says what it would save
+
+Requests are the billing basis, so a request nobody uses is a bill nobody needed. The proposal is
+p95 usage over fourteen days plus a quarter of headroom, floored so nothing is shrunk into
+unschedulability, and it is only reported when it would actually lower the request.
+
+Each proposal carries the money it frees at the current rate and the `kubectl patch` that applies it.
+A workload that was never observed produces no proposal at all — an unused request and an unmeasured
+one look identical in the requests alone, and only one of them is safe to shrink.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The

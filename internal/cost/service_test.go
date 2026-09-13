@@ -152,16 +152,27 @@ func TestTheEffectivePolicyIsReportedWithItsApprover(t *testing.T) {
 	}
 }
 
-func TestInvoicesSayTheyAreNotBuiltYet(t *testing.T) {
+func TestWithoutAReadModelInvoicesSaySoRatherThanReturningNone(t *testing.T) {
 	c := newCluster(t, division(), pricingPolicy("150000", "25000", "2020-01-01"))
 	service := cost.NewService(c, readerReturning(t, nil), nil)
 
-	_, err := service.ListInvoices(signedIn(t), connect.NewRequest(&governv1.ListInvoicesRequest{}))
-	if connect.CodeOf(err) != connect.CodeUnimplemented {
-		t.Fatalf("got %v, want unimplemented", err)
+	_, err := service.ListInvoices(signedIn(t), connect.NewRequest(
+		&governv1.ListInvoicesRequest{Division: "payments"}))
+
+	if connect.CodeOf(err) != connect.CodeUnavailable {
+		t.Fatalf("got %v, want unavailable rather than an empty list", err)
 	}
-	if !strings.Contains(err.Error(), "GetDivisionCost") {
-		t.Errorf("the error does not point anywhere useful: %v", err)
+}
+
+func TestRightSizingWithoutMetricsRefusesToGuess(t *testing.T) {
+	c := newCluster(t, division(), pricingPolicy("150000", "25000", "2020-01-01"))
+	service := cost.NewService(c, cost.NewReader(nil), workloads{})
+
+	_, err := service.ListRightSizing(signedIn(t), connect.NewRequest(
+		&governv1.ListRightSizingRequest{Division: "payments"}))
+
+	if connect.CodeOf(err) != connect.CodeUnavailable {
+		t.Fatalf("got %v, want a refusal to propose numbers from nothing", err)
 	}
 }
 

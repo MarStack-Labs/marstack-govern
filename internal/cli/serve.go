@@ -47,6 +47,7 @@ type serveOptions struct {
 	auditArchive     string
 	registryToken    string
 	registryInsecure bool
+	billingInterval  time.Duration
 	webhookCertDir   string
 	webhookPort      int
 	auth             authOptions
@@ -58,6 +59,7 @@ func newServeCommand() *cobra.Command {
 		resync:          10 * time.Minute,
 		recommendWindow: requests.DefaultWindow,
 		webhookPort:     9443,
+		billingInterval: time.Hour,
 		auth:            authOptions{secureCookies: true},
 	}
 
@@ -87,6 +89,8 @@ func newServeCommand() *cobra.Command {
 
 	flags.StringVar(&opts.auditToken, "audit-token", "", "bearer token the Kubernetes audit webhook must present (falls back to GOVERN_AUDIT_TOKEN)")
 	flags.StringVar(&opts.auditArchive, "audit-archive", "", "directory for append-only audit segments, ideally backed by object storage with retention")
+
+	flags.DurationVar(&opts.billingInterval, "billing-interval", opts.billingInterval, "how often to look for a finished month that has not been invoiced")
 
 	flags.StringVar(&opts.webhookCertDir, "webhook-cert-dir", "", "directory holding tls.crt and tls.key; without it the attribution webhook is not served")
 	flags.IntVar(&opts.webhookPort, "webhook-port", opts.webhookPort, "port the admission webhook listens on")
@@ -249,11 +253,12 @@ func runServe(ctx context.Context, opts serveOptions) error {
 					correlator: &diagnostics.Correlator{Metrics: metricsClient},
 				}).
 				WithDrift(delivery.NewDrift(delivery.NewArgo(manager.GetClient()), auditStore)),
-			Tenancy:       tenancy.NewService(divisions).WithScope(sessions),
-			Session:       sessions,
-			Requests:      requestService,
-			Decisions:     requests.NewDecisionService(requestService),
-			FinOps:        cost.NewService(manager.GetClient(), usageReader, workloadRequests{store: store}),
+			Tenancy:   tenancy.NewService(divisions).WithScope(sessions),
+			Session:   sessions,
+			Requests:  requestService,
+			Decisions: requests.NewDecisionService(requestService),
+			FinOps: cost.NewService(manager.GetClient(), usageReader, workloadRequests{store: store}).
+				WithInvoices(pricing),
 			Audit:         audit.NewService(auditStore, archive),
 			RegisterAudit: registerAudit,
 			Policy:        policy.NewService(manager.GetClient()),
@@ -278,6 +283,15 @@ func runServe(ctx context.Context, opts serveOptions) error {
 	group.Go(func() error { return watcher.Run(groupCtx) })
 	group.Go(func() error { return projector.Run(groupCtx) })
 	group.Go(func() error { return manager.Start(groupCtx) })
+	group.Go(func() error {
+		return (&cost.Biller{
+			Client:    manager.GetClient(),
+			Store:     pricing,
+			Workloads: workloadRequests{store: store},
+			Logger:    logger,
+			Interval:  opts.billingInterval,
+		}).Run(groupCtx)
+	})
 
 	group.Go(func() error {
 		logger.Info("listening", "addr", opts.addr)
