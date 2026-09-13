@@ -96,10 +96,44 @@ A throwaway cluster to try it against:
 
 ```sh
 kind create cluster --name govern
-kubectl create namespace payments-dev
-kubectl label namespace payments-dev govern.marstack.io/division=payments
+kubectl apply -f deploy/crd
+```
+
+Declare a division and the namespaces provision themselves:
+
+```yaml
+apiVersion: govern.marstack.io/v1alpha1
+kind: Division
+metadata:
+  name: payments
+spec:
+  displayName: Payments
+  environments: [dev, staging, prod]
+  quota:
+    cpu: "8"
+    memory: 16Gi
+    storage: 100Gi
+    pods: 50
+  limits:
+    defaultRequestCpu: 250m
+    defaultRequestMemory: 512Mi
+    maxCpuPerPod: "2"
+    maxMemoryPerPod: 4Gi
+  access:
+    - role: admin
+      group: payments-admins
+    - role: viewer
+      group: payments-readers
+```
+
+```sh
+kubectl apply -f division.yaml
+kubectl get division payments
 kubectl -n payments-dev create deployment api --image ghcr.io/nginxinc/nginx-unprivileged:alpine
 ```
+
+Three namespaces appear, each with a default-deny network policy, a limit range, a quota, and role
+bindings for the two group claims. Nothing about them was typed twice.
 
 Working on the UI:
 
@@ -112,6 +146,8 @@ make web       # production build into internal/web/dist
 
 ```
 cmd/margov/          the binary
+api/v1alpha1/        the Division custom resource
+deploy/crd/          generated CRD manifests
 proto/               service contracts, the single source for Go and TypeScript clients
 gen/                 generated Go bindings
 internal/
@@ -120,6 +156,7 @@ internal/
   cli/               command tree
   db/                connection pool, embedded migrations, migration runner
   kube/              client, impersonation, informers, workload conversion
+  tenancy/           division controller, projector, service
   version/           build metadata
   web/dist/          built UI, embedded into the binary
 web/                 the UI source

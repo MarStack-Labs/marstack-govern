@@ -132,6 +132,18 @@ without any distribution logic of our own.
 
 The consequence: a division's environments are a tenant grouping plus labels, not a namespace tree.
 
+### Where this stands today
+
+The `Division` controller provisions namespaces, limit ranges, default-deny network policies and
+role bindings, and it enforces quota with a `ResourceQuota` **per namespace**. Each namespace is
+therefore capped, but the division's total is not yet enforced across its namespaces — that is what
+Capsule's resource pools provide, and wiring them in is a separate step, verified against a cluster
+that actually runs Capsule.
+
+The division reports which backend it is using in `status.quotaBackend`, and the `QuotaReady`
+condition says plainly that a cross-namespace total is missing. A gap that is visible in
+`kubectl get division` is a gap; a gap hidden behind a green checkmark is a lie.
+
 ### Isolation defaults
 
 | Control | Default |
