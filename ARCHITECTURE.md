@@ -252,7 +252,7 @@ kernel or through a contract a module publishes.
 | `kube` | informers and a watch multiplexer, impersonating client factory, server-side apply dry-run client |
 | `projector` | platform events into the read model, and the replay procedure invariant 2 depends on |
 | `api` | ConnectRPC handlers, the SSE hub, authorization middleware |
-| `simulate` | the shadow world: admission dry-run, scheduler simulation, quota and cost projection |
+| `simulate` | the shadow world: cluster snapshot and bin packing, with admission dry-run and cost projection to follow |
 | `timeline` | ordered events per workload: rollouts, Kubernetes events, alerts, audit entries |
 | `identity` | who the caller is, and what Kubernetes will let them see |
 
@@ -307,9 +307,18 @@ judge the real apply has already judged this one.
 ### Approvals show their consequence
 
 When an approver opens a request, they see what granting it does: how cluster commitment changes,
-which nodes no longer fit, which pods would go `Pending`, and how the division's monthly bill moves.
-Scheduler simulation, not arithmetic — arithmetic cannot tell you that 4 spare cores spread across
-6 nodes will not fit a 2-core pod.
+which nodes fill up, and which pods would have nowhere to run.
+
+This is packing, not arithmetic. The simulator snapshots every node's free capacity, measures the
+division's **typical pod** from what it already runs, fills the requested headroom with pods of that
+size, and places them with a best-fit pass that skips cordoned, tainted and not-ready nodes.
+
+That is the difference that matters: arithmetic says 4 spare cores are enough for a 2-core pod, and
+it is wrong whenever those cores are 700m at a time across six nodes. The simulation says so, names
+the nodes, and the verdict is stored with the decision.
+
+The monthly cost delta joins this view with the FinOps slice; until then it is absent rather than
+estimated.
 
 ### A grant that lapses is flagged, not reverted
 
