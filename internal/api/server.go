@@ -8,11 +8,13 @@ import (
 
 	"github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1/governv1connect"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
+	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/version"
 )
 
 type Options struct {
 	Catalog   *catalog.Service
+	Tenancy   *tenancy.Service
 	Hub       *Hub
 	Web       fs.FS
 	Logger    *slog.Logger
@@ -34,6 +36,11 @@ func NewHandler(opts Options) http.Handler {
 
 	if opts.Catalog != nil {
 		path, handler := governv1connect.NewCatalogServiceHandler(opts.Catalog)
+		mux.Handle(path, handler)
+	}
+
+	if opts.Tenancy != nil {
+		path, handler := governv1connect.NewTenancyServiceHandler(opts.Tenancy)
 		mux.Handle(path, handler)
 	}
 

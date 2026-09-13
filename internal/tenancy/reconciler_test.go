@@ -273,7 +273,7 @@ func newReconciler(t *testing.T, objects ...client.Object) (*tenancy.Reconciler,
 	c := fake.NewClientBuilder().
 		WithScheme(scheme).
 		WithObjects(objects...).
-		WithStatusSubresource(&governv1alpha1.Division{}).
+		WithStatusSubresource(&governv1alpha1.Division{}, &corev1.ResourceQuota{}).
 		Build()
 
 	return &tenancy.Reconciler{Client: c, Scheme: scheme}, c

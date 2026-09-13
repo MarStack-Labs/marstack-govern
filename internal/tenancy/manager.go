@@ -27,7 +27,7 @@ func NewScheme() (*runtime.Scheme, error) {
 	return scheme, nil
 }
 
-func NewManager(restConfig *rest.Config, logger *slog.Logger) (ctrl.Manager, error) {
+func NewManager(restConfig *rest.Config, store *Store, publisher Publisher, logger *slog.Logger) (ctrl.Manager, error) {
 	scheme, err := NewScheme()
 	if err != nil {
 		return nil, err
@@ -47,6 +47,11 @@ func NewManager(restConfig *rest.Config, logger *slog.Logger) (ctrl.Manager, err
 	reconciler := &Reconciler{Client: manager.GetClient(), Scheme: manager.GetScheme()}
 	if err := reconciler.SetupWithManager(manager); err != nil {
 		return nil, fmt.Errorf("register the division controller: %w", err)
+	}
+
+	projector := &Projector{Client: manager.GetClient(), Store: store, Publisher: publisher}
+	if err := projector.SetupWithManager(manager); err != nil {
+		return nil, fmt.Errorf("register the division projector: %w", err)
 	}
 
 	return manager, nil

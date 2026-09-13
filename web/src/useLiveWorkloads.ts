@@ -1,21 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fromJson } from "@bufbuild/protobuf";
 
 import { catalog } from "./client";
+import { useResync, useStreamEvent } from "./events";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
-import {
-  StreamEventSchema,
-  WorkloadChanged_Change,
-} from "./gen/marstack/govern/v1/events_pb";
-
-export type StreamState = "connecting" | "live" | "reconnecting" | "resync";
+import type { StreamEvent } from "./gen/marstack/govern/v1/events_pb";
+import { WorkloadChanged_Change } from "./gen/marstack/govern/v1/events_pb";
 
 export interface LiveWorkloads {
   workloads: Workload[];
   freshness?: Freshness;
-  streamState: StreamState;
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -32,50 +27,36 @@ export function useLiveWorkloads(): LiveWorkloads {
   });
 
   const [patches, setPatches] = useState<Map<string, Workload | null>>(new Map());
-  const [streamState, setStreamState] = useState<StreamState>("connecting");
   const [liveFreshness, setLiveFreshness] = useState<Freshness | undefined>();
 
-  useEffect(() => {
-    const source = new EventSource("/v1/events");
+  const onChange = useCallback((message: StreamEvent) => {
+    if (message.body.case !== "workloadChanged") {
+      return;
+    }
 
-    source.onopen = () => setStreamState("live");
-    source.onerror = () => setStreamState("reconnecting");
+    const { change, workload } = message.body.value;
+    if (!workload) {
+      return;
+    }
 
-    source.addEventListener("resync", () => {
-      setStreamState("resync");
-      setPatches(new Map());
-      void queryClient.invalidateQueries({ queryKey: workloadsKey });
-    });
-
-    source.addEventListener("workload_changed", (event) => {
-      const message = fromJson(
-        StreamEventSchema,
-        JSON.parse((event as MessageEvent<string>).data),
+    setLiveFreshness(message.freshness);
+    setPatches((current) => {
+      const next = new Map(current);
+      next.set(
+        workload.uid,
+        change === WorkloadChanged_Change.REMOVED ? null : workload,
       );
-
-      if (message.body.case !== "workloadChanged") {
-        return;
-      }
-
-      const { change, workload } = message.body.value;
-      if (!workload) {
-        return;
-      }
-
-      setStreamState("live");
-      setLiveFreshness(message.freshness);
-      setPatches((current) => {
-        const next = new Map(current);
-        next.set(
-          workload.uid,
-          change === WorkloadChanged_Change.REMOVED ? null : workload,
-        );
-        return next;
-      });
+      return next;
     });
+  }, []);
 
-    return () => source.close();
+  const onResync = useCallback(() => {
+    setPatches(new Map());
+    void queryClient.invalidateQueries({ queryKey: workloadsKey });
   }, [queryClient]);
+
+  useStreamEvent("workload_changed", onChange);
+  useResync(onResync);
 
   const workloads = useMemo(() => {
     const merged = new Map<string, Workload>();
@@ -101,7 +82,6 @@ export function useLiveWorkloads(): LiveWorkloads {
   return {
     workloads,
     freshness: liveFreshness ?? query.data?.freshness,
-    streamState,
     isLoading: query.isLoading,
     error: query.error,
     refetch: () => void query.refetch(),

@@ -102,13 +102,15 @@ func runServe(ctx context.Context, opts serveOptions) error {
 		return err
 	}
 
-	manager, err := tenancy.NewManager(restConfig, logger)
+	store := catalog.NewStore(pool)
+	divisions := tenancy.NewStore(pool)
+	hub := api.NewHub(0)
+
+	manager, err := tenancy.NewManager(restConfig, divisions, hub, logger)
 	if err != nil {
 		return err
 	}
 
-	store := catalog.NewStore(pool)
-	hub := api.NewHub(0)
 	watcher := kube.NewWatcher(client, opts.resync, 512)
 	projector := catalog.NewProjector(store, watcher.Events(), hub, logger)
 
@@ -121,6 +123,7 @@ func runServe(ctx context.Context, opts serveOptions) error {
 		Addr: opts.addr,
 		Handler: api.NewHandler(api.Options{
 			Catalog: catalog.NewService(store),
+			Tenancy: tenancy.NewService(divisions),
 			Hub:     hub,
 			Web:     assets,
 			Logger:  logger,
