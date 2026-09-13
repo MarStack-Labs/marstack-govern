@@ -313,3 +313,78 @@ func failure(policyName, kind, name, severity string) map[string]any {
 func contains(haystack, needle string) bool {
 	return strings.Contains(haystack, needle)
 }
+
+func TestAReportThatNamesItsSubjectInScopeIsRead(t *testing.T) {
+	scoped := &unstructured.Unstructured{Object: map[string]any{
+		"results": []any{
+			map[string]any{
+				"policy":  "require-resources",
+				"rule":    "autogen-requests-and-limits",
+				"result":  "fail",
+				"message": "every container must declare resources.requests and limits",
+			},
+		},
+		"scope": map[string]any{
+			"apiVersion": "apps/v1",
+			"kind":       "ReplicaSet",
+			"name":       "offender-84c4f46d47",
+			"namespace":  "payments-dev",
+		},
+	}}
+	scoped.SetGroupVersionKind(policy.PolicyReportGVK)
+	scoped.SetName("269e4ac8-14ad-47d8-a60c-2255e23ad8b1")
+	scoped.SetNamespace("payments-dev")
+
+	service := policy.NewService(newCluster(t, division("payments", "payments-dev"), scoped))
+
+	response, err := service.ListViolations(signedIn(t), connect.NewRequest(
+		&governv1.ListViolationsRequest{Division: "payments"}))
+	if err != nil {
+		t.Fatalf("list violations: %v", err)
+	}
+
+	if len(response.Msg.GetViolations()) != 1 {
+		t.Fatalf("a per-resource report was dropped: got %d violations",
+			len(response.Msg.GetViolations()))
+	}
+
+	violation := response.Msg.GetViolations()[0]
+	if violation.GetResourceKind() != "ReplicaSet" || violation.GetResourceName() != "offender-84c4f46d47" {
+		t.Fatalf("the subject was not taken from scope: %s/%s",
+			violation.GetResourceKind(), violation.GetResourceName())
+	}
+	if violation.GetNamespace() != "payments-dev" {
+		t.Errorf("namespace: got %s", violation.GetNamespace())
+	}
+}
+
+func TestAResourceWithOnlyWarningsIsNotCountedAsFailing(t *testing.T) {
+	warning := map[string]any{
+		"policy":  "prefer-probes",
+		"rule":    "check-probes",
+		"result":  "warn",
+		"message": "the container has no readiness probe",
+		"resources": []any{
+			map[string]any{"kind": "Deployment", "name": "api", "namespace": "payments-dev"},
+		},
+	}
+
+	service := policy.NewService(newCluster(t,
+		division("payments", "payments-dev"),
+		report("payments-dev", warning),
+	))
+
+	response, err := service.GetCompliance(signedIn(t), connect.NewRequest(
+		&governv1.GetComplianceRequest{Division: "payments"}))
+	if err != nil {
+		t.Fatalf("compliance: %v", err)
+	}
+
+	summary := response.Msg.GetCompliance()
+	if summary.GetFailing() != 0 {
+		t.Fatalf("a resource with only warnings was reported as failing: %d", summary.GetFailing())
+	}
+	if summary.GetWarning() != 1 {
+		t.Fatalf("the warning was lost: %d", summary.GetWarning())
+	}
+}

@@ -521,6 +521,26 @@ Git is the same staleness trap as a hand-written service catalogue, one level up
 Without a forge token the platform still renders and checks the manifest, and says plainly that it
 can preview but not open. Silently producing nothing would look like success.
 
+### Kyverno reports name their subject in two different places
+
+Kyverno emits one `PolicyReport` per resource, and the resource is named in the report's top-level
+`scope` — the individual `results` carry no `resources` array at all. Aggregated reports, and
+`ClusterPolicyReport`, use the per-result array instead.
+
+Reading only the per-result array meant every finding from a real cluster was dropped on the floor:
+the code required a resource name, could not find one, and skipped the result. The unit tests passed
+because their fixtures used the aggregated shape. Nothing was wrong with the tests; their idea of
+what Kyverno emits was out of date, which no amount of unit testing can detect.
+
+The reader now falls back to `scope` when a result carries no `resources`, and a test pins each
+shape. `internal/policy/cluster_test.go` runs the same service against a live Kyverno when
+`GOVERN_TEST_KUBE_CONTEXT` is set, and skips otherwise.
+
+The same pass also fixed a counting error it exposed: `Compliance.Failing` counts **distinct
+resources**, not results, and a resource carrying only warnings no longer counts among them. "Four
+resources are failing a policy" and "six results were reported" are both true and different numbers,
+and the summary now says the first without quietly meaning the second.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The

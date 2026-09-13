@@ -206,6 +206,20 @@ func guardrailFrom(object *unstructured.Unstructured, clusterScoped bool) Guardr
 	return guardrail
 }
 
+func subjectOf(result map[string]any, report *unstructured.Unstructured) map[string]any {
+	if resources, ok := result["resources"].([]any); ok && len(resources) > 0 {
+		if resource, ok := resources[0].(map[string]any); ok {
+			return resource
+		}
+	}
+
+	if scope, found, _ := unstructured.NestedMap(report.Object, "scope"); found {
+		return scope
+	}
+
+	return nil
+}
+
 func findingsFrom(report *unstructured.Unstructured) []Finding {
 	results, found, _ := unstructured.NestedSlice(report.Object, "results")
 	if !found {
@@ -240,14 +254,11 @@ func findingsFrom(report *unstructured.Unstructured) []Finding {
 			ObservedAt: observed,
 		}
 
-		if resources, ok := result["resources"].([]any); ok && len(resources) > 0 {
-			if resource, ok := resources[0].(map[string]any); ok {
-				finding.ResourceKind = stringField(resource, "kind")
-				finding.ResourceName = stringField(resource, "name")
-				if namespace := stringField(resource, "namespace"); namespace != "" {
-					finding.Namespace = namespace
-				}
-			}
+		subject := subjectOf(result, report)
+		finding.ResourceKind = stringField(subject, "kind")
+		finding.ResourceName = stringField(subject, "name")
+		if namespace := stringField(subject, "namespace"); namespace != "" {
+			finding.Namespace = namespace
 		}
 
 		if finding.Policy == "" || finding.ResourceName == "" {

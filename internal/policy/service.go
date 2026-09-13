@@ -127,11 +127,10 @@ func (s *Service) GetCompliance(
 	offending := map[string]bool{}
 
 	for _, finding := range findings {
-		switch finding.Result {
-		case "warn":
+		if finding.Result == "warn" {
 			compliance.Warning++
-		default:
-			compliance.Failing++
+
+			continue
 		}
 
 		if finding.Severity == "critical" {
