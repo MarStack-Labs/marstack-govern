@@ -32,6 +32,7 @@ Kubernetes API, and an approval shows a simulation of its own effect before it i
 | **Simulates approvals** | cluster commitment, which nodes stop fitting, which pods go `Pending`, and how the monthly bill moves |
 | **Charges back** | consumption from OpenCost times rates from a versioned `PricingPolicy`, billed on requests, in rupiah |
 | **Records decisions** | with the evidence the approver saw, in a hash-chained, WORM-backed audit trail |
+| **Traces images** | registry digest, cosign signature, source repository and revision from OCI labels, and CVE counts from Trivy — nobody links a repository by hand |
 | **Explains failures** | events, exit codes, OOM kills, probe failures and scheduler reasons into one causal sentence, with the `kubectl` command to reproduce it |
 
 ## The rule
@@ -66,6 +67,7 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 | PostgreSQL | the read model | yes |
 | An OIDC provider (Keycloak, Dex) | identity and group claims | yes |
 | [Cilium](https://cilium.io) | network policy, and Hubble flows for reachability | recommended |
+| [Trivy Operator](https://aquasecurity.github.io/trivy-operator) | vulnerability and SBOM reports | for supply chain features |
 | [Argo CD](https://argo-cd.readthedocs.io) | GitOps, and desired-versus-live for drift | for delivery features |
 | Mimir / Loki / Tempo | metrics, logs, traces | for signals, recommendations and chargeback |
 

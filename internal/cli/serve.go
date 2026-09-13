@@ -24,23 +24,26 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/metrics"
 	"github.com/marstack-labs/marstack-govern/internal/policy"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
+	"github.com/marstack-labs/marstack-govern/internal/supplychain"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/web"
 )
 
 type serveOptions struct {
-	addr            string
-	databaseURL     string
-	kubeconfig      string
-	kubeContext     string
-	resync          time.Duration
-	logLevel        string
-	metricsURL      string
-	metricsTenant   string
-	recommendWindow time.Duration
-	auditToken      string
-	auditArchive    string
-	auth            authOptions
+	addr             string
+	databaseURL      string
+	kubeconfig       string
+	kubeContext      string
+	resync           time.Duration
+	logLevel         string
+	metricsURL       string
+	metricsTenant    string
+	recommendWindow  time.Duration
+	auditToken       string
+	auditArchive     string
+	registryToken    string
+	registryInsecure bool
+	auth             authOptions
 }
 
 func newServeCommand() *cobra.Command {
@@ -71,6 +74,9 @@ func newServeCommand() *cobra.Command {
 	flags.StringVar(&opts.metricsURL, "metrics-url", "", "Prometheus or Mimir base url used to propose quota numbers")
 	flags.StringVar(&opts.metricsTenant, "metrics-tenant", "", "value for X-Scope-OrgID when querying Mimir")
 	flags.DurationVar(&opts.recommendWindow, "recommend-window", opts.recommendWindow, "how far back usage is read when proposing a quota")
+
+	flags.StringVar(&opts.registryToken, "registry-token", "", "bearer token for reading image manifests and signatures")
+	flags.BoolVar(&opts.registryInsecure, "registry-insecure", false, "talk to the registry over plain http")
 
 	flags.StringVar(&opts.auditToken, "audit-token", "", "bearer token the Kubernetes audit webhook must present (falls back to GOVERN_AUDIT_TOKEN)")
 	flags.StringVar(&opts.auditArchive, "audit-archive", "", "directory for append-only audit segments, ideally backed by object storage with retention")
@@ -218,7 +224,15 @@ func runServe(ctx context.Context, opts serveOptions) error {
 	server := &http.Server{
 		Addr: opts.addr,
 		Handler: api.NewHandler(api.Options{
-			Catalog:       catalog.NewService(store).WithScope(sessions),
+			Catalog: catalog.NewService(store).
+				WithScope(sessions).
+				WithProvenance(supplychain.NewProvenance(
+					supplychain.NewRegistry(supplychain.RegistryConfig{
+						Token:    opts.registryToken,
+						Insecure: opts.registryInsecure,
+					}),
+					supplychain.NewScanner(manager.GetClient()),
+				)),
 			Tenancy:       tenancy.NewService(divisions).WithScope(sessions),
 			Session:       sessions,
 			Requests:      requestService,

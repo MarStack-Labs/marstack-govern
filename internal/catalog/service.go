@@ -17,9 +17,14 @@ type Scoper interface {
 	Scope(ctx context.Context, actor identity.Actor) (identity.Scope, error)
 }
 
+type Prover interface {
+	Of(ctx context.Context, namespace, image string) (*governv1.Provenance, error)
+}
+
 type Service struct {
 	store  *Store
 	scoper Scoper
+	prover Prover
 }
 
 func NewService(store *Store) *Service {
@@ -28,6 +33,12 @@ func NewService(store *Store) *Service {
 
 func (s *Service) WithScope(scoper Scoper) *Service {
 	s.scoper = scoper
+
+	return s
+}
+
+func (s *Service) WithProvenance(prover Prover) *Service {
+	s.prover = prover
 
 	return s
 }
@@ -144,10 +155,49 @@ func (s *Service) GetWorkload(
 }
 
 func (s *Service) GetProvenance(
-	context.Context,
-	*connect.Request[governv1.GetProvenanceRequest],
+	ctx context.Context,
+	req *connect.Request[governv1.GetProvenanceRequest],
 ) (*connect.Response[governv1.GetProvenanceResponse], error) {
-	return nil, unimplemented("provenance")
+	if s.prover == nil {
+		return nil, connect.NewError(connect.CodeUnavailable,
+			errors.New("no registry is configured, so nothing is known about where this image came from"))
+	}
+
+	workload, err := s.store.GetWorkload(ctx, req.Msg.GetUid())
+	if errors.Is(err, ErrNotFound) {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("workload %s not found", req.Msg.GetUid()))
+	}
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	scope, scoped, err := s.scopeOf(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if scoped && !scope.Allows(workload.Namespace) {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("workload %s not found", req.Msg.GetUid()))
+	}
+
+	if workload.ImageRef == "" {
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Errorf("%s/%s runs no container image we can trace", workload.Namespace, workload.Name))
+	}
+
+	provenance, err := s.prover.Of(ctx, workload.Namespace, workload.ImageRef)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
+
+	freshness, err := s.freshness(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&governv1.GetProvenanceResponse{
+		Provenance: provenance,
+		Freshness:  freshness,
+	}), nil
 }
 
 func (s *Service) GetTimeline(

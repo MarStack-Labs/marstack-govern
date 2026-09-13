@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+import { catalog } from "./client";
+
+import { ConnectError } from "@connectrpc/connect";
 
 import { useStreamState, type StreamState } from "./events";
 import { useSession } from "./useSession";
@@ -267,6 +272,8 @@ function Panel({
 }
 
 function WorkloadTable({ workloads }: { workloads: Workload[] }) {
+  const [inspected, setInspected] = useState<string | null>(null);
+
   return (
     <Table
       headers={[
@@ -278,12 +285,13 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
         "Replicas",
         "Requests",
         "Image",
+        "",
       ]}
     >
-      {workloads.map((workload) => (
+      {workloads.flatMap((workload) => [
         <tr
           key={workload.uid}
-          className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+          className="border-b border-edge/60 hover:bg-white/[0.03]"
         >
           <td className="px-5 py-3">
             <HealthDot health={workload.health} />
@@ -308,9 +316,84 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
           <td className="max-w-[22rem] truncate px-5 py-3 font-mono text-xs text-muted">
             {workload.imageRef || "—"}
           </td>
-        </tr>
-      ))}
+          <td className="px-5 py-3">
+            <button
+              type="button"
+              onClick={() => setInspected(inspected === workload.uid ? null : workload.uid)}
+              className="rounded-lg border border-edge px-2 py-1 font-mono text-[11px] text-muted hover:border-primary hover:text-ink"
+            >
+              {inspected === workload.uid ? "hide" : "provenance"}
+            </button>
+          </td>
+        </tr>,
+        inspected === workload.uid ? (
+          <tr key={`${workload.uid}-provenance`} className="border-b border-edge/60 bg-canvas">
+            <td colSpan={9} className="px-5 py-4">
+              <ProvenancePanel uid={workload.uid} />
+            </td>
+          </tr>
+        ) : null,
+      ])}
     </Table>
+  );
+}
+
+function ProvenancePanel({ uid }: { uid: string }) {
+  const query = useQuery({
+    queryKey: ["provenance", uid],
+    queryFn: () => catalog.getProvenance({ uid }),
+    retry: false,
+  });
+
+  if (query.error) {
+    return (
+      <p className="font-mono text-xs text-progressing">
+        {ConnectError.from(query.error).message}
+      </p>
+    );
+  }
+
+  const provenance = query.data?.provenance;
+  if (!provenance) {
+    return <p className="font-mono text-xs text-muted">asking the registry…</p>;
+  }
+
+  const vulnerabilities = provenance.vulnerabilities;
+
+  return (
+    <div className="flex flex-col gap-2 font-mono text-xs">
+      <p className={provenance.signed ? "text-healthy" : "text-degraded"}>
+        {provenance.signed ? "signed with cosign" : "no cosign signature found"}
+        {provenance.tagMutable ? " · the tag can move under you" : " · pinned tag"}
+        {provenance.sbomPresent ? " · sbom present" : ""}
+      </p>
+
+      <p className="text-muted">
+        digest {provenance.imageDigest || "unknown"}
+        {provenance.baseImageAgeDays > 0 ? ` · built ${provenance.baseImageAgeDays} days ago` : ""}
+      </p>
+
+      <p className="text-muted">
+        {provenance.sourceRepo
+          ? `source ${provenance.sourceRepo}${
+              provenance.sourceRevision ? ` at ${provenance.sourceRevision}` : ""
+            }`
+          : "the image carries no source label, so its origin is unproven"}
+      </p>
+
+      {vulnerabilities ? (
+        <p className={vulnerabilities.critical > 0 ? "text-degraded" : "text-muted"}>
+          {vulnerabilities.critical} critical · {vulnerabilities.high} high ·{" "}
+          {vulnerabilities.medium} medium · {vulnerabilities.low} low
+        </p>
+      ) : (
+        <p className="text-muted">no vulnerability report for this digest</p>
+      )}
+
+      {provenance.signatureIssuer ? (
+        <p className="text-progressing">{provenance.signatureIssuer}</p>
+      ) : null}
+    </div>
   );
 }
 
