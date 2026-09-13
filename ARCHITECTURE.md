@@ -135,14 +135,27 @@ The consequence: a division's environments are a tenant grouping plus labels, no
 ### Where this stands today
 
 The `Division` controller provisions namespaces, limit ranges, default-deny network policies and
-role bindings, and it enforces quota with a `ResourceQuota` **per namespace**. Each namespace is
-therefore capped, but the division's total is not yet enforced across its namespaces — that is what
-Capsule's resource pools provide, and wiring them in is a separate step, verified against a cluster
-that actually runs Capsule.
+role bindings. How it enforces quota depends on what the cluster actually has, decided by a
+`RESTMapper` lookup for `GlobalResourceQuota` rather than by configuration:
 
-The division reports which backend it is using in `status.quotaBackend`, and the `QuotaReady`
-condition says plainly that a cross-namespace total is missing. A gap that is visible in
-`kubectl get division` is a gap; a gap hidden behind a green checkmark is a lie.
+| Capsule | Enforcement | `status.quotaBackend` |
+|---|---|---|
+| installed | one `GlobalResourceQuota` selecting every namespace labelled with the division; Capsule keeps a single ledger across them | `capsule` |
+| absent | a `ResourceQuota` in each namespace | `resourcequota` |
+
+The two are mutually exclusive, and switching is not additive. When Capsule appears, the controller
+**deletes** the per-namespace quotas it wrote earlier. Leaving them would cap each namespace at the
+whole division total on its own, which is the failure the global quota exists to prevent — a division
+allowed 40 cpu could then run 40 in each of four namespaces.
+
+`QuotaReady` reports which of the two is actually holding the line, and with Capsule it quotes the
+shared ledger: *"Capsule enforces the division total across 4 namespaces; 26500m of 40 cpu is
+committed."* A gap visible in `kubectl get division` is a gap; a gap hidden behind a green checkmark
+is a lie.
+
+Capsule's own types are read through `unstructured` rather than by importing its Go module. An
+optional dependency that is compiled in is not optional, and the platform must keep running on
+clusters that do not have it.
 
 ### Isolation defaults
 

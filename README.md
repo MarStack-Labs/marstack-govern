@@ -50,12 +50,17 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 
 ## Status
 
-Working end to end: workloads are discovered, divisions are reconciled into namespaces with quota and
-isolation, sign-in is OIDC with Kubernetes deciding what each person may see, and quota requests
-arrive with a number proposed from observed usage and are decided against recorded evidence.
+Working end to end, and verified against a real cluster rather than only in tests: workload
+discovery, divisions reconciled into namespaces with isolation and a cross-namespace quota total,
+OIDC sign-in with Kubernetes deciding what each person may see, quota requests proposed from usage
+and decided against recorded evidence, scheduler simulation, chargeback, the hash-chained audit
+trail, policy and supply-chain reporting, diagnostics, topology, and preview environments that are
+reclaimed when their lease ends.
 
-Scheduler simulation, FinOps, audit integrity, supply chain and diagnostics are the slices after
-this one.
+Attribution is enforced at admission, so a `kubectl` write cannot claim to be someone else.
+
+Not built yet: the scaffolding wizard and merge-request creation, month-end invoice generation, and
+per-workload right-sizing.
 
 ## Prerequisites
 
@@ -63,7 +68,7 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 
 | Component | Purpose | Required |
 |---|---|---|
-| [Capsule](https://projectcapsule.dev) | tenants and cross-namespace quota | yes |
+| [Capsule](https://projectcapsule.dev) | the cross-namespace division total, via `GlobalResourceQuota` | recommended |
 | [Kyverno](https://kyverno.io) | admission policy, and preflight evaluation | yes |
 | PostgreSQL | the read model | yes |
 | An OIDC provider (Keycloak, Dex) | identity and group claims | yes |
@@ -74,7 +79,9 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 | Mimir / Loki / Tempo | metrics, logs, traces | for signals, recommendations and chargeback |
 
 Missing optional components degrade specific features and say so in the UI. They never produce a
-guess.
+guess. Without Capsule the platform falls back to a `ResourceQuota` in each namespace, which caps
+each namespace but not the division as a whole; `kubectl get division` shows which backend is
+actually in force.
 
 Without `--webhook-cert-dir` the attribution webhook is not served: the control plane still records
 who asked for what, but a direct `kubectl` write can claim to be someone else. The platform logs a

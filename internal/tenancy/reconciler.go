@@ -66,7 +66,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	status := division.Status.DeepCopy()
 	status.Namespaces = nil
 	status.ObservedGeneration = division.Generation
+
+	capsule := capsuleInstalled(r.Client)
 	status.QuotaBackend = QuotaBackendResourceQuota
+	if capsule {
+		status.QuotaBackend = QuotaBackendCapsule
+	}
 
 	namespacesReady := true
 	isolationReady := true
@@ -88,9 +93,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionFalse, "LimitRangeFailed", err.Error())
 		}
 
-		if err := r.ensureResourceQuota(ctx, division, name); err != nil {
-			quotaReady = false
-			r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionFalse, "ResourceQuotaFailed", err.Error())
+		if !capsule {
+			if err := r.ensureResourceQuota(ctx, division, name); err != nil {
+				quotaReady = false
+				r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionFalse, "ResourceQuotaFailed", err.Error())
+			}
 		}
 
 		if division.IsolationEnabled() {
@@ -103,6 +110,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		if err := r.ensureRoleBindings(ctx, division, name); err != nil {
 			accessReady = false
 			r.setCondition(status, governv1alpha1.ConditionAccessReady, metav1.ConditionFalse, "RoleBindingFailed", err.Error())
+		}
+	}
+
+	if capsule {
+		if err := r.ensureGlobalQuota(ctx, division); err != nil {
+			quotaReady = false
+			r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionFalse, "GlobalQuotaFailed", err.Error())
+		} else if err := r.dropNamespaceQuotas(ctx, status.Namespaces); err != nil {
+			quotaReady = false
+			r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionFalse, "StaleQuotaLeft", err.Error())
 		}
 	}
 
@@ -124,7 +141,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			fmt.Sprintf("%d group claims bound to namespace roles", len(division.Spec.Access)))
 	}
 
-	if quotaReady {
+	if quotaReady && capsule {
+		r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionTrue, "AcrossNamespaces",
+			r.globalQuotaMessage(ctx, division))
+	} else if quotaReady {
 		r.setCondition(status, governv1alpha1.ConditionQuotaReady, metav1.ConditionTrue, "PerNamespace",
 			"the quota is enforced in each namespace; a cross-namespace total needs a tenant quota backend")
 	}
