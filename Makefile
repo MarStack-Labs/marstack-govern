@@ -9,7 +9,10 @@ PREFIX ?= /usr/local
 DIST    ?= dist
 TARGETS ?= linux/amd64 linux/arm64 darwin/arm64
 
-.PHONY: build install uninstall test vet fmt cross dist proto proto-lint generate web web-dev staticcheck vuln gosec secrets security check tools hooks run clean
+.PHONY: build install uninstall test vet fmt cross dist proto proto-lint generate web web-dev staticcheck vuln gosec secrets security check tools hooks run clean site
+
+site:
+	cp web/src/meridian.css site/meridian.css
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/margov ./cmd/margov

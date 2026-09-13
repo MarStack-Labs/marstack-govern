@@ -4,6 +4,7 @@ import { ConnectError } from "@connectrpc/connect";
 
 import { auditTrail } from "./client";
 import type { AuditEvent } from "./gen/marstack/govern/v1/audit_pb";
+import { tableHead, tableRow, tableWrap } from "./ui";
 
 export function AuditView() {
   const [actor, setActor] = useState("");
@@ -23,7 +24,7 @@ export function AuditView() {
 
   if (events.error) {
     return (
-      <div className="rounded-2xl border border-degraded/40 bg-degraded/10 px-6 py-6 font-mono text-xs text-degraded">
+      <div className="rounded-lg border-l-4 border-degraded bg-degraded-soft px-6 py-6 font-mono text-xs text-degraded">
         {ConnectError.from(events.error).message}
       </div>
     );
@@ -40,7 +41,7 @@ export function AuditView() {
             value={actor}
             onChange={(event) => setActor(event.target.value)}
             placeholder="dev@example.test"
-            className="rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-ink"
+            className="rounded-lg border border-edge bg-raised px-3 py-2 text-sm text-ink"
           />
         </label>
         <label className="flex w-40 flex-col gap-1 font-mono text-[11px] text-muted">
@@ -49,7 +50,7 @@ export function AuditView() {
             value={verb}
             onChange={(event) => setVerb(event.target.value)}
             placeholder="create"
-            className="rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-ink"
+            className="rounded-lg border border-edge bg-raised px-3 py-2 text-sm text-ink"
           />
         </label>
 
@@ -82,19 +83,19 @@ export function AuditView() {
       </section>
 
       {events.data?.events.length === 0 ? (
-        <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+        <div className="card text-center">
           <p className="text-sm">Nothing has been recorded yet.</p>
           <p className="mt-2 font-mono text-xs text-muted">
             point the Kubernetes audit webhook at /v1/audit to start the trail
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-          <table className="w-full border-collapse text-sm">
+        <div className={tableWrap}>
+          <table className="ms-table">
             <thead>
-              <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+              <tr className={tableHead}>
                 {["Seq", "When", "Actor", "Verb", "Resource", "Object", "Code", ""].map((header) => (
-                  <th key={header} className="px-5 py-3 font-semibold">
+                  <th key={header} className="font-semibold">
                     {header}
                   </th>
                 ))}
@@ -130,20 +131,20 @@ function EventRow({
 }) {
   return (
     <>
-      <tr className="border-b border-edge/60 hover:bg-white/[0.03]">
-        <td className="px-5 py-3 font-mono text-xs text-muted">{event.seq.toString()}</td>
-        <td className="px-5 py-3 font-mono text-xs text-muted">
+      <tr className={tableRow}>
+        <td className="font-mono text-xs text-muted">{event.seq.toString()}</td>
+        <td className="font-mono text-xs text-muted">
           {event.eventAt ? new Date(Number(event.eventAt.seconds) * 1000).toLocaleString() : "—"}
         </td>
-        <td className="px-5 py-3 font-mono text-xs">
+        <td className="font-mono text-xs">
           {event.actor?.subject}
           {event.impersonatedBy ? (
             <span className="text-muted"> via {event.impersonatedBy}</span>
           ) : null}
         </td>
-        <td className="px-5 py-3 font-mono text-xs text-accent">{event.verb}</td>
-        <td className="px-5 py-3 font-mono text-xs text-muted">{event.resource}</td>
-        <td className="px-5 py-3 font-mono text-xs text-muted">
+        <td className="font-mono text-xs text-accent">{event.verb}</td>
+        <td className="font-mono text-xs text-muted">{event.resource}</td>
+        <td className="font-mono text-xs text-muted">
           {event.namespace ? `${event.namespace}/` : ""}
           {event.objectName || "—"}
         </td>
@@ -154,7 +155,7 @@ function EventRow({
         >
           {event.responseCode}
         </td>
-        <td className="px-5 py-3">
+        <td >
           <button
             type="button"
             onClick={onToggle}
@@ -165,12 +166,12 @@ function EventRow({
         </td>
       </tr>
       {expanded ? (
-        <tr className="border-b border-edge/60 bg-canvas">
+        <tr className="border-b border-edge/60 bg-primary-soft/30">
           <td colSpan={8} className="px-5 py-4">
             <p className="mb-2 font-mono text-[10px] text-muted">
               hash {event.hash.slice(0, 16)} · follows {event.prevHash.slice(0, 16) || "the start"}
             </p>
-            <pre className="max-h-80 overflow-auto rounded-xl border border-edge bg-surface p-4 font-mono text-[11px] text-muted">
+            <pre className="max-h-80 overflow-auto rounded-xl border border-edge bg-surface shadow-sm shadow-slate-900/[0.04] p-4 font-mono text-[11px] text-muted">
               {prettyJson(event.payloadJson)}
             </pre>
           </td>

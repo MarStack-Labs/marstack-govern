@@ -6,6 +6,7 @@ import { catalog } from "./client";
 import { ConnectError } from "@connectrpc/connect";
 
 import { useStreamState, type StreamState } from "./events";
+import { badge, tableHead, tableRow, tableWrap, type Tone } from "./ui";
 import { useSession } from "./useSession";
 import type { Session } from "./gen/marstack/govern/v1/identity_pb";
 import { Session_AuthMode } from "./gen/marstack/govern/v1/identity_pb";
@@ -76,49 +77,76 @@ const views: { id: View; label: string; subtitle: string }[] = [
 
 export function App() {
   const [view, setView] = useState<View>("services");
+  const [drawer, setDrawer] = useState(false);
   const streamState = useStreamState();
   const { session, isLoading, switchDivision, signOut } = useSession();
   const active = views.find((candidate) => candidate.id === view) ?? views[0];
 
   if (isLoading) {
     return (
-      <div className="flex min-h-full items-center justify-center bg-canvas">
+      <div className="flex min-h-full items-center justify-center bg-raised">
         <p className="font-mono text-xs text-muted">checking who you are…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-canvas text-ink">
-      <header className="border-b border-edge px-8 py-5">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-          <nav className="flex items-center gap-1">
-            {views.map((candidate) => (
-              <button
-                key={candidate.id}
-                type="button"
-                onClick={() => setView(candidate.id)}
-                className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                  candidate.id === view
-                    ? "bg-white/10 font-medium text-ink"
-                    : "text-muted hover:text-ink"
-                }`}
-              >
-                {candidate.label}
-              </button>
-            ))}
-          </nav>
-          <p className="font-mono text-xs text-muted">{active.subtitle}</p>
-          <div className="ml-auto flex items-center gap-5">
+    <div className="ms-shell" data-drawer={drawer ? "open" : "closed"}>
+      <aside className="ms-rail">
+        <a className="ms-rail-brand" href="/">
+          <span className="grid size-7 place-items-center rounded-md bg-[var(--ms-accent-solid)] text-[13px] font-bold text-white">
+            m
+          </span>
+          <span className="ms-wordmark">margov</span>
+        </a>
+
+        <nav className="flex flex-col gap-0.5">
+          <p className="ms-eyebrow px-3 pb-1">Platform</p>
+          {views.map((candidate) => (
+            <button
+              key={candidate.id}
+              type="button"
+              className="ms-nav-item"
+              aria-current={candidate.id === view ? "page" : undefined}
+              onClick={() => {
+                setView(candidate.id);
+                setDrawer(false);
+              }}
+            >
+              {candidate.label}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <div className="ms-main">
+        <header className="ms-topbar">
+          <button
+            type="button"
+            className="ms-btn ms-drawer-btn"
+            aria-label="Toggle navigation"
+            aria-expanded={drawer}
+            onClick={() => setDrawer((on) => !on)}
+          >
+            <MenuIcon />
+          </button>
+
+          <div className="ms-page-head">
+            <h1>{active.label}</h1>
+          </div>
+
+          <div className="ml-auto flex flex-wrap items-center gap-4">
             <StreamBadge state={streamState} />
             <DivisionPicker session={session} onSwitch={switchDivision} />
             <Identity session={session} onSignOut={signOut} />
           </div>
-        </div>
-        <DevAuthBanner session={session} />
-      </header>
+        </header>
 
-      <main className="px-8 py-6">
+        <DevAuthBanner session={session} />
+
+        <main className="ms-page">
+          <p className="text-sm text-muted">{active.subtitle}</p>
+
         {view === "services" ? (
           <ServicesView />
         ) : view === "divisions" ? (
@@ -138,7 +166,8 @@ export function App() {
         ) : (
           <AuditView />
         )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
@@ -162,7 +191,7 @@ function DivisionPicker({
       <select
         value={session?.activeDivision ?? memberships[0].division}
         onChange={(event) => onSwitch(event.target.value)}
-        className="rounded-lg border border-edge bg-surface px-2 py-1 text-ink"
+        className="rounded-lg border border-edge bg-surface shadow-sm shadow-slate-900/[0.04] px-2 py-1 text-ink"
       >
         {memberships.map((membership) => (
           <option key={membership.division} value={membership.division}>
@@ -210,7 +239,7 @@ function DevAuthBanner({ session }: { session?: Session }) {
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-progressing/40 bg-progressing/10 px-4 py-2 font-mono text-xs text-progressing">
+    <div className="mt-4 rounded-xl border border-progressing/30 bg-progressing-soft px-4 py-2 font-mono text-xs text-progressing">
       authentication is disabled: everyone reaching this page is signed in as{" "}
       {session.actor?.subject}
     </div>
@@ -316,23 +345,23 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
       {workloads.flatMap((workload) => [
         <tr
           key={workload.uid}
-          className="border-b border-edge/60 hover:bg-white/[0.03]"
+          className={tableRow}
         >
-          <td className="px-5 py-3">
+          <td >
             <HealthDot health={workload.health} />
           </td>
-          <td className="px-5 py-3 font-mono text-xs text-accent">
+          <td className="font-mono text-xs text-accent">
             {workload.division || "unassigned"}
           </td>
-          <td className="px-5 py-3 font-mono text-xs text-muted">
+          <td className="font-mono text-xs text-muted">
             {workload.namespace}
           </td>
-          <td className="px-5 py-3 font-medium">{workload.name}</td>
-          <td className="px-5 py-3 font-mono text-xs text-muted">{workload.kind}</td>
-          <td className="px-5 py-3 font-mono text-xs">
+          <td className="font-medium">{workload.name}</td>
+          <td className="font-mono text-xs text-muted">{workload.kind}</td>
+          <td className="font-mono text-xs">
             {workload.replicasReady}/{workload.replicasDesired}
           </td>
-          <td className="px-5 py-3 font-mono text-xs text-muted">
+          <td className="font-mono text-xs text-muted">
             {formatCompute(
               workload.requested?.cpuMillicores,
               workload.requested?.memoryBytes,
@@ -341,7 +370,7 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
           <td className="max-w-[22rem] truncate px-5 py-3 font-mono text-xs text-muted">
             {workload.imageRef || "—"}
           </td>
-          <td className="px-5 py-3">
+          <td >
             <div className="flex gap-2">
               <button
                 type="button"
@@ -365,14 +394,14 @@ function WorkloadTable({ workloads }: { workloads: Workload[] }) {
           </td>
         </tr>,
         inspected === workload.uid ? (
-          <tr key={`${workload.uid}-provenance`} className="border-b border-edge/60 bg-canvas">
+          <tr key={`${workload.uid}-provenance`} className="border-b border-edge/60 bg-primary-soft/30">
             <td colSpan={9} className="px-5 py-4">
               <ProvenancePanel uid={workload.uid} />
             </td>
           </tr>
         ) : null,
         diagnosed === workload.uid ? (
-          <tr key={`${workload.uid}-diagnose`} className="border-b border-edge/60 bg-canvas">
+          <tr key={`${workload.uid}-diagnose`} className="border-b border-edge/60 bg-primary-soft/30">
             <td colSpan={9} className="px-5 py-4">
               <DiagnosePanel uid={workload.uid} />
             </td>
@@ -464,14 +493,14 @@ function DiagnosePanel({ uid }: { uid: string }) {
       ) : null}
 
       {found.reproduceCommands.length > 0 ? (
-        <pre className="overflow-auto rounded-xl border border-edge bg-surface p-4 font-mono text-[11px] text-muted">
+        <pre className="overflow-auto rounded-xl border border-edge bg-surface shadow-sm shadow-slate-900/[0.04] p-4 font-mono text-[11px] text-muted">
           {found.reproduceCommands.join("\n")}
         </pre>
       ) : null}
 
       {(timeline.data?.events ?? []).length > 0 ? (
         <div className="flex flex-col gap-1">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-muted">timeline</p>
+          <p className="card-title">timeline</p>
           {(timeline.data?.events ?? []).slice(0, 8).map((event, index) => (
             <p key={index} className="font-mono text-xs text-muted">
               {event.occurredAt
@@ -548,36 +577,36 @@ function ProvenancePanel({ uid }: { uid: string }) {
 function DivisionTable({ divisions }: { divisions: Division[] }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+      <h2 className="card-title">
         Divisions
       </h2>
       <Table headers={["Phase", "Name", "Display", "Quota", "Used", "Saturation", "Namespaces"]}>
         {divisions.map((division) => (
           <tr
             key={division.uid}
-            className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+            className={tableRow}
           >
-            <td className="px-5 py-3">
+            <td >
               <PhaseBadge phase={division.phase} />
             </td>
-            <td className="px-5 py-3 font-mono text-xs text-accent">{division.name}</td>
-            <td className="px-5 py-3 font-medium">{division.displayName}</td>
-            <td className="px-5 py-3 font-mono text-xs text-muted">
+            <td className="font-mono text-xs text-accent">{division.name}</td>
+            <td className="font-medium">{division.displayName}</td>
+            <td className="font-mono text-xs text-muted">
               {formatCompute(
                 division.quota?.cpuMillicores,
                 division.quota?.memoryBytes,
               )}
             </td>
-            <td className="px-5 py-3 font-mono text-xs text-muted">
+            <td className="font-mono text-xs text-muted">
               {formatCompute(division.used?.cpuMillicores, division.used?.memoryBytes)}
             </td>
-            <td className="px-5 py-3">
+            <td >
               <Saturation
                 used={Number(division.used?.cpuMillicores ?? 0n)}
                 quota={Number(division.quota?.cpuMillicores ?? 0n)}
               />
             </td>
-            <td className="px-5 py-3 font-mono text-xs text-muted">
+            <td className="font-mono text-xs text-muted">
               {division.namespaces.join(", ") || "—"}
             </td>
           </tr>
@@ -594,26 +623,26 @@ function NamespaceTable({ namespaces }: { namespaces: Namespace[] }) {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+      <h2 className="card-title">
         Namespaces
       </h2>
       <Table headers={["Namespace", "Division", "Environment", "Default deny", "Limit range"]}>
         {namespaces.map((namespace) => (
           <tr
             key={namespace.name}
-            className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+            className={tableRow}
           >
-            <td className="px-5 py-3 font-medium">{namespace.name}</td>
-            <td className="px-5 py-3 font-mono text-xs text-accent">
+            <td className="font-medium">{namespace.name}</td>
+            <td className="font-mono text-xs text-accent">
               {namespace.division || "unassigned"}
             </td>
-            <td className="px-5 py-3 font-mono text-xs text-muted">
+            <td className="font-mono text-xs text-muted">
               {namespace.environment || "—"}
             </td>
-            <td className="px-5 py-3">
+            <td >
               <Present present={namespace.defaultDenyPresent} />
             </td>
-            <td className="px-5 py-3">
+            <td >
               <Present present={namespace.limitRangePresent} />
             </td>
           </tr>
@@ -631,12 +660,12 @@ function Table({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-      <table className="w-full border-collapse text-sm">
+    <div className={tableWrap}>
+      <table className="ms-table">
         <thead>
-          <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+          <tr className={tableHead}>
             {headers.map((header) => (
-              <th key={header} className="px-5 py-3 font-semibold">
+              <th key={header} className="font-semibold">
                 {header}
               </th>
             ))}
@@ -648,43 +677,45 @@ function Table({
   );
 }
 
+function MenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function HealthDot({ health }: { health: Workload_Health }) {
   const style = {
-    [Workload_Health.HEALTHY]: { color: "bg-healthy", label: "healthy" },
-    [Workload_Health.PROGRESSING]: { color: "bg-progressing", label: "progressing" },
-    [Workload_Health.DEGRADED]: { color: "bg-degraded", label: "degraded" },
-    [Workload_Health.UNSPECIFIED]: { color: "bg-muted", label: "unknown" },
+    [Workload_Health.HEALTHY]: { tone: "healthy" as Tone, label: "healthy" },
+    [Workload_Health.PROGRESSING]: { tone: "progressing" as Tone, label: "progressing" },
+    [Workload_Health.DEGRADED]: { tone: "degraded" as Tone, label: "degraded" },
+    [Workload_Health.UNSPECIFIED]: { tone: "neutral" as Tone, label: "unknown" },
   }[health];
 
   return (
-    <span className="flex items-center gap-2 font-mono text-xs">
-      <span className={`inline-block h-2 w-2 rounded-full ${style.color}`} />
-      {style.label}
-    </span>
+    <span className={badge(style.tone)}>{style.label}</span>
   );
 }
 
 function PhaseBadge({ phase }: { phase: Division_Phase }) {
   const style = {
-    [Division_Phase.ACTIVE]: { color: "bg-healthy", label: "active" },
-    [Division_Phase.PENDING]: { color: "bg-progressing", label: "pending" },
-    [Division_Phase.SUSPENDED]: { color: "bg-degraded", label: "suspended" },
-    [Division_Phase.TERMINATING]: { color: "bg-degraded", label: "terminating" },
-    [Division_Phase.UNSPECIFIED]: { color: "bg-muted", label: "unknown" },
+    [Division_Phase.ACTIVE]: { tone: "healthy" as Tone, label: "active" },
+    [Division_Phase.PENDING]: { tone: "progressing" as Tone, label: "pending" },
+    [Division_Phase.SUSPENDED]: { tone: "degraded" as Tone, label: "suspended" },
+    [Division_Phase.TERMINATING]: { tone: "degraded" as Tone, label: "terminating" },
+    [Division_Phase.UNSPECIFIED]: { tone: "neutral" as Tone, label: "unknown" },
   }[phase];
 
   return (
-    <span className="flex items-center gap-2 font-mono text-xs">
-      <span className={`inline-block h-2 w-2 rounded-full ${style.color}`} />
-      {style.label}
-    </span>
+    <span className={badge(style.tone)}>{style.label}</span>
   );
 }
 
 function Present({ present }: { present: boolean }) {
   return (
     <span
-      className={`font-mono text-xs ${present ? "text-healthy" : "text-degraded"}`}
+      className={badge(present ? "healthy" : "degraded")}
     >
       {present ? "present" : "missing"}
     </span>
@@ -703,7 +734,7 @@ function Saturation({ used, quota }: { used: number; quota: number }) {
 
   return (
     <span className="flex items-center gap-3">
-      <span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+      <span className="h-1.5 w-24 overflow-hidden rounded-full bg-primary-soft">
         <span
           className={`block h-full ${tone}`}
           style={{ width: `${Math.max(percent, 2)}%` }}
@@ -769,7 +800,7 @@ function DegradationBanner({ freshness }: { freshness?: Freshness }) {
 
 function EmptyPanel({ title, hint }: { title: string; hint: string }) {
   return (
-    <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+    <div className="card text-center">
       <p className="text-sm">{title}</p>
       <p className="mt-2 font-mono text-xs text-muted">{hint}</p>
     </div>
@@ -784,7 +815,7 @@ function ErrorPanel({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-degraded/40 bg-degraded/10 px-6 py-6">
+    <div className="rounded-lg border-l-4 border-degraded bg-degraded-soft px-6 py-6">
       <p className="font-mono text-xs text-degraded">{message}</p>
       <button
         type="button"

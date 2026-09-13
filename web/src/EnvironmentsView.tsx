@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ConnectError } from "@connectrpc/connect";
 
 import { environments } from "./client";
+import { badge, tableHead, tableRow, tableWrap } from "./ui";
 import { PreviewEnvironment_Phase } from "./gen/marstack/govern/v1/environments_pb";
 import type { PreviewEnvironment } from "./gen/marstack/govern/v1/environments_pb";
 import type { Session } from "./gen/marstack/govern/v1/identity_pb";
@@ -38,7 +39,7 @@ export function EnvironmentsView({ session }: { session?: Session }) {
 
   if (!division) {
     return (
-      <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+      <div className="card text-center">
         <p className="text-sm">Pick a division to see the previews it is holding open.</p>
       </div>
     );
@@ -46,7 +47,7 @@ export function EnvironmentsView({ session }: { session?: Session }) {
 
   if (previews.error) {
     return (
-      <div className="rounded-2xl border border-progressing/40 bg-progressing/10 px-6 py-6 font-mono text-xs text-progressing">
+      <div className="rounded-lg border-l-4 border-progressing bg-progressing-soft px-6 py-6 font-mono text-xs text-progressing">
         {ConnectError.from(previews.error).message}
       </div>
     );
@@ -65,7 +66,7 @@ export function EnvironmentsView({ session }: { session?: Session }) {
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+          <h2 className="card-title">
             Preview environments in {division}
           </h2>
           <label className="flex items-center gap-2 font-mono text-[11px] text-muted">
@@ -79,16 +80,16 @@ export function EnvironmentsView({ session }: { session?: Session }) {
         </div>
 
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+          <div className="card text-center">
             <p className="text-sm">No preview is holding a namespace right now.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-            <table className="w-full border-collapse text-sm">
+          <div className={tableWrap}>
+            <table className="ms-table">
               <thead>
-                <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+                <tr className={tableHead}>
                   {["Phase", "Change", "Namespace", "Lease", "Requester", ""].map((header, index) => (
-                    <th key={index} className="px-5 py-3 font-semibold">
+                    <th key={index} className="font-semibold">
                       {header}
                     </th>
                   ))}
@@ -98,14 +99,14 @@ export function EnvironmentsView({ session }: { session?: Session }) {
                 {rows.map((row) => (
                   <tr
                     key={row.name}
-                    className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                    className={tableRow}
                   >
-                    <td className="px-5 py-3">
-                      <span className={`font-mono text-xs ${phaseTone(row.phase)}`}>
+                    <td >
+                      <span className={phaseTone(row.phase)}>
                         {phaseLabel(row.phase)}
                       </span>
                     </td>
-                    <td className="px-5 py-3">
+                    <td >
                       <span className="font-medium">
                         {row.change?.repository}!{row.change?.number}
                       </span>
@@ -113,14 +114,14 @@ export function EnvironmentsView({ session }: { session?: Session }) {
                         {row.change?.branch}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-mono text-xs text-accent">
+                    <td className="font-mono text-xs text-accent">
                       {row.namespace || "—"}
                     </td>
-                    <td className="px-5 py-3">
+                    <td >
                       <Lease preview={row} />
                     </td>
-                    <td className="px-5 py-3 font-mono text-xs text-muted">{row.requestedBy}</td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="font-mono text-xs text-muted">{row.requestedBy}</td>
+                    <td className="text-right">
                       {row.phase !== PreviewEnvironment_Phase.READY ? null : renewing === row.name ? (
                         <div className="flex justify-end gap-2">
                           <input
@@ -128,7 +129,7 @@ export function EnvironmentsView({ session }: { session?: Session }) {
                             value={reason}
                             onChange={(event) => setReason(event.target.value)}
                             placeholder="why it needs another day"
-                            className="w-64 rounded-lg border border-edge bg-canvas px-3 py-1 font-mono text-[11px] text-ink"
+                            className="w-64 rounded-lg border border-edge bg-raised px-3 py-1 font-mono text-[11px] text-ink"
                           />
                           <button
                             type="button"
@@ -211,9 +212,12 @@ function Lease({ preview }: { preview: PreviewEnvironment }) {
 
 function Tile({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="flex min-w-[14rem] flex-1 flex-col gap-2 rounded-2xl border border-edge bg-surface px-5 py-4">
-      <span className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</span>
-      <span className={`font-mono text-2xl ${tone}`}>{value}</span>
+    <div className="flex min-w-0 sm:min-w-[13rem] flex-1 items-center gap-4 rounded-lg bg-surface px-5 py-4 shadow-[var(--shadow-card)]">
+      <span className={`h-10 w-1 shrink-0 rounded-full ${tone.replace("text-", "bg-")}`} />
+      <span className="flex flex-col gap-0.5">
+        <span className={`text-2xl leading-none font-medium ${tone}`}>{value}</span>
+        <span className="text-[11px] uppercase tracking-wider text-faint">{label}</span>
+      </span>
     </div>
   );
 }
@@ -247,12 +251,12 @@ function phaseLabel(phase: PreviewEnvironment_Phase) {
 function phaseTone(phase: PreviewEnvironment_Phase) {
   switch (phase) {
     case PreviewEnvironment_Phase.READY:
-      return "text-healthy";
+      return badge("healthy");
     case PreviewEnvironment_Phase.RECLAIMING:
-      return "text-progressing";
+      return badge("progressing");
     case PreviewEnvironment_Phase.ORPHANED:
-      return "text-degraded";
+      return badge("degraded");
     default:
-      return "text-muted";
+      return badge("neutral");
   }
 }

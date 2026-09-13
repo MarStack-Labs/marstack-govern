@@ -32,7 +32,7 @@ export function DeployView({ session }: { session?: Session }) {
 
   if (templates.error) {
     return (
-      <div className="rounded-2xl border border-progressing/40 bg-progressing/10 px-6 py-6 font-mono text-xs text-progressing">
+      <div className="rounded-lg border-l-4 border-progressing bg-progressing-soft px-6 py-6 font-mono text-xs text-progressing">
         {ConnectError.from(templates.error).message}
       </div>
     );
@@ -44,12 +44,12 @@ export function DeployView({ session }: { session?: Session }) {
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+        <h2 className="card-title">
           Curated templates, read from the registry
         </h2>
 
         {catalogue.length === 0 ? (
-          <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+          <div className="card text-center">
             <p className="text-sm">The registry holds no charts yet.</p>
           </div>
         ) : (
@@ -64,10 +64,10 @@ export function DeployView({ session }: { session?: Session }) {
                   preview.reset();
                   open.reset();
                 }}
-                className={`flex min-w-[16rem] flex-1 flex-col gap-1 rounded-2xl border px-5 py-4 text-left transition-colors ${
+                className={`flex min-w-0 sm:min-w-[16rem] flex-1 flex-col gap-1 rounded-lg border px-5 py-4 text-left transition-colors ${
                   candidate.name === selected
-                    ? "border-accent bg-white/[0.06]"
-                    : "border-edge bg-surface hover:bg-white/[0.03]"
+                    ? "border-accent bg-primary-soft"
+                    : "border-edge bg-surface hover:bg-primary-soft/60"
                 }`}
               >
                 <span className="font-medium">{candidate.name}</span>
@@ -80,8 +80,8 @@ export function DeployView({ session }: { session?: Session }) {
       </section>
 
       {template ? (
-        <section className="flex flex-col gap-4 rounded-2xl border border-edge bg-surface px-6 py-5">
-          <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+        <section className="flex flex-col gap-4 card px-6 py-5">
+          <h2 className="card-title">
             Add {template.name} to {division || "your division"}
           </h2>
 
@@ -91,14 +91,14 @@ export function DeployView({ session }: { session?: Session }) {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="ledger-db"
-                className="w-full rounded-lg border border-edge bg-canvas px-3 py-1.5 font-mono text-xs text-ink"
+                className="w-full rounded-lg border border-edge bg-raised px-3 py-1.5 font-mono text-xs text-ink"
               />
             </Field>
             <Field label="Environment">
               <input
                 value={environment}
                 onChange={(event) => setEnvironment(event.target.value)}
-                className="w-full rounded-lg border border-edge bg-canvas px-3 py-1.5 font-mono text-xs text-ink"
+                className="w-full rounded-lg border border-edge bg-raised px-3 py-1.5 font-mono text-xs text-ink"
               />
             </Field>
           </div>
@@ -112,7 +112,7 @@ export function DeployView({ session }: { session?: Session }) {
                     setValues((current) => ({ ...current, [field.name]: event.target.value }))
                   }
                   placeholder={field.defaultValue || field.kind}
-                  className="w-full rounded-lg border border-edge bg-canvas px-3 py-1.5 font-mono text-xs text-ink"
+                  className="w-full rounded-lg border border-edge bg-raised px-3 py-1.5 font-mono text-xs text-ink"
                 />
               </Field>
             ))}
@@ -124,7 +124,7 @@ export function DeployView({ session }: { session?: Session }) {
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 placeholder="recorded on the merge request"
-                className="w-full rounded-lg border border-edge bg-canvas px-3 py-1.5 font-mono text-xs text-ink"
+                className="w-full rounded-lg border border-edge bg-raised px-3 py-1.5 font-mono text-xs text-ink"
               />
             </Field>
 
@@ -140,7 +140,7 @@ export function DeployView({ session }: { session?: Session }) {
               type="button"
               disabled={!name || reason.trim().length < 10 || open.isPending}
               onClick={() => open.mutate()}
-              className="rounded-lg border border-accent px-4 py-1.5 font-mono text-[11px] text-accent hover:bg-white/[0.05] disabled:opacity-40"
+              className="rounded-lg border border-accent px-4 py-1.5 font-mono text-[11px] text-accent hover:bg-primary-soft disabled:opacity-40"
             >
               open merge request
             </button>
@@ -187,7 +187,7 @@ export function DeployView({ session }: { session?: Session }) {
               {preview.data.files.map((file) => (
                 <div key={file.path} className="flex flex-col gap-1">
                   <span className="font-mono text-[11px] text-accent">{file.path}</span>
-                  <pre className="overflow-x-auto rounded-lg border border-edge bg-canvas px-4 py-3 font-mono text-[11px] text-muted">
+                  <pre className="overflow-x-auto rounded-lg border border-edge bg-raised px-4 py-3 font-mono text-[11px] text-muted">
                     {file.content}
                   </pre>
                 </div>
@@ -202,8 +202,8 @@ export function DeployView({ session }: { session?: Session }) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex min-w-[14rem] flex-1 flex-col gap-1.5">
-      <span className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</span>
+    <label className="flex min-w-0 sm:min-w-[14rem] flex-1 flex-col gap-1.5">
+      <span className="card-title">{label}</span>
       {children}
     </label>
   );

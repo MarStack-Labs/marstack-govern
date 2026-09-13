@@ -5,6 +5,7 @@ import { finops } from "./client";
 import { CostComponent_Resource } from "./gen/marstack/govern/v1/finops_pb";
 import type { Money } from "./gen/marstack/govern/v1/common_pb";
 import type { Session } from "./gen/marstack/govern/v1/identity_pb";
+import { tableHead, tableRow, tableWrap } from "./ui";
 
 export function CostView({ session }: { session?: Session }) {
   const division = session?.activeDivision ?? "";
@@ -26,7 +27,7 @@ export function CostView({ session }: { session?: Session }) {
 
   if (query.error) {
     return (
-      <div className="rounded-2xl border border-degraded/40 bg-degraded/10 px-6 py-6 font-mono text-xs text-degraded">
+      <div className="rounded-lg border-l-4 border-degraded bg-degraded-soft px-6 py-6 font-mono text-xs text-degraded">
         {ConnectError.from(query.error).message}
       </div>
     );
@@ -52,13 +53,13 @@ export function CostView({ session }: { session?: Session }) {
       </p>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">Breakdown</h2>
-        <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-          <table className="w-full border-collapse text-sm">
+        <h2 className="card-title">Breakdown</h2>
+        <div className={tableWrap}>
+          <table className="ms-table">
             <thead>
-              <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+              <tr className={tableHead}>
                 {["Resource", "Quantity", "Rate", "Amount"].map((header) => (
-                  <th key={header} className="px-5 py-3 font-semibold">
+                  <th key={header} className="font-semibold">
                     {header}
                   </th>
                 ))}
@@ -67,16 +68,16 @@ export function CostView({ session }: { session?: Session }) {
             <tbody>
               {cost.components.map((component, index) => (
                 <tr key={index} className="border-b border-edge/60 last:border-0">
-                  <td className="px-5 py-3 font-mono text-xs text-accent">
+                  <td className="font-mono text-xs text-accent">
                     {resourceName(component.resource)}
                   </td>
-                  <td className="px-5 py-3 font-mono text-xs text-muted">
+                  <td className="font-mono text-xs text-muted">
                     {component.quantity} {component.unit}
                   </td>
-                  <td className="px-5 py-3 font-mono text-xs text-muted">
+                  <td className="font-mono text-xs text-muted">
                     {formatMoney(component.rate)} / hour
                   </td>
-                  <td className="px-5 py-3 font-mono text-xs">{formatMoney(component.amount)}</td>
+                  <td className="font-mono text-xs">{formatMoney(component.amount)}</td>
                 </tr>
               ))}
             </tbody>
@@ -86,15 +87,15 @@ export function CostView({ session }: { session?: Session }) {
 
       {cost.topConsumers.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+          <h2 className="card-title">
             Where it goes
           </h2>
-          <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-            <table className="w-full border-collapse text-sm">
+          <div className={tableWrap}>
+            <table className="ms-table">
               <thead>
-                <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+                <tr className={tableHead}>
                   {["Namespace", "Workload", "Run rate this month"].map((header) => (
-                    <th key={header} className="px-5 py-3 font-semibold">
+                    <th key={header} className="font-semibold">
                       {header}
                     </th>
                   ))}
@@ -104,11 +105,11 @@ export function CostView({ session }: { session?: Session }) {
                 {cost.topConsumers.map((workload) => (
                   <tr
                     key={workload.workloadUid}
-                    className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                    className={tableRow}
                   >
-                    <td className="px-5 py-3 font-mono text-xs text-muted">{workload.namespace}</td>
-                    <td className="px-5 py-3 font-medium">{workload.name}</td>
-                    <td className="px-5 py-3 font-mono text-xs">{formatMoney(workload.charged)}</td>
+                    <td className="font-mono text-xs text-muted">{workload.namespace}</td>
+                    <td className="font-medium">{workload.name}</td>
+                    <td className="font-mono text-xs">{formatMoney(workload.charged)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -130,9 +131,9 @@ function Tile({
   tone: string;
 }) {
   return (
-    <div className="flex min-w-[16rem] flex-1 flex-col gap-2 rounded-2xl border border-edge bg-surface px-5 py-4">
-      <span className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</span>
-      <span className={`font-mono text-2xl ${tone}`}>{formatMoney(amount)}</span>
+    <div className="flex min-w-0 sm:min-w-[16rem] flex-1 flex-col gap-2 card px-5 py-4">
+      <span className="card-title">{label}</span>
+      <span className={`text-2xl font-medium ${tone}`}>{formatMoney(amount)}</span>
     </div>
   );
 }

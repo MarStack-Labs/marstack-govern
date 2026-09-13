@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ConnectError } from "@connectrpc/connect";
 
 import { topology } from "./client";
+import { badge, tableHead, tableRow, tableWrap } from "./ui";
 import { NetworkPath_Verdict } from "./gen/marstack/govern/v1/topology_pb";
 import type { NetworkPath } from "./gen/marstack/govern/v1/topology_pb";
 import type { Session } from "./gen/marstack/govern/v1/identity_pb";
@@ -25,7 +26,7 @@ export function TopologyView({ session }: { session?: Session }) {
 
   if (!division) {
     return (
-      <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+      <div className="card text-center">
         <p className="text-sm">Pick a division to see how its services talk to each other.</p>
       </div>
     );
@@ -41,25 +42,25 @@ export function TopologyView({ session }: { session?: Session }) {
   return (
     <div className="flex flex-col gap-8">
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+        <h2 className="card-title">
           Who calls whom, from trace metrics
         </h2>
 
         {graph.error ? (
-          <div className="rounded-2xl border border-progressing/40 bg-progressing/10 px-6 py-6 font-mono text-xs text-progressing">
+          <div className="rounded-lg border-l-4 border-progressing bg-progressing-soft px-6 py-6 font-mono text-xs text-progressing">
             {ConnectError.from(graph.error).message}
           </div>
         ) : edges.length === 0 ? (
-          <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+          <div className="card text-center">
             <p className="text-sm">No calls were traced in this window.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-            <table className="w-full border-collapse text-sm">
+          <div className={tableWrap}>
+            <table className="ms-table">
               <thead>
-                <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+                <tr className={tableHead}>
                   {["Caller", "Callee", "Requests/s", "Errors"].map((header) => (
-                    <th key={header} className="px-5 py-3 font-semibold">
+                    <th key={header} className="font-semibold">
                       {header}
                     </th>
                   ))}
@@ -69,22 +70,22 @@ export function TopologyView({ session }: { session?: Session }) {
                 {edges.map((edge) => (
                   <tr
                     key={`${edge.client}->${edge.server}`}
-                    className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                    className={tableRow}
                   >
-                    <td className="px-5 py-3 font-medium">{edge.client}</td>
-                    <td className="px-5 py-3 font-medium">{edge.server}</td>
-                    <td className="px-5 py-3 font-mono text-xs text-muted">
+                    <td className="font-medium">{edge.client}</td>
+                    <td className="font-medium">{edge.server}</td>
+                    <td className="font-mono text-xs text-muted">
                       {edge.requestsPerSecond.toFixed(2)}
                     </td>
-                    <td className="px-5 py-3">
+                    <td >
                       <span
-                        className={`font-mono text-xs ${
+                        className={badge(
                           edge.errorRatio > 0.05
-                            ? "text-degraded"
+                            ? "degraded"
                             : edge.errorRatio > 0
-                              ? "text-progressing"
-                              : "text-healthy"
-                        }`}
+                              ? "progressing"
+                              : "healthy",
+                        )}
                       >
                         {(edge.errorRatio * 100).toFixed(1)}%
                       </span>
@@ -98,7 +99,7 @@ export function TopologyView({ session }: { session?: Session }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+        <h2 className="card-title">
           What the network policies actually permit
         </h2>
 
@@ -127,12 +128,12 @@ export function TopologyView({ session }: { session?: Session }) {
               />
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-              <table className="w-full border-collapse text-sm">
+            <div className={tableWrap}>
+              <table className="ms-table">
                 <thead>
-                  <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+                  <tr className={tableHead}>
                     {["From", "To", "Verdict", "Allowed by"].map((header) => (
-                      <th key={header} className="px-5 py-3 font-semibold">
+                      <th key={header} className="font-semibold">
                         {header}
                       </th>
                     ))}
@@ -142,16 +143,16 @@ export function TopologyView({ session }: { session?: Session }) {
                   {paths.map((path) => (
                     <tr
                       key={`${path.from}->${path.to}`}
-                      className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                      className={tableRow}
                     >
-                      <td className="px-5 py-3 font-mono text-xs text-muted">{path.from}</td>
-                      <td className="px-5 py-3 font-medium">{path.to}</td>
-                      <td className="px-5 py-3">
-                        <span className={`font-mono text-xs ${verdictTone(path)}`}>
+                      <td className="font-mono text-xs text-muted">{path.from}</td>
+                      <td className="font-medium">{path.to}</td>
+                      <td >
+                        <span className={verdictTone(path)}>
                           {verdictLabel(path)}
                         </span>
                       </td>
-                      <td className="px-5 py-3 font-mono text-xs text-accent">
+                      <td className="font-mono text-xs text-accent">
                         {path.allowedBy || "—"}
                       </td>
                     </tr>
@@ -168,9 +169,12 @@ export function TopologyView({ session }: { session?: Session }) {
 
 function Tile({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="flex min-w-[14rem] flex-1 flex-col gap-2 rounded-2xl border border-edge bg-surface px-5 py-4">
-      <span className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</span>
-      <span className={`font-mono text-2xl ${tone}`}>{value}</span>
+    <div className="flex min-w-0 sm:min-w-[13rem] flex-1 items-center gap-4 rounded-lg bg-surface px-5 py-4 shadow-[var(--shadow-card)]">
+      <span className={`h-10 w-1 shrink-0 rounded-full ${tone.replace("text-", "bg-")}`} />
+      <span className="flex flex-col gap-0.5">
+        <span className={`text-2xl leading-none font-medium ${tone}`}>{value}</span>
+        <span className="text-[11px] uppercase tracking-wider text-faint">{label}</span>
+      </span>
     </div>
   );
 }
@@ -191,12 +195,12 @@ function verdictLabel(path: NetworkPath) {
 function verdictTone(path: NetworkPath) {
   switch (path.verdict) {
     case NetworkPath_Verdict.ALLOWED_AND_USED:
-      return "text-healthy";
+      return badge("healthy");
     case NetworkPath_Verdict.ALLOWED_UNUSED:
-      return "text-progressing";
+      return badge("progressing");
     case NetworkPath_Verdict.OBSERVED_NOT_ALLOWED:
-      return "text-degraded";
+      return badge("degraded");
     default:
-      return "text-muted";
+      return badge("neutral");
   }
 }

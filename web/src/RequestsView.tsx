@@ -6,6 +6,7 @@ import { Decision_Outcome } from "./gen/marstack/govern/v1/decisions_pb";
 import type { ResourceRequest } from "./gen/marstack/govern/v1/requests_pb";
 import { ResourceRequest_Phase } from "./gen/marstack/govern/v1/requests_pb";
 import type { Session } from "./gen/marstack/govern/v1/identity_pb";
+import { tableHead, tableRow, tableWrap } from "./ui";
 
 const gibibyte = 1024n * 1024n * 1024n;
 
@@ -16,7 +17,7 @@ export function RequestsView({ session }: { session?: Session }) {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-degraded/40 bg-degraded/10 px-6 py-6 font-mono text-xs text-degraded">
+      <div className="rounded-lg border-l-4 border-degraded bg-degraded-soft px-6 py-6 font-mono text-xs text-degraded">
         {ConnectError.from(error).message}
       </div>
     );
@@ -90,7 +91,7 @@ function QuotaForm({
 
   if (!division) {
     return (
-      <section className="rounded-2xl border border-edge bg-surface px-6 py-6">
+      <section className="card px-6 py-6">
         <p className="font-mono text-xs text-muted">
           you are not a member of any division yet, so there is nothing to request for
         </p>
@@ -99,7 +100,7 @@ function QuotaForm({
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-edge bg-surface px-6 py-6">
+    <section className="flex flex-col gap-4 card px-6 py-6">
       <header className="flex flex-wrap items-baseline gap-3">
         <h2 className="text-base font-medium">Ask for more quota</h2>
         <p className="font-mono text-xs text-muted">
@@ -119,13 +120,13 @@ function QuotaForm({
       <div className="flex flex-wrap gap-4">
         <Field label="cpu (cores)" value={cpu} onChange={setCpu} />
         <Field label="memory (Gi)" value={memory} onChange={setMemory} />
-        <label className="flex min-w-[20rem] flex-1 flex-col gap-1 font-mono text-[11px] text-muted">
+        <label className="flex min-w-0 sm:min-w-[20rem] flex-1 flex-col gap-1 font-mono text-[11px] text-muted">
           reason
           <input
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             placeholder="onboarding two backends for the quarter"
-            className="rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-ink"
+            className="rounded-lg border border-edge bg-raised px-3 py-2 text-sm text-ink"
           />
         </label>
       </div>
@@ -171,7 +172,7 @@ function Field({
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-ink"
+        className="rounded-lg border border-edge bg-raised px-3 py-2 text-sm text-ink"
       />
     </label>
   );
@@ -192,7 +193,7 @@ function ApprovalQueue({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+      <h2 className="card-title">
         Waiting for a decision
       </h2>
 
@@ -204,7 +205,7 @@ function ApprovalQueue({
         {queue.map((request) => (
           <article
             key={request.uid}
-            className="flex flex-col gap-3 rounded-2xl border border-edge bg-surface px-5 py-4"
+            className="flex flex-col gap-3 card px-5 py-4"
           >
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <span className="font-mono text-xs text-accent">{request.division}</span>
@@ -227,7 +228,7 @@ function ApprovalQueue({
                   setReasons((current) => ({ ...current, [request.uid]: event.target.value }))
                 }
                 placeholder="the reason for your decision, recorded with it"
-                className="min-w-[22rem] flex-1 rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-ink"
+                className="min-w-0 sm:min-w-[22rem] flex-1 rounded-lg border border-edge bg-raised px-3 py-2 text-sm text-ink"
               />
               <button
                 type="button"
@@ -262,8 +263,8 @@ function Evidence({ request }: { request: ResourceRequest }) {
   const preflight = request.preflight;
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-edge/70 bg-canvas px-4 py-3">
-      <p className="font-mono text-[11px] uppercase tracking-wider text-muted">evidence</p>
+    <div className="flex flex-col gap-2 rounded-xl border border-edge/70 bg-raised px-4 py-3">
+      <p className="card-title">evidence</p>
 
       {recommendation ? (
         <p className="font-mono text-xs text-muted">
@@ -352,7 +353,7 @@ function RequestTable({
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+      <div className="card text-center">
         <p className="text-sm">No requests have been filed.</p>
       </div>
     );
@@ -360,13 +361,13 @@ function RequestTable({
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">All requests</h2>
-      <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-        <table className="w-full border-collapse text-sm">
+      <h2 className="card-title">All requests</h2>
+      <div className={tableWrap}>
+        <table className="ms-table">
           <thead>
-            <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+            <tr className={tableHead}>
               {["Phase", "Division", "Target", "Requester", "Reason", "Decision", ""].map((header) => (
-                <th key={header} className="px-5 py-3 font-semibold">
+                <th key={header} className="font-semibold">
                   {header}
                 </th>
               ))}
@@ -376,25 +377,25 @@ function RequestTable({
             {requests.map((request) => (
               <tr
                 key={request.uid}
-                className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                className={tableRow}
               >
-                <td className="px-5 py-3">
+                <td >
                   <PhaseLabel phase={request.phase} />
                 </td>
-                <td className="px-5 py-3 font-mono text-xs text-accent">{request.division}</td>
-                <td className="px-5 py-3 font-mono text-xs">
+                <td className="font-mono text-xs text-accent">{request.division}</td>
+                <td className="font-mono text-xs">
                   {formatCompute(request.quota?.target?.cpuMillicores, request.quota?.target?.memoryBytes)}
                 </td>
-                <td className="px-5 py-3 font-mono text-xs text-muted">
+                <td className="font-mono text-xs text-muted">
                   {request.requester?.subject}
                 </td>
                 <td className="max-w-[20rem] truncate px-5 py-3 text-muted">{request.reason}</td>
-                <td className="px-5 py-3 font-mono text-xs text-muted">
+                <td className="font-mono text-xs text-muted">
                   {request.decided
                     ? `${request.decided.outcome} by ${request.decided.decider}`
                     : "—"}
                 </td>
-                <td className="px-5 py-3">
+                <td >
                   {isOpen(request.phase) ? (
                     <button
                       type="button"

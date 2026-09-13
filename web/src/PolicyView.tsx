@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ConnectError } from "@connectrpc/connect";
 
 import { policies } from "./client";
+import { badge, tableHead, tableRow, tableWrap } from "./ui";
 import {
   GuardrailPolicy_Enforcement,
   Violation_Result,
@@ -34,7 +35,7 @@ export function PolicyView({ session }: { session?: Session }) {
 
   if (guardrails.error) {
     return (
-      <div className="rounded-2xl border border-progressing/40 bg-progressing/10 px-6 py-6 font-mono text-xs text-progressing">
+      <div className="rounded-lg border-l-4 border-progressing bg-progressing-soft px-6 py-6 font-mono text-xs text-progressing">
         {ConnectError.from(guardrails.error).message}
       </div>
     );
@@ -54,15 +55,15 @@ export function PolicyView({ session }: { session?: Session }) {
       ) : null}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+        <h2 className="card-title">
           Guardrails in the cluster
         </h2>
-        <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-          <table className="w-full border-collapse text-sm">
+        <div className={tableWrap}>
+          <table className="ms-table">
             <thead>
-              <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+              <tr className={tableHead}>
                 {["Mode", "Policy", "Scope", "Rules", "What it asks for"].map((header) => (
-                  <th key={header} className="px-5 py-3 font-semibold">
+                  <th key={header} className="font-semibold">
                     {header}
                   </th>
                 ))}
@@ -72,26 +73,26 @@ export function PolicyView({ session }: { session?: Session }) {
               {(guardrails.data?.policies ?? []).map((guardrail) => (
                 <tr
                   key={guardrail.name}
-                  className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                  className={tableRow}
                 >
-                  <td className="px-5 py-3">
+                  <td >
                     <span
-                      className={`font-mono text-xs ${
+                      className={badge(
                         guardrail.enforcement === GuardrailPolicy_Enforcement.ENFORCE
-                          ? "text-healthy"
-                          : "text-progressing"
-                      }`}
+                          ? "healthy"
+                          : "progressing",
+                      )}
                     >
                       {guardrail.enforcement === GuardrailPolicy_Enforcement.ENFORCE
                         ? "enforce"
                         : "audit"}
                     </span>
                   </td>
-                  <td className="px-5 py-3 font-medium">{guardrail.name}</td>
-                  <td className="px-5 py-3 font-mono text-xs text-muted">
+                  <td className="font-medium">{guardrail.name}</td>
+                  <td className="font-mono text-xs text-muted">
                     {guardrail.clusterScoped ? "cluster" : "namespace"}
                   </td>
-                  <td className="px-5 py-3 font-mono text-xs text-muted">
+                  <td className="font-mono text-xs text-muted">
                     {guardrail.rules.length}
                   </td>
                   <td className="max-w-[26rem] px-5 py-3 text-muted">
@@ -105,7 +106,7 @@ export function PolicyView({ session }: { session?: Session }) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-muted">
+        <h2 className="card-title">
           What is failing in {division || "your division"}
         </h2>
 
@@ -114,16 +115,16 @@ export function PolicyView({ session }: { session?: Session }) {
             {ConnectError.from(violations.error).message}
           </p>
         ) : (violations.data?.violations ?? []).length === 0 ? (
-          <div className="rounded-2xl border border-edge bg-surface px-6 py-10 text-center">
+          <div className="card text-center">
             <p className="text-sm">Nothing is failing a policy right now.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-edge bg-surface">
-            <table className="w-full border-collapse text-sm">
+          <div className={tableWrap}>
+            <table className="ms-table">
               <thead>
-                <tr className="border-b border-edge text-left font-mono text-[11px] uppercase tracking-wider text-muted">
+                <tr className={tableHead}>
                   {["Severity", "Policy", "Resource", "Namespace", "Message"].map((header) => (
-                    <th key={header} className="px-5 py-3 font-semibold">
+                    <th key={header} className="font-semibold">
                       {header}
                     </th>
                   ))}
@@ -133,19 +134,19 @@ export function PolicyView({ session }: { session?: Session }) {
                 {(violations.data?.violations ?? []).map((violation, index) => (
                   <tr
                     key={index}
-                    className="border-b border-edge/60 last:border-0 hover:bg-white/[0.03]"
+                    className={tableRow}
                   >
-                    <td className="px-5 py-3">
-                      <span className={`font-mono text-xs ${severityTone(violation.severity)}`}>
+                    <td >
+                      <span className={severityTone(violation.severity)}>
                         {severityName(violation.severity)}
                         {violation.result === Violation_Result.WARN ? " (warn)" : ""}
                       </span>
                     </td>
-                    <td className="px-5 py-3 font-mono text-xs text-accent">{violation.policy}</td>
-                    <td className="px-5 py-3 font-medium">
+                    <td className="font-mono text-xs text-accent">{violation.policy}</td>
+                    <td className="font-medium">
                       {violation.resourceKind}/{violation.resourceName}
                     </td>
-                    <td className="px-5 py-3 font-mono text-xs text-muted">{violation.namespace}</td>
+                    <td className="font-mono text-xs text-muted">{violation.namespace}</td>
                     <td className="max-w-[26rem] px-5 py-3 text-muted">{violation.message}</td>
                   </tr>
                 ))}
@@ -160,9 +161,12 @@ export function PolicyView({ session }: { session?: Session }) {
 
 function Tile({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="flex min-w-[14rem] flex-1 flex-col gap-2 rounded-2xl border border-edge bg-surface px-5 py-4">
-      <span className="font-mono text-[11px] uppercase tracking-wider text-muted">{label}</span>
-      <span className={`font-mono text-2xl ${tone}`}>{value}</span>
+    <div className="flex min-w-0 sm:min-w-[13rem] flex-1 items-center gap-4 rounded-lg bg-surface px-5 py-4 shadow-[var(--shadow-card)]">
+      <span className={`h-10 w-1 shrink-0 rounded-full ${tone.replace("text-", "bg-")}`} />
+      <span className="flex flex-col gap-0.5">
+        <span className={`text-2xl leading-none font-medium ${tone}`}>{value}</span>
+        <span className="text-[11px] uppercase tracking-wider text-faint">{label}</span>
+      </span>
     </div>
   );
 }
@@ -184,10 +188,10 @@ function severityTone(severity: Violation_Severity) {
   switch (severity) {
     case Violation_Severity.CRITICAL:
     case Violation_Severity.HIGH:
-      return "text-degraded";
+      return badge("degraded");
     case Violation_Severity.LOW:
-      return "text-muted";
+      return badge("neutral");
     default:
-      return "text-progressing";
+      return badge("progressing");
   }
 }

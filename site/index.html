@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en" data-surface="navy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>marstack-govern — every fact derived from the platform</title>
+<meta name="description" content="Multi-tenancy and governance for a shared Kubernetes cluster. Divisions ask, a platform team decides, and every operational fact on screen is read from the cluster rather than typed by a human.">
+<link rel="stylesheet" href="meridian.css">
+<link rel="stylesheet" href="site.css">
+</head>
+<body class="ms-root">
+
+<nav class="top">
+  <b class="ms-wordmark">marstack</b>
+  <span class="ms-eyebrow">govern</span>
+  <span class="grow"></span>
+  <a href="#rule">The rule</a>
+  <a href="#quickstart">Quickstart</a>
+  <a href="#decisions">Decisions</a>
+  <a href="#tenancy">Tenancy</a>
+  <a href="#audit">Audit</a>
+  <a href="https://github.com/MarStack-Labs/marstack-govern">GitHub</a>
+</nav>
+
+<header class="hero">
+  <span class="ms-pill ms-pill-pending"><i></i>pre-1.0</span>
+  <h1>Nobody types what is running.</h1>
+  <p class="lede">
+    One Kubernetes cluster, many divisions. They ask for quota, access and preview environments;
+    a platform team decides. Every operational fact on screen is read back from the cluster,
+    the audit log, the registry and the metrics store — never from a form.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <b>Humans supply intent and policy</b>
+      <span>Raise my quota, approve, reject. The rupiah rate per vCPU. Nothing else is typed.</span>
+    </div>
+    <div class="card">
+      <b>Requests arrive filled in</b>
+      <span>A quota request opens with a number proposed from thirty days of usage, and the date the current quota runs out.</span>
+    </div>
+    <div class="card">
+      <b>Approvals show their consequence</b>
+      <span>Bin packing against real nodes: which pods stop fitting, and how the bill moves.</span>
+    </div>
+    <div class="card">
+      <b>Attribution is enforced at admission</b>
+      <span>A <code>kubectl</code> write cannot claim to be someone else. The API server overwrites it.</span>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+  <aside class="toc">
+    <ol>
+      <li><a href="#rule">The one rule</a></li>
+      <li><a href="#what">What it is</a></li>
+      <li><a href="#quickstart">Quickstart</a></li>
+      <li><a href="#tenancy">Divisions and quota</a></li>
+      <li><a href="#decisions">Requests and decisions</a></li>
+      <li><a href="#finops">Chargeback</a></li>
+      <li><a href="#audit">Audit</a></li>
+      <li><a href="#environments">Preview environments</a></li>
+      <li><a href="#verification">How it is verified</a></li>
+      <li><a href="#excluded">What it will not do</a></li>
+    </ol>
+  </aside>
+
+  <main class="body">
+
+    <section id="rule">
+      <h2>The one rule</h2>
+
+      <p>
+        Humans supply two kinds of input. Everything else is derived.
+      </p>
+
+      <table class="ms-table">
+        <thead>
+          <tr><th>Input</th><th>Examples</th><th>Shape</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Intent</strong></td>
+            <td>raise my quota, grant me access, approve, reject</td>
+            <td>a custom resource carrying requester, reason and an expiry</td>
+          </tr>
+          <tr>
+            <td><strong>Policy</strong></td>
+            <td>the rupiah rate per vCPU, Kyverno rules, how idle cost is allocated</td>
+            <td>a versioned, approved object that later records cite</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Facts — what is running, who owns it, how much it uses, who changed what — are read from
+        the Kubernetes API, the Kubernetes audit log, the OCI registry, Mimir, Loki, Tempo,
+        Kyverno, Trivy, Argo CD and Hubble. <strong>If a fact cannot be derived, it is not
+        shown.</strong> There is no free-text field describing reality.
+      </p>
+
+      <div class="note" data-tone="info">
+        <p>
+          The rule is enforced mechanically, not by discipline. PostgreSQL holds only a projection,
+          and a test drops it, replays from the platform and compares. A column whose only source
+          is a form cannot survive that replay, so the violation fails CI rather than waiting to be
+          noticed.
+        </p>
+      </div>
+    </section>
+
+    <section id="what">
+      <h2>What it is</h2>
+
+      <p>
+        One Go binary, <code>margov</code>, with the web console embedded in it. It watches the
+        cluster through informers, projects what it sees into PostgreSQL, and serves that back over
+        ConnectRPC — gRPC, REST and the browser from one set of protobuf definitions.
+      </p>
+
+      <p>
+        It composes rather than reimplements. Capsule holds the cross-namespace quota, Kyverno is
+        the admission policy engine, Argo CD is the desired-versus-live authority, Trivy supplies
+        vulnerability reports, Prometheus or Mimir supplies usage. Where one of those is missing,
+        the affected feature says so by name instead of guessing.
+      </p>
+
+      <div class="note" data-tone="warn">
+        <p>
+          There is no mandatory gateway. The console and <code>kubectl</code> reach the same API
+          server, are stopped by the same RBAC, and land in the same audit log. The console can
+          never show more than the same person's <code>kubectl</code> would.
+        </p>
+      </div>
+    </section>
+
+    <section id="quickstart">
+      <h2>Quickstart</h2>
+
+      <p>
+        Build the binary, point it at a database and a cluster:
+      </p>
+
+      <pre><code>make build     # ./bin/margov, with the console embedded
+
+createdb govern
+
+./bin/margov serve \
+  --database-url postgres://localhost:5432/govern \
+  --kube-context kind-govern \
+  --secure-cookies=false \
+  --insecure-dev-identity "you@example.test:payments-admins"</code></pre>
+
+      <p>
+        <code>--insecure-dev-identity</code> signs every visitor in as that subject with those
+        group claims, and says so loudly in the log and across the top of the page. Against a real
+        cluster, use OIDC instead — group claims are matched against the <code>access</code> grants
+        on each <code>Division</code>, and what a signed-in person actually sees is confirmed with
+        Kubernetes through a <code>SelfSubjectAccessReview</code> under their own identity.
+      </p>
+    </section>
+
+    <section id="tenancy">
+      <h2>Divisions and quota</h2>
+
+      <p>
+        A <code>Division</code> is reconciled into namespaces, limit ranges, default-deny network
+        policies and role bindings from group claims. How the quota is enforced depends on what the
+        cluster actually has, decided by a <code>RESTMapper</code> lookup rather than by
+        configuration:
+      </p>
+
+      <table class="ms-table">
+        <thead>
+          <tr><th>Capsule</th><th>Enforcement</th><th><code>status.quotaBackend</code></th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>installed</td>
+            <td>one <code>GlobalResourceQuota</code> over every namespace labelled with the division</td>
+            <td><code>capsule</code></td>
+          </tr>
+          <tr>
+            <td>absent</td>
+            <td>a <code>ResourceQuota</code> in each namespace</td>
+            <td><code>resourcequota</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        The two are mutually exclusive. When Capsule appears the controller <strong>deletes</strong>
+        the per-namespace quotas it wrote earlier — leaving them would cap each namespace at the
+        whole division total on its own, which is the failure the global quota exists to prevent.
+      </p>
+
+      <p>
+        The condition quotes the shared ledger rather than claiming success:
+        <em>"Capsule enforces the division total across 4 namespaces; 26500m of 40 cpu is
+        committed."</em> A gap visible in <code>kubectl get division</code> is a gap; a gap hidden
+        behind a green checkmark is a lie.
+      </p>
+    </section>
+
+    <section id="decisions">
+      <h2>Requests and decisions</h2>
+
+      <p>
+        Every request is a custom resource in the requester's namespace, so its progress can be
+        watched with <code>kubectl</code>. Three things happen before a human sees it:
+      </p>
+
+      <table class="ms-table">
+        <thead>
+          <tr><th>Step</th><th>What it produces</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Recommendation</strong></td>
+            <td>p95 and p99 over thirty days, a proposed number, and when the current quota runs out</td>
+          </tr>
+          <tr>
+            <td><strong>Preflight</strong></td>
+            <td>server-side apply with <code>dryRun=All</code> through the real admission chain, including Kyverno</td>
+          </tr>
+          <tr>
+            <td><strong>Simulation</strong></td>
+            <td>bin packing against real node capacity: which pods stop fitting, and the commitment before and after</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        The decision records the evidence the approver saw at that moment, not merely that someone
+        clicked Approve. Deciding against stale evidence is refused: the approval carries a digest
+        of the recommendation, preflight and simulation, and a mismatch comes back as
+        <code>Aborted</code>.
+      </p>
+
+      <p>
+        Approvals are time-bound. Each carries an expiry and a reason, and a controller revokes it
+        when it lapses.
+      </p>
+    </section>
+
+    <section id="finops">
+      <h2>Chargeback</h2>
+
+      <p>
+        Cost is usage times a rate, and the rate is <strong>policy</strong>: a
+        <code>PricingPolicy</code> with an effective date, an approver, and a revision that every
+        invoice cites. Billing is on <strong>requests, not usage</strong> — requested capacity is
+        locked away from other divisions, so that is what a division actually consumes. Usage is
+        still shown, as the measure of idle.
+      </p>
+
+      <p>
+        An invoice is generated once the month has ended and never recalculated. A period still
+        running is refused as a forecast; a month with no policy in force is refused rather than
+        billed at zero. Each invoice carries a digest over its own inputs, so a nightly job can
+        tell "already correct" from "an input changed" instead of rewriting finished invoices
+        forever.
+      </p>
+
+      <p>
+        Money is <code>math/big.Rat</code> end to end. No float ever touches a rupiah.
+      </p>
+    </section>
+
+    <section id="audit">
+      <h2>Audit</h2>
+
+      <p>
+        The Kubernetes audit webhook is the single source. Because every platform mutation is a
+        custom resource applied under the caller's own identity through impersonation, "when did
+        this division change its quota" is already in the cluster audit log. There is no second
+        trail that could disagree with the first.
+      </p>
+
+      <p>
+        Each event is hashed onto the one before it and written to both PostgreSQL and an
+        append-only archive. Verification rehashes the exact bytes that were hashed — stored
+        alongside the row, because <code>jsonb</code> reorders keys and <code>timestamptz</code>
+        truncates to microseconds, and either would break a chain over untouched data.
+      </p>
+
+      <p>
+        Attribution is enforced at admission. A mutating webhook writes every
+        <code>requestedBy</code>, <code>decidedBy</code> and <code>grantedBy</code> from
+        <code>userInfo.username</code> on the admission request itself. A claimed value is
+        overwritten, an empty one filled in, and on update the field is immutable. Renewals are
+        append-only, so a lease extension cannot be disowned or erased.
+      </p>
+    </section>
+
+    <section id="environments">
+      <h2>Preview environments</h2>
+
+      <p>
+        An <code>EphemeralEnvironment</code> holds a real namespace with its own quota and the
+        division's default-deny, and a controller takes it back when the lease ends.
+      </p>
+
+      <p>
+        The expiry is <code>creationTimestamp</code> plus the granted duration, recomputed to the
+        same value on every pass. A controller that writes <code>now + ttl</code> each reconcile
+        gives a preview an unbounded life while still reporting 48 hours left. Extending is a
+        recorded act: a renewal carries the extension, a reason and who granted it.
+      </p>
+
+      <p>
+        Reclamation deletes by owner reference, never by name. The namespace name is derived from
+        the division and the change number, so a collision with something created by hand is
+        possible; such a namespace is reported as orphaned and left alone.
+      </p>
+    </section>
+
+    <section id="verification">
+      <h2>How it is verified</h2>
+
+      <p>
+        Unit tests check that code does what its author meant. They cannot check whether the author
+        understood what Kyverno, Capsule, Argo CD or Prometheus actually emit — and that is where
+        the expensive mistakes have been. Every module that reads a third-party API carries a
+        cluster test that runs the same code against the real component and skips when it is
+        absent:
+      </p>
+
+      <pre><code>GOVERN_TEST_KUBE_CONTEXT=kind-margov \
+GOVERN_TEST_METRICS_URL=http://127.0.0.1:9090 \
+  go test ./...</code></pre>
+
+      <p>
+        Two of them earned their place immediately. Against a live Kyverno the platform reported
+        zero violations while <code>kubectl</code> showed six — Kyverno names the offending
+        resource in the report's <code>scope</code>, and only aggregated reports use the per-result
+        array the code was reading. Against a live Prometheus, a window shorter than the subquery
+        resolution returned nothing at all rather than a small number.
+      </p>
+    </section>
+
+    <section id="excluded">
+      <h2>What it will not do</h2>
+
+      <ul>
+        <li>It is not an orchestrator. Crossplane, Kratix and KubeVela fulfil requests; this decides them.</li>
+        <li>It is not a replacement for Grafana. Free-form investigation stays there; deep links carry context.</li>
+        <li>It is not CI/CD. It reads pipeline results; it does not run pipelines.</li>
+        <li>It is not a hand-maintained catalog. A feature that needs a YAML file kept in sync by humans is designed wrong.</li>
+        <li>It is not a SIEM.</li>
+        <li>It is not the system of record for who belongs to which division. The identity provider is.</li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <span class="ms-eyebrow">marstack-govern</span>
+  <span>Apache-2.0 · <a href="https://github.com/MarStack-Labs/marstack-govern">MarStack-Labs/marstack-govern</a></span>
+</footer>
+
+</body>
+</html>
