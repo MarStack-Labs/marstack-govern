@@ -12,6 +12,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/audit"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
+	"github.com/marstack-labs/marstack-govern/internal/environments"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/policy"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
@@ -31,6 +32,7 @@ type Options struct {
 	RegisterAudit func(*http.ServeMux)
 	Policy        *policy.Service
 	Topology      *topology.Service
+	Environments  *environments.Service
 	Hub           *Hub
 	Web           fs.FS
 	Logger        *slog.Logger
@@ -103,6 +105,11 @@ func NewHandler(opts Options) http.Handler {
 
 	if opts.Topology != nil {
 		path, handler := governv1connect.NewTopologyServiceHandler(opts.Topology, options...)
+		mux.Handle(path, handler)
+	}
+
+	if opts.Environments != nil {
+		path, handler := governv1connect.NewEnvironmentServiceHandler(opts.Environments, options...)
 		mux.Handle(path, handler)
 	}
 

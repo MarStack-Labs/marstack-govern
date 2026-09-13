@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file marstack/govern/v1/common.proto.
  */
 export const file_marstack_govern_v1_common: GenFile = /*@__PURE__*/
-  fileDesc("Ch9tYXJzdGFjay9nb3Zlcm4vdjEvY29tbW9uLnByb3RvEhJtYXJzdGFjay5nb3Zlcm4udjEirAEKCUZyZXNobmVzcxIvCgtvYnNlcnZlZF9hdBgBIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGAoQcmVzb3VyY2VfdmVyc2lvbhgCIAEoCRIeChZwcm9qZWN0aW9uX2xhZ19zZWNvbmRzGAMgASgDEjQKCGRlZ3JhZGVkGAQgAygLMiIubWFyc3RhY2suZ292ZXJuLnYxLkRlZ3JhZGVkU291cmNlImUKDkRlZ3JhZGVkU291cmNlEg4KBnNvdXJjZRgBIAEoCRIOCgZyZWFzb24YAiABKAkSMwoPbGFzdF9oZWFsdGh5X2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIjCgRQYWdlEgwKBHNpemUYASABKAUSDQoFdG9rZW4YAiABKAkiLQoIUGFnZUluZm8SEgoKbmV4dF90b2tlbhgBIAEoCRINCgV0b3RhbBgCIAEoBSIpCgVNb25leRIQCghjdXJyZW5jeRgBIAEoCRIOCgZhbW91bnQYAiABKAkiXAoHQ29tcHV0ZRIWCg5jcHVfbWlsbGljb3JlcxgBIAEoAxIUCgxtZW1vcnlfYnl0ZXMYAiABKAMSFQoNc3RvcmFnZV9ieXRlcxgDIAEoAxIMCgRwb2RzGAQgASgFIkEKBUFjdG9yEg8KB3N1YmplY3QYASABKAkSDgoGZ3JvdXBzGAIgAygJEhcKD2FjdGluZ19kaXZpc2lvbhgDIAEoCSKgAwoLRXJyb3JEZXRhaWwSNgoGcmVhc29uGAEgASgOMiYubWFyc3RhY2suZ292ZXJuLnYxLkVycm9yRGV0YWlsLlJlYXNvbhIPCgdtZXNzYWdlGAIgASgJEg4KBmZpZWxkcxgDIAMoCRIOCgZwb2xpY3kYBCABKAkSEwoLcmVtZWRpYXRpb24YBSABKAkikgIKBlJlYXNvbhIWChJSRUFTT05fVU5TUEVDSUZJRUQQABIYChRSRUFTT05fTk9UX1BFUk1JVFRFRBABEhoKFlJFQVNPTl9QT0xJQ1lfUkVKRUNURUQQAhIZChVSRUFTT05fUVVPVEFfRVhDRUVERUQQAxIbChdSRUFTT05fUFJFRkxJR0hUX0ZBSUxFRBAEEhsKF1JFQVNPTl9TVEFMRV9QUk9KRUNUSU9OEAUSHQoZUkVBU09OX1NPVVJDRV9VTkFWQUlMQUJMRRAGEhsKF1JFQVNPTl9ERUNJU0lPTl9FWFBJUkVEEAcSEwoPUkVBU09OX0NPTkZMSUNUEAgSFAoQUkVBU09OX05PVF9GT1VORBAJQtkBChZjb20ubWFyc3RhY2suZ292ZXJuLnYxQgtDb21tb25Qcm90b1ABWkhnaXRodWIuY29tL21hcnN0YWNrLWxhYnMvbWFyc3RhY2stZ292ZXJuL2dlbi9tYXJzdGFjay9nb3Zlcm4vdjE7Z292ZXJudjGiAgNNR1iqAhJNYXJzdGFjay5Hb3Zlcm4uVjHKAhJNYXJzdGFja1xHb3Zlcm5cVjHiAh5NYXJzdGFja1xHb3Zlcm5cVjFcR1BCTWV0YWRhdGHqAhRNYXJzdGFjazo6R292ZXJuOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("Ch9tYXJzdGFjay9nb3Zlcm4vdjEvY29tbW9uLnByb3RvEhJtYXJzdGFjay5nb3Zlcm4udjEirAEKCUZyZXNobmVzcxIvCgtvYnNlcnZlZF9hdBgBIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASGAoQcmVzb3VyY2VfdmVyc2lvbhgCIAEoCRIeChZwcm9qZWN0aW9uX2xhZ19zZWNvbmRzGAMgASgDEjQKCGRlZ3JhZGVkGAQgAygLMiIubWFyc3RhY2suZ292ZXJuLnYxLkRlZ3JhZGVkU291cmNlImUKDkRlZ3JhZGVkU291cmNlEg4KBnNvdXJjZRgBIAEoCRIOCgZyZWFzb24YAiABKAkSMwoPbGFzdF9oZWFsdGh5X2F0GAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIjCgRQYWdlEgwKBHNpemUYASABKAUSDQoFdG9rZW4YAiABKAkiLQoIUGFnZUluZm8SEgoKbmV4dF90b2tlbhgBIAEoCRINCgV0b3RhbBgCIAEoBSIpCgVNb25leRIQCghjdXJyZW5jeRgBIAEoCRIOCgZhbW91bnQYAiABKAkifgoJQ29uZGl0aW9uEgwKBHR5cGUYASABKAkSCgoCb2sYAiABKAgSDgoGcmVhc29uGAMgASgJEg8KB21lc3NhZ2UYBCABKAkSNgoSbGFzdF90cmFuc2l0aW9uX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJcCgdDb21wdXRlEhYKDmNwdV9taWxsaWNvcmVzGAEgASgDEhQKDG1lbW9yeV9ieXRlcxgCIAEoAxIVCg1zdG9yYWdlX2J5dGVzGAMgASgDEgwKBHBvZHMYBCABKAUiQQoFQWN0b3ISDwoHc3ViamVjdBgBIAEoCRIOCgZncm91cHMYAiADKAkSFwoPYWN0aW5nX2RpdmlzaW9uGAMgASgJIqADCgtFcnJvckRldGFpbBI2CgZyZWFzb24YASABKA4yJi5tYXJzdGFjay5nb3Zlcm4udjEuRXJyb3JEZXRhaWwuUmVhc29uEg8KB21lc3NhZ2UYAiABKAkSDgoGZmllbGRzGAMgAygJEg4KBnBvbGljeRgEIAEoCRITCgtyZW1lZGlhdGlvbhgFIAEoCSKSAgoGUmVhc29uEhYKElJFQVNPTl9VTlNQRUNJRklFRBAAEhgKFFJFQVNPTl9OT1RfUEVSTUlUVEVEEAESGgoWUkVBU09OX1BPTElDWV9SRUpFQ1RFRBACEhkKFVJFQVNPTl9RVU9UQV9FWENFRURFRBADEhsKF1JFQVNPTl9QUkVGTElHSFRfRkFJTEVEEAQSGwoXUkVBU09OX1NUQUxFX1BST0pFQ1RJT04QBRIdChlSRUFTT05fU09VUkNFX1VOQVZBSUxBQkxFEAYSGwoXUkVBU09OX0RFQ0lTSU9OX0VYUElSRUQQBxITCg9SRUFTT05fQ09ORkxJQ1QQCBIUChBSRUFTT05fTk9UX0ZPVU5EEAlC2QEKFmNvbS5tYXJzdGFjay5nb3Zlcm4udjFCC0NvbW1vblByb3RvUAFaSGdpdGh1Yi5jb20vbWFyc3RhY2stbGFicy9tYXJzdGFjay1nb3Zlcm4vZ2VuL21hcnN0YWNrL2dvdmVybi92MTtnb3Zlcm52MaICA01HWKoCEk1hcnN0YWNrLkdvdmVybi5WMcoCEk1hcnN0YWNrXEdvdmVyblxWMeICHk1hcnN0YWNrXEdvdmVyblxWMVxHUEJNZXRhZGF0YeoCFE1hcnN0YWNrOjpHb3Zlcm46OlYxYgZwcm90bzM", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message marstack.govern.v1.Freshness
@@ -140,6 +140,43 @@ export const MoneySchema: GenMessage<Money> = /*@__PURE__*/
   messageDesc(file_marstack_govern_v1_common, 4);
 
 /**
+ * @generated from message marstack.govern.v1.Condition
+ */
+export type Condition = Message<"marstack.govern.v1.Condition"> & {
+  /**
+   * @generated from field: string type = 1;
+   */
+  type: string;
+
+  /**
+   * @generated from field: bool ok = 2;
+   */
+  ok: boolean;
+
+  /**
+   * @generated from field: string reason = 3;
+   */
+  reason: string;
+
+  /**
+   * @generated from field: string message = 4;
+   */
+  message: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp last_transition_at = 5;
+   */
+  lastTransitionAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message marstack.govern.v1.Condition.
+ * Use `create(ConditionSchema)` to create a new message.
+ */
+export const ConditionSchema: GenMessage<Condition> = /*@__PURE__*/
+  messageDesc(file_marstack_govern_v1_common, 5);
+
+/**
  * @generated from message marstack.govern.v1.Compute
  */
 export type Compute = Message<"marstack.govern.v1.Compute"> & {
@@ -169,7 +206,7 @@ export type Compute = Message<"marstack.govern.v1.Compute"> & {
  * Use `create(ComputeSchema)` to create a new message.
  */
 export const ComputeSchema: GenMessage<Compute> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_common, 5);
+  messageDesc(file_marstack_govern_v1_common, 6);
 
 /**
  * @generated from message marstack.govern.v1.Actor
@@ -196,7 +233,7 @@ export type Actor = Message<"marstack.govern.v1.Actor"> & {
  * Use `create(ActorSchema)` to create a new message.
  */
 export const ActorSchema: GenMessage<Actor> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_common, 6);
+  messageDesc(file_marstack_govern_v1_common, 7);
 
 /**
  * @generated from message marstack.govern.v1.ErrorDetail
@@ -233,7 +270,7 @@ export type ErrorDetail = Message<"marstack.govern.v1.ErrorDetail"> & {
  * Use `create(ErrorDetailSchema)` to create a new message.
  */
 export const ErrorDetailSchema: GenMessage<ErrorDetail> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_common, 7);
+  messageDesc(file_marstack_govern_v1_common, 8);
 
 /**
  * @generated from enum marstack.govern.v1.ErrorDetail.Reason
@@ -294,5 +331,5 @@ export enum ErrorDetail_Reason {
  * Describes the enum marstack.govern.v1.ErrorDetail.Reason.
  */
 export const ErrorDetail_ReasonSchema: GenEnum<ErrorDetail_Reason> = /*@__PURE__*/
-  enumDesc(file_marstack_govern_v1_common, 7, 0);
+  enumDesc(file_marstack_govern_v1_common, 8, 0);
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/marstack-labs/marstack-govern/internal/api"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
+	"github.com/marstack-labs/marstack-govern/internal/environments"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/simulate"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
@@ -66,6 +67,7 @@ func buildControllers(
 		{"decision controller", (&requests.DecisionReconciler{Client: client}).SetupWithManager},
 		{"request projector", (&requests.Projector{Client: client, Store: requested, Publisher: hub}).SetupWithManager},
 		{"pricing policy projector", (&cost.Projector{Client: client, Store: pricing}).SetupWithManager},
+		{"ephemeral environment controller", (&environments.Reconciler{Client: client, Scheme: scheme}).SetupWithManager},
 	}
 
 	for _, registration := range registrations {

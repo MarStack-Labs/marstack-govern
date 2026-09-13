@@ -20,6 +20,7 @@ Protos carry no comments; the reasoning lives here.
 | `AuditService` | `audit.proto` | audit stream, chain verification |
 | `PolicyService` | `policy.proto` | guardrail catalog, violations, compliance |
 | `TopologyService` | `topology.proto` | traced service graph, network reachability |
+| `EnvironmentService` | `environments.proto` | preview environments, leases, renewals |
 
 `common.proto` holds shared types; `events.proto` defines the live stream payloads.
 

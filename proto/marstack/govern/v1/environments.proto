@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service EnvironmentService {
+  rpc ListEnvironments(ListEnvironmentsRequest) returns (ListEnvironmentsResponse);
+  rpc RequestEnvironment(RequestEnvironmentRequest) returns (RequestEnvironmentResponse);
+  rpc RenewEnvironment(RenewEnvironmentRequest) returns (RenewEnvironmentResponse);
+  rpc ReleaseEnvironment(ReleaseEnvironmentRequest) returns (ReleaseEnvironmentResponse);
+}
+
+message Change {
+  string repository = 1;
+  int32 number = 2;
+  string branch = 3;
+  string revision = 4;
+}
+
+message PreviewEnvironment {
+  string uid = 1;
+  string name = 2;
+  string division = 3;
+  Change change = 4;
+  Phase phase = 5;
+  string namespace = 6;
+  Compute quota = 7;
+  string requested_by = 8;
+  google.protobuf.Timestamp lease_started_at = 9;
+  google.protobuf.Timestamp expires_at = 10;
+  string granted_ttl = 11;
+  int64 remaining_seconds = 12;
+  repeated Renewal renewals = 13;
+  repeated Condition conditions = 14;
+
+  enum Phase {
+    PHASE_UNSPECIFIED = 0;
+    PHASE_PENDING = 1;
+    PHASE_READY = 2;
+    PHASE_EXPIRED = 3;
+    PHASE_RECLAIMING = 4;
+    PHASE_ORPHANED = 5;
+  }
+}
+
+message Renewal {
+  string extend = 1;
+  string reason = 2;
+  string granted_by = 3;
+  google.protobuf.Timestamp granted_at = 4;
+}
+
+message ListEnvironmentsRequest {
+  string division = 1;
+  bool include_reclaimed = 2;
+}
+
+message ListEnvironmentsResponse {
+  repeated PreviewEnvironment environments = 1;
+  Freshness freshness = 2;
+}
+
+message RequestEnvironmentRequest {
+  string division = 1;
+  Change change = 2;
+  Compute quota = 3;
+  string ttl = 4;
+}
+
+message RequestEnvironmentResponse {
+  PreviewEnvironment environment = 1;
+}
+
+message RenewEnvironmentRequest {
+  string name = 1;
+  string extend = 2;
+  string reason = 3;
+}
+
+message RenewEnvironmentResponse {
+  PreviewEnvironment environment = 1;
+}
+
+message ReleaseEnvironmentRequest {
+  string name = 1;
+}
+
+message ReleaseEnvironmentResponse {
+  PreviewEnvironment environment = 1;
+}

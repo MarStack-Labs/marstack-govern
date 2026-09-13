@@ -10,6 +10,7 @@ import { FinOpsService } from "./gen/marstack/govern/v1/finops_pb";
 import { PolicyService } from "./gen/marstack/govern/v1/policy_pb";
 import { TenancyService } from "./gen/marstack/govern/v1/tenancy_pb";
 import { TopologyService } from "./gen/marstack/govern/v1/topology_pb";
+import { EnvironmentService } from "./gen/marstack/govern/v1/environments_pb";
 
 const transport = createConnectTransport({
   baseUrl: window.location.origin,
@@ -24,3 +25,4 @@ export const finops = createClient(FinOpsService, transport);
 export const auditTrail = createClient(AuditService, transport);
 export const policies = createClient(PolicyService, transport);
 export const topology = createClient(TopologyService, transport);
+export const environments = createClient(EnvironmentService, transport);

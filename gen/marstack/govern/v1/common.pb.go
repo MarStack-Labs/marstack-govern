@@ -89,7 +89,7 @@ func (x ErrorDetail_Reason) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ErrorDetail_Reason.Descriptor instead.
 func (ErrorDetail_Reason) EnumDescriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{7, 0}
+	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{8, 0}
 }
 
 type Freshness struct {
@@ -376,6 +376,82 @@ func (x *Money) GetAmount() string {
 	return ""
 }
 
+type Condition struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Type             string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Ok               bool                   `protobuf:"varint,2,opt,name=ok,proto3" json:"ok,omitempty"`
+	Reason           string                 `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	Message          string                 `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
+	LastTransitionAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_transition_at,json=lastTransitionAt,proto3" json:"last_transition_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *Condition) Reset() {
+	*x = Condition{}
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Condition) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Condition) ProtoMessage() {}
+
+func (x *Condition) ProtoReflect() protoreflect.Message {
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Condition.ProtoReflect.Descriptor instead.
+func (*Condition) Descriptor() ([]byte, []int) {
+	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Condition) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *Condition) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
+func (x *Condition) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *Condition) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *Condition) GetLastTransitionAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastTransitionAt
+	}
+	return nil
+}
+
 type Compute struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CpuMillicores int64                  `protobuf:"varint,1,opt,name=cpu_millicores,json=cpuMillicores,proto3" json:"cpu_millicores,omitempty"`
@@ -388,7 +464,7 @@ type Compute struct {
 
 func (x *Compute) Reset() {
 	*x = Compute{}
-	mi := &file_marstack_govern_v1_common_proto_msgTypes[5]
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -400,7 +476,7 @@ func (x *Compute) String() string {
 func (*Compute) ProtoMessage() {}
 
 func (x *Compute) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_common_proto_msgTypes[5]
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -413,7 +489,7 @@ func (x *Compute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Compute.ProtoReflect.Descriptor instead.
 func (*Compute) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{5}
+	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Compute) GetCpuMillicores() int64 {
@@ -455,7 +531,7 @@ type Actor struct {
 
 func (x *Actor) Reset() {
 	*x = Actor{}
-	mi := &file_marstack_govern_v1_common_proto_msgTypes[6]
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -467,7 +543,7 @@ func (x *Actor) String() string {
 func (*Actor) ProtoMessage() {}
 
 func (x *Actor) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_common_proto_msgTypes[6]
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -480,7 +556,7 @@ func (x *Actor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Actor.ProtoReflect.Descriptor instead.
 func (*Actor) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{6}
+	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Actor) GetSubject() string {
@@ -517,7 +593,7 @@ type ErrorDetail struct {
 
 func (x *ErrorDetail) Reset() {
 	*x = ErrorDetail{}
-	mi := &file_marstack_govern_v1_common_proto_msgTypes[7]
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -529,7 +605,7 @@ func (x *ErrorDetail) String() string {
 func (*ErrorDetail) ProtoMessage() {}
 
 func (x *ErrorDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_common_proto_msgTypes[7]
+	mi := &file_marstack_govern_v1_common_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -542,7 +618,7 @@ func (x *ErrorDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ErrorDetail.ProtoReflect.Descriptor instead.
 func (*ErrorDetail) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{7}
+	return file_marstack_govern_v1_common_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ErrorDetail) GetReason() ErrorDetail_Reason {
@@ -604,7 +680,13 @@ const file_marstack_govern_v1_common_proto_rawDesc = "" +
 	"\x05total\x18\x02 \x01(\x05R\x05total\";\n" +
 	"\x05Money\x12\x1a\n" +
 	"\bcurrency\x18\x01 \x01(\tR\bcurrency\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\tR\x06amount\"\x8c\x01\n" +
+	"\x06amount\x18\x02 \x01(\tR\x06amount\"\xab\x01\n" +
+	"\tCondition\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x0e\n" +
+	"\x02ok\x18\x02 \x01(\bR\x02ok\x12\x16\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason\x12\x18\n" +
+	"\amessage\x18\x04 \x01(\tR\amessage\x12H\n" +
+	"\x12last_transition_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x10lastTransitionAt\"\x8c\x01\n" +
 	"\aCompute\x12%\n" +
 	"\x0ecpu_millicores\x18\x01 \x01(\x03R\rcpuMillicores\x12!\n" +
 	"\fmemory_bytes\x18\x02 \x01(\x03R\vmemoryBytes\x12#\n" +
@@ -646,7 +728,7 @@ func file_marstack_govern_v1_common_proto_rawDescGZIP() []byte {
 }
 
 var file_marstack_govern_v1_common_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_marstack_govern_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_marstack_govern_v1_common_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_marstack_govern_v1_common_proto_goTypes = []any{
 	(ErrorDetail_Reason)(0),       // 0: marstack.govern.v1.ErrorDetail.Reason
 	(*Freshness)(nil),             // 1: marstack.govern.v1.Freshness
@@ -654,21 +736,23 @@ var file_marstack_govern_v1_common_proto_goTypes = []any{
 	(*Page)(nil),                  // 3: marstack.govern.v1.Page
 	(*PageInfo)(nil),              // 4: marstack.govern.v1.PageInfo
 	(*Money)(nil),                 // 5: marstack.govern.v1.Money
-	(*Compute)(nil),               // 6: marstack.govern.v1.Compute
-	(*Actor)(nil),                 // 7: marstack.govern.v1.Actor
-	(*ErrorDetail)(nil),           // 8: marstack.govern.v1.ErrorDetail
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*Condition)(nil),             // 6: marstack.govern.v1.Condition
+	(*Compute)(nil),               // 7: marstack.govern.v1.Compute
+	(*Actor)(nil),                 // 8: marstack.govern.v1.Actor
+	(*ErrorDetail)(nil),           // 9: marstack.govern.v1.ErrorDetail
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_marstack_govern_v1_common_proto_depIdxs = []int32{
-	9, // 0: marstack.govern.v1.Freshness.observed_at:type_name -> google.protobuf.Timestamp
-	2, // 1: marstack.govern.v1.Freshness.degraded:type_name -> marstack.govern.v1.DegradedSource
-	9, // 2: marstack.govern.v1.DegradedSource.last_healthy_at:type_name -> google.protobuf.Timestamp
-	0, // 3: marstack.govern.v1.ErrorDetail.reason:type_name -> marstack.govern.v1.ErrorDetail.Reason
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	10, // 0: marstack.govern.v1.Freshness.observed_at:type_name -> google.protobuf.Timestamp
+	2,  // 1: marstack.govern.v1.Freshness.degraded:type_name -> marstack.govern.v1.DegradedSource
+	10, // 2: marstack.govern.v1.DegradedSource.last_healthy_at:type_name -> google.protobuf.Timestamp
+	10, // 3: marstack.govern.v1.Condition.last_transition_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: marstack.govern.v1.ErrorDetail.reason:type_name -> marstack.govern.v1.ErrorDetail.Reason
+	5,  // [5:5] is the sub-list for method output_type
+	5,  // [5:5] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_marstack_govern_v1_common_proto_init() }
@@ -682,7 +766,7 @@ func file_marstack_govern_v1_common_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_marstack_govern_v1_common_proto_rawDesc), len(file_marstack_govern_v1_common_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

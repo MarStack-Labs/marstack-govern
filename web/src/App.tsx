@@ -16,13 +16,14 @@ import { CostView } from "./CostView";
 import { AuditView } from "./AuditView";
 import { PolicyView } from "./PolicyView";
 import { TopologyView } from "./TopologyView";
+import { EnvironmentsView } from "./EnvironmentsView";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import { Workload_Health } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
 import type { Division, Namespace } from "./gen/marstack/govern/v1/tenancy_pb";
 import { Division_Phase } from "./gen/marstack/govern/v1/tenancy_pb";
 
-type View = "services" | "divisions" | "requests" | "cost" | "policies" | "topology" | "audit";
+type View = "services" | "divisions" | "requests" | "cost" | "policies" | "topology" | "environments" | "audit";
 
 const views: { id: View; label: string; subtitle: string }[] = [
   {
@@ -54,6 +55,11 @@ const views: { id: View; label: string; subtitle: string }[] = [
     id: "topology",
     label: "Topology",
     subtitle: "traced calls beside what the network policies actually permit",
+  },
+  {
+    id: "environments",
+    label: "Environments",
+    subtitle: "previews that hold a namespace only as long as their lease",
   },
   {
     id: "audit",
@@ -119,6 +125,8 @@ export function App() {
           <PolicyView session={session} />
         ) : view === "topology" ? (
           <TopologyView session={session} />
+        ) : view === "environments" ? (
+          <EnvironmentsView session={session} />
         ) : (
           <AuditView />
         )}

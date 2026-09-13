@@ -391,6 +391,35 @@ exist, the graph is not drawn at all: `Edges` returns `ErrNoTraces` and the serv
 that may never happen, which is worse than no diagram. Reachability still answers in that case, with
 `traffic_observed` false so the page can say the verdicts come from policy alone.
 
+### A lease is measured from creation, never from the last reconcile
+
+A preview environment holds a real namespace with a real quota, so what makes it ephemeral is the
+one thing that must not drift: when it ends. The expiry is `creationTimestamp + granted`, and the
+reconciler recomputes that same value every time rather than adding the remaining time to *now*.
+
+The trap this avoids is quiet and common. A controller that writes `expiresAt = now + ttl` on each
+pass gives a preview an unbounded life: every restart, every resync, every no-op edit to the spec
+renews it. Nobody notices, because the object still says it expires in 48 hours — it has just said
+that for three weeks. `TestTheLeaseRunsFromCreationNotFromThisReconcile` reconciles twice with the
+clock moved forward between them and asserts the expiry did not move.
+
+Extending a lease is therefore not a clock operation but a recorded one. A renewal is an entry in
+`spec.renewals` carrying the extension, a reason, and who granted it; the lease is creation plus the
+sum of the grants, capped at a seven-day ceiling. The renewal history survives in the object, so
+"why is this preview still alive after five days" has an answer instead of a shrug.
+
+Two more rules keep reclamation honest:
+
+```
+namespace missing        → the environment settles as Expired, and stays there
+namespace we do not own  → Orphaned: reported, never deleted
+```
+
+The second matters more than it looks. The controller derives the namespace name from the division
+and the change number, so a name collision with something a human created by hand is possible. Owner
+reference, not name, decides whether the controller may delete — a TTL sweeper that deletes by naming
+convention is one collision away from removing production.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The

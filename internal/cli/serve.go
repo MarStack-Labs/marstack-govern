@@ -21,6 +21,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/db"
 	"github.com/marstack-labs/marstack-govern/internal/delivery"
 	"github.com/marstack-labs/marstack-govern/internal/diagnostics"
+	"github.com/marstack-labs/marstack-govern/internal/environments"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
 	"github.com/marstack-labs/marstack-govern/internal/metrics"
@@ -250,11 +251,15 @@ func runServe(ctx context.Context, opts serveOptions) error {
 			RegisterAudit: registerAudit,
 			Policy:        policy.NewService(manager.GetClient()),
 			Topology:      topology.NewService(manager.GetClient(), topology.NewGraph(metricsClient, time.Hour)),
-			Hub:           hub,
-			Web:           assets,
-			Logger:        logger,
-			Sealer:        sealer,
-			RegisterAuth:  registerAuth,
+			Environments: environments.NewService(
+				manager.GetClient(),
+				environments.ClientFactory(impersonatingRuntimeClients(restConfig, scheme)),
+			),
+			Hub:          hub,
+			Web:          assets,
+			Logger:       logger,
+			Sealer:       sealer,
+			RegisterAuth: registerAuth,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,

@@ -30,6 +30,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&QuotaRequest{}, &QuotaRequestList{},
 		&Decision{}, &DecisionList{},
 		&PricingPolicy{}, &PricingPolicyList{},
+		&EphemeralEnvironment{}, &EphemeralEnvironmentList{},
 	)
 	metav1.AddToGroupVersion(scheme, GroupVersion)
 

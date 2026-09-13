@@ -34,6 +34,14 @@ message Money {
   string amount = 2;
 }
 
+message Condition {
+  string type = 1;
+  bool ok = 2;
+  string reason = 3;
+  string message = 4;
+  google.protobuf.Timestamp last_transition_at = 5;
+}
+
 message Compute {
   int64 cpu_millicores = 1;
   int64 memory_bytes = 2;
