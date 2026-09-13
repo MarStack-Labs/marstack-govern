@@ -575,6 +575,22 @@ is scaled by the resolution in hours rather than assuming each sample is an hour
 same four cores over the same wall-clock produce the same core-hours at every sampling rate — which
 is the property that makes an invoice independent of how the query was written.
 
+### A projection keys on the object's name, not its UID
+
+Kubernetes gives a recreated object a new UID and the same name. The projectors upserted on `uid`
+while the tables also carried a unique constraint on the Kubernetes identity — `divisions.name`,
+`requests (namespace, kind, name)` — so a delete-and-recreate produced a conflict on `uid` that
+matched nothing, an insert, and a unique violation on the name. The controller then retried that row
+forever and the read model never caught up with the cluster.
+
+The conflict target is now the identity Kubernetes uses, and the `uid` column follows the live object
+rather than pinning the dead one. Foreign keys onto `divisions(uid)` gained `ON UPDATE CASCADE` so a
+division can be recreated without losing the requests and invoices attached to it. The catalog
+already handled this by evicting the replaced row before inserting; the other two did not.
+
+Both paths now have a test that recreates an object under the same name with a new UID and asserts
+one row survives, carrying the UID that actually exists.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The

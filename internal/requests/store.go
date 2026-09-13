@@ -65,7 +65,8 @@ func (s *Store) UpsertRequest(ctx context.Context, request Request) error {
 		    $1, $2, $3, $4, (SELECT uid FROM divisions WHERE name = $5), $6, $5,
 		    $7, $8, $9, $10, $11, nullif($12, ''), $13, $14, now()
 		)
-		ON CONFLICT (uid) DO UPDATE SET
+		ON CONFLICT (namespace, kind, name) DO UPDATE SET
+		    uid            = excluded.uid,
 		    division_uid   = excluded.division_uid,
 		    requester      = excluded.requester,
 		    reason         = excluded.reason,

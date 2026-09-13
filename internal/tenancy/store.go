@@ -80,8 +80,8 @@ func (s *Store) UpsertDivision(ctx context.Context, division Division, namespace
 		    used_cpu_millicores, used_memory_bytes, used_storage_bytes, used_pods,
 		    created_at, resource_version, observed_at
 		) VALUES ($1, $2, $3, NULL, $4, nullif($5, ''), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
-		ON CONFLICT (uid) DO UPDATE SET
-		    name                 = excluded.name,
+		ON CONFLICT (name) DO UPDATE SET
+		    uid                  = excluded.uid,
 		    display_name         = excluded.display_name,
 		    phase                = excluded.phase,
 		    quota_backend        = excluded.quota_backend,

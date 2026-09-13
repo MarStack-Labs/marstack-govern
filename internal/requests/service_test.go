@@ -278,3 +278,52 @@ func storedUID(t *testing.T, store *requests.Store) string {
 
 	return found[0].UID
 }
+
+func TestARequestRecreatedWithTheSameNameReplacesTheOldRow(t *testing.T) {
+	pool := dbtest.Migrated(t)
+	store := requests.NewStore(pool)
+	ctx := t.Context()
+
+	filed := requests.Request{
+		UID:       "11111111-1111-1111-1111-111111111111",
+		Kind:      "QuotaRequest",
+		Name:      "quota-1",
+		Namespace: "payments-dev",
+		Division:  "payments",
+		Requester: "dev@example.test",
+		Reason:    "the p95 has been above the ceiling for a fortnight",
+		Phase:     "awaiting_decision",
+		Spec:      []byte(`{"target":{"cpu":"16"}}`),
+		CreatedAt: time.Now(),
+	}
+
+	if err := store.UpsertRequest(ctx, filed); err != nil {
+		t.Fatalf("first upsert: %v", err)
+	}
+
+	again := filed
+	again.UID = "22222222-2222-2222-2222-222222222222"
+
+	if err := store.UpsertRequest(ctx, again); err != nil {
+		t.Fatalf("a request recreated under the same name wedged the projector: %v", err)
+	}
+
+	var (
+		rows int
+		uid  string
+	)
+
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*), max(uid::text) FROM requests WHERE namespace = $1 AND name = $2`,
+		filed.Namespace, filed.Name,
+	).Scan(&rows, &uid); err != nil {
+		t.Fatalf("read requests: %v", err)
+	}
+
+	if rows != 1 {
+		t.Fatalf("got %d rows for one request, want the old one replaced", rows)
+	}
+	if uid != again.UID {
+		t.Fatalf("uid: got %s, want the request that actually exists now", uid)
+	}
+}

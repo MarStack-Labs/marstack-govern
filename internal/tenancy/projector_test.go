@@ -203,3 +203,41 @@ type recordingPublisher struct {
 func (p *recordingPublisher) Publish(event *governv1.StreamEvent) {
 	p.events = append(p.events, event)
 }
+
+func TestADivisionRecreatedWithTheSameNameReplacesTheOldRow(t *testing.T) {
+	pool := dbtest.Migrated(t)
+	store := tenancy.NewStore(pool)
+	ctx := t.Context()
+
+	first := newDivision()
+	first.UID = "11111111-1111-1111-1111-111111111111"
+
+	reconciler, c := newReconciler(t, first)
+	reconcile(t, ctx, reconciler, first.Name)
+	project(t, ctx, c, store, &recordingPublisher{}, first.Name)
+
+	second := newDivision()
+	second.UID = "22222222-2222-2222-2222-222222222222"
+
+	reconciler, c = newReconciler(t, second)
+	reconcile(t, ctx, reconciler, second.Name)
+	project(t, ctx, c, store, &recordingPublisher{}, second.Name)
+
+	var (
+		rows int
+		uid  string
+	)
+
+	if err := pool.QueryRow(ctx,
+		`SELECT count(*), max(uid::text) FROM divisions WHERE name = $1`, first.Name,
+	).Scan(&rows, &uid); err != nil {
+		t.Fatalf("read divisions: %v", err)
+	}
+
+	if rows != 1 {
+		t.Fatalf("got %d rows for one division, want the old one replaced", rows)
+	}
+	if uid != string(second.UID) {
+		t.Fatalf("uid: got %s, want the division that actually exists now", uid)
+	}
+}
