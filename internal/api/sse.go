@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,18 +11,34 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	governv1 "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 )
 
 type eventStream struct {
 	hub       *Hub
 	logger    *slog.Logger
 	heartbeat time.Duration
+	sessions  *identity.Service
+	guarded   bool
 }
 
 func (s *eventStream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "streaming is not supported by this connection", http.StatusInternalServerError)
+		return
+	}
+
+	actor, signedIn := identity.FromContext(r.Context())
+	if s.guarded && !signedIn {
+		http.Error(w, "sign in at /auth/login", http.StatusUnauthorized)
+		return
+	}
+
+	allow, err := s.filterFor(r.Context(), actor, signedIn)
+	if err != nil {
+		s.logger.Error("scope the event stream", "error", err)
+		http.Error(w, "cannot decide what you may see", http.StatusServiceUnavailable)
 		return
 	}
 
@@ -35,7 +52,7 @@ func (s *eventStream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		from = r.URL.Query().Get("cursor")
 	}
 
-	stream, complete := s.hub.Subscribe(r.Context(), from)
+	stream, complete := s.hub.Subscribe(r.Context(), from, allow)
 
 	if !complete {
 		if err := writeEvent(w, "resync", "", `{"reason":"the requested cursor is older than the replay buffer"}`); err != nil {
@@ -90,6 +107,37 @@ func (s *eventStream) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			flusher.Flush()
 		}
 	}
+}
+
+func (s *eventStream) filterFor(ctx context.Context, actor identity.Actor, signedIn bool) (Filter, error) {
+	if s.sessions == nil || !signedIn {
+		return nil, nil
+	}
+
+	scope, err := s.sessions.Scope(ctx, actor)
+	if err != nil {
+		return nil, err
+	}
+
+	if scope.AllowAll {
+		return nil, nil
+	}
+
+	return func(event *governv1.StreamEvent) bool {
+		switch body := event.GetBody().(type) {
+		case *governv1.StreamEvent_WorkloadChanged:
+			return scope.Allows(body.WorkloadChanged.GetWorkload().GetNamespace())
+		case *governv1.StreamEvent_DivisionChanged:
+			for _, namespace := range body.DivisionChanged.GetDivision().GetNamespaces() {
+				if scope.Allows(namespace) {
+					return true
+				}
+			}
+			return false
+		default:
+			return true
+		}
+	}, nil
 }
 
 func writeEvent(w http.ResponseWriter, name, id, data string) error {

@@ -44,12 +44,13 @@ type Workload struct {
 }
 
 type Filter struct {
-	Division  string
-	Namespace string
-	Health    string
-	Search    string
-	Limit     int32
-	Cursor    string
+	Division   string
+	Namespace  string
+	Namespaces []string
+	Health     string
+	Search     string
+	Limit      int32
+	Cursor     string
 }
 
 type Freshness struct {
@@ -168,6 +169,9 @@ func (s *Store) ListWorkloads(ctx context.Context, filter Filter) ([]Workload, s
 	}
 	if filter.Namespace != "" {
 		add("w.namespace = $%d", filter.Namespace)
+	}
+	if filter.Namespaces != nil {
+		add("w.namespace = ANY($%d)", filter.Namespaces)
 	}
 	if filter.Health != "" {
 		add("w.health = $%d", filter.Health)

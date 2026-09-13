@@ -1,6 +1,9 @@
 import { useState } from "react";
 
 import { useStreamState, type StreamState } from "./events";
+import { useSession } from "./useSession";
+import type { Session } from "./gen/marstack/govern/v1/identity_pb";
+import { Session_AuthMode } from "./gen/marstack/govern/v1/identity_pb";
 import { useLiveWorkloads } from "./useLiveWorkloads";
 import { useLiveDivisions } from "./useLiveDivisions";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
@@ -27,7 +30,16 @@ const views: { id: View; label: string; subtitle: string }[] = [
 export function App() {
   const [view, setView] = useState<View>("services");
   const streamState = useStreamState();
+  const { session, isLoading, switchDivision, signOut } = useSession();
   const active = views.find((candidate) => candidate.id === view) ?? views[0];
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-full items-center justify-center bg-canvas">
+        <p className="font-mono text-xs text-muted">checking who you are…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-canvas text-ink">
@@ -50,15 +62,92 @@ export function App() {
             ))}
           </nav>
           <p className="font-mono text-xs text-muted">{active.subtitle}</p>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-5">
             <StreamBadge state={streamState} />
+            <DivisionPicker session={session} onSwitch={switchDivision} />
+            <Identity session={session} onSignOut={signOut} />
           </div>
         </div>
+        <DevAuthBanner session={session} />
       </header>
 
       <main className="px-8 py-6">
         {view === "services" ? <ServicesView /> : <DivisionsView />}
       </main>
+    </div>
+  );
+}
+
+function DivisionPicker({
+  session,
+  onSwitch,
+}: {
+  session?: Session;
+  onSwitch: (division: string) => void;
+}) {
+  const memberships = session?.memberships ?? [];
+
+  if (memberships.length === 0) {
+    return <span className="font-mono text-[11px] text-muted">no divisions</span>;
+  }
+
+  return (
+    <label className="flex items-center gap-2 font-mono text-[11px] text-muted">
+      division
+      <select
+        value={session?.activeDivision ?? memberships[0].division}
+        onChange={(event) => onSwitch(event.target.value)}
+        className="rounded-lg border border-edge bg-surface px-2 py-1 text-ink"
+      >
+        {memberships.map((membership) => (
+          <option key={membership.division} value={membership.division}>
+            {membership.displayName || membership.division}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function Identity({
+  session,
+  onSignOut,
+}: {
+  session?: Session;
+  onSignOut: () => void;
+}) {
+  if (!session?.actor) {
+    return null;
+  }
+
+  return (
+    <span className="flex items-center gap-3 font-mono text-[11px] text-muted">
+      {session.actor.subject}
+      {session.platformApprover ? (
+        <span className="rounded-md border border-accent/50 px-1.5 py-0.5 text-accent">
+          approver
+        </span>
+      ) : null}
+      <button
+        type="button"
+        onClick={onSignOut}
+        className="rounded-lg border border-edge px-2 py-1 text-ink hover:border-primary"
+      >
+        sign out
+      </button>
+    </span>
+  );
+}
+
+function DevAuthBanner({ session }: { session?: Session }) {
+  if (session?.authMode !== Session_AuthMode.DEV) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border border-progressing/40 bg-progressing/10 px-4 py-2 font-mono text-xs text-progressing">
+      authentication is disabled: everyone reaching this page is signed in as{" "}
+      {session.actor?.subject}
     </div>
   );
 }

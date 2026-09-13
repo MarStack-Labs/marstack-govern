@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -41,6 +42,18 @@ type Division struct {
 	ObservedAt      time.Time
 }
 
+type Grant struct {
+	Role  string
+	Group string
+}
+
+type Access struct {
+	Division    string
+	DisplayName string
+	Grants      []Grant
+	Namespaces  []string
+}
+
 type Namespace struct {
 	Name               string
 	Division           string
@@ -53,7 +66,7 @@ type Namespace struct {
 	ObservedAt         time.Time
 }
 
-func (s *Store) UpsertDivision(ctx context.Context, division Division, namespaces []Namespace) error {
+func (s *Store) UpsertDivision(ctx context.Context, division Division, namespaces []Namespace, grants []Grant) error {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("begin division upsert: %w", err)
@@ -121,6 +134,20 @@ func (s *Store) UpsertDivision(ctx context.Context, division Division, namespace
 		division.UID, names,
 	); err != nil {
 		return fmt.Errorf("prune namespaces of %s: %w", division.Name, err)
+	}
+
+	if _, err := tx.Exec(ctx, `DELETE FROM division_grants WHERE division_uid = $1`, division.UID); err != nil {
+		return fmt.Errorf("clear grants of %s: %w", division.Name, err)
+	}
+
+	for _, grant := range grants {
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO division_grants (division_uid, role, group_claim) VALUES ($1, $2, $3)
+			 ON CONFLICT DO NOTHING`,
+			division.UID, grant.Role, grant.Group,
+		); err != nil {
+			return fmt.Errorf("record grant %s/%s of %s: %w", grant.Role, grant.Group, division.Name, err)
+		}
 	}
 
 	return tx.Commit(ctx)
@@ -237,4 +264,43 @@ func scanDivisions(rows pgx.Rows) ([]Division, error) {
 	}
 
 	return divisions, rows.Err()
+}
+
+func (s *Store) ListAccess(ctx context.Context) ([]Access, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT d.name, d.display_name,
+		       coalesce(array_agg(DISTINCT g.role || ':' || g.group_claim)
+		                FILTER (WHERE g.role IS NOT NULL), '{}'),
+		       coalesce(array_agg(DISTINCT n.name) FILTER (WHERE n.name IS NOT NULL), '{}')
+		FROM divisions d
+		LEFT JOIN division_grants g ON g.division_uid = d.uid
+		LEFT JOIN namespaces n ON n.division_uid = d.uid
+		GROUP BY d.uid
+		ORDER BY d.name`)
+	if err != nil {
+		return nil, fmt.Errorf("list division access: %w", err)
+	}
+	defer rows.Close()
+
+	access := []Access{}
+	for rows.Next() {
+		var entry Access
+		var pairs []string
+
+		if err := rows.Scan(&entry.Division, &entry.DisplayName, &pairs, &entry.Namespaces); err != nil {
+			return nil, fmt.Errorf("scan division access: %w", err)
+		}
+
+		for _, pair := range pairs {
+			role, group, found := strings.Cut(pair, ":")
+			if !found {
+				continue
+			}
+			entry.Grants = append(entry.Grants, Grant{Role: role, Group: group})
+		}
+
+		access = append(access, entry)
+	}
+
+	return access, rows.Err()
 }

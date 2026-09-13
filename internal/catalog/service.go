@@ -10,14 +10,44 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	governv1 "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 )
 
+type Scoper interface {
+	Scope(ctx context.Context, actor identity.Actor) (identity.Scope, error)
+}
+
 type Service struct {
-	store *Store
+	store  *Store
+	scoper Scoper
 }
 
 func NewService(store *Store) *Service {
 	return &Service{store: store}
+}
+
+func (s *Service) WithScope(scoper Scoper) *Service {
+	s.scoper = scoper
+
+	return s
+}
+
+func (s *Service) scopeOf(ctx context.Context) (identity.Scope, bool, error) {
+	if s.scoper == nil {
+		return identity.Scope{AllowAll: true}, false, nil
+	}
+
+	actor, ok := identity.FromContext(ctx)
+	if !ok {
+		return identity.Scope{}, true, connect.NewError(connect.CodeUnauthenticated, errors.New("sign in at /auth/login"))
+	}
+
+	scope, err := s.scoper.Scope(ctx, actor)
+	if err != nil {
+		return identity.Scope{}, true, connect.NewError(connect.CodeUnavailable, err)
+	}
+
+	return scope, true, nil
 }
 
 func (s *Service) ListWorkloads(
@@ -37,9 +67,26 @@ func (s *Service) ListWorkloads(
 		filter.Cursor = page.GetToken()
 	}
 
-	workloads, next, err := s.store.ListWorkloads(ctx, filter)
+	scope, scoped, err := s.scopeOf(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		return nil, err
+	}
+
+	workloads := []Workload{}
+	next := ""
+
+	if !scoped || scope.AllowAll {
+		workloads, next, err = s.store.ListWorkloads(ctx, filter)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+	} else if len(scope.Namespaces) > 0 {
+		filter.Namespaces = scope.Namespaces
+
+		workloads, next, err = s.store.ListWorkloads(ctx, filter)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
 	}
 
 	freshness, err := s.freshness(ctx)
@@ -69,6 +116,15 @@ func (s *Service) GetWorkload(
 	req *connect.Request[governv1.GetWorkloadRequest],
 ) (*connect.Response[governv1.GetWorkloadResponse], error) {
 	workload, err := s.store.GetWorkload(ctx, req.Msg.GetUid())
+	if err == nil {
+		scope, scoped, scopeErr := s.scopeOf(ctx)
+		if scopeErr != nil {
+			return nil, scopeErr
+		}
+		if scoped && !scope.Allows(workload.Namespace) {
+			err = ErrNotFound
+		}
+	}
 	if errors.Is(err, ErrNotFound) {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("workload %s not found", req.Msg.GetUid()))
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/api"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/db/dbtest"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
 )
 
@@ -40,7 +41,7 @@ func TestClusterReachesTheApiWithoutAnyoneTypingAnything(t *testing.T) {
 	go func() { _ = watcher.Run(ctx) }()
 	go func() { _ = projector.Run(ctx) }()
 
-	stream, _ := hub.Subscribe(ctx, "")
+	stream, _ := hub.Subscribe(ctx, "", nil)
 
 	workloads := waitForWorkloads(t, ctx, service, 1)
 
@@ -276,5 +277,71 @@ func deployment(name, namespace, division string, desired, ready int32) *appsv1.
 			ReadyReplicas:      ready,
 			ObservedGeneration: 1,
 		},
+	}
+}
+
+type fixedScope struct {
+	scope identity.Scope
+}
+
+func (f fixedScope) Scope(context.Context, identity.Actor) (identity.Scope, error) {
+	return f.scope, nil
+}
+
+func TestReadsAreLimitedToWhatKubernetesAllows(t *testing.T) {
+	pool := dbtest.Migrated(t)
+	store := catalog.NewStore(pool)
+	ctx := t.Context()
+
+	for _, spec := range []struct{ name, namespace, division string }{
+		{"api", "payments-dev", "payments"},
+		{"ledger", "payments-prod", "payments"},
+		{"reporting", "erp-dev", "erp"},
+	} {
+		workload := kube.WorkloadFromDeployment(deployment(spec.name, spec.namespace, spec.division, 1, 1))
+		workload.UID = uidFor(spec.name)
+		if err := store.UpsertWorkload(ctx, workload); err != nil {
+			t.Fatalf("upsert %s: %v", spec.name, err)
+		}
+	}
+
+	service := catalog.NewService(store).WithScope(fixedScope{
+		scope: identity.Scope{Namespaces: []string{"payments-dev"}},
+	})
+
+	scoped := identity.NewContext(ctx, identity.Actor{Subject: "dev@example.test"})
+
+	response, err := service.ListWorkloads(scoped, connect.NewRequest(&governv1.ListWorkloadsRequest{}))
+	if err != nil {
+		t.Fatalf("list: %v", err)
+	}
+
+	if len(response.Msg.GetWorkloads()) != 1 {
+		t.Fatalf("got %d workloads, want 1", len(response.Msg.GetWorkloads()))
+	}
+	if got := response.Msg.GetWorkloads()[0].GetNamespace(); got != "payments-dev" {
+		t.Errorf("namespace: got %q", got)
+	}
+
+	hidden, err := store.GetWorkload(ctx, uidFor("reporting"))
+	if err != nil {
+		t.Fatalf("get hidden workload: %v", err)
+	}
+
+	_, err = service.GetWorkload(scoped, connect.NewRequest(&governv1.GetWorkloadRequest{Uid: hidden.UID}))
+	if connect.CodeOf(err) != connect.CodeNotFound {
+		t.Fatalf("a workload outside the scope was readable: %v", err)
+	}
+}
+
+func TestScopedReadsRefuseAnonymousCallers(t *testing.T) {
+	pool := dbtest.Migrated(t)
+	service := catalog.NewService(catalog.NewStore(pool)).WithScope(fixedScope{
+		scope: identity.Scope{AllowAll: true},
+	})
+
+	_, err := service.ListWorkloads(t.Context(), connect.NewRequest(&governv1.ListWorkloadsRequest{}))
+	if connect.CodeOf(err) != connect.CodeUnauthenticated {
+		t.Fatalf("got %v, want unauthenticated", err)
 	}
 }

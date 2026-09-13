@@ -17,6 +17,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/api"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/db"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/web"
@@ -121,6 +122,8 @@ func runServe(ctx context.Context, opts serveOptions) error {
 
 	store := catalog.NewStore(pool)
 	divisions := tenancy.NewStore(pool)
+	authorizer := identity.NewAuthorizer(impersonatingClients(restConfig), time.Minute)
+	sessions := identity.NewService(sealer, divisionAccess{store: divisions}, authorizer)
 	hub := api.NewHub(0)
 
 	manager, err := tenancy.NewManager(restConfig, divisions, hub, logger)
@@ -139,8 +142,9 @@ func runServe(ctx context.Context, opts serveOptions) error {
 	server := &http.Server{
 		Addr: opts.addr,
 		Handler: api.NewHandler(api.Options{
-			Catalog:      catalog.NewService(store),
-			Tenancy:      tenancy.NewService(divisions),
+			Catalog:      catalog.NewService(store).WithScope(sessions),
+			Tenancy:      tenancy.NewService(divisions).WithScope(sessions),
+			Session:      sessions,
 			Hub:          hub,
 			Web:          assets,
 			Logger:       logger,

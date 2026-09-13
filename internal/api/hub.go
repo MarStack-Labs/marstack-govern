@@ -15,8 +15,13 @@ type Hub struct {
 	next        uint64
 	ring        []*governv1.StreamEvent
 	ringSize    int
-	subscribers map[int]chan *governv1.StreamEvent
+	subscribers map[int]subscriber
 	nextSubID   int
+}
+
+type subscriber struct {
+	stream chan *governv1.StreamEvent
+	allow  Filter
 }
 
 func NewHub(replayBuffer int) *Hub {
@@ -26,7 +31,7 @@ func NewHub(replayBuffer int) *Hub {
 
 	return &Hub{
 		ringSize:    replayBuffer,
-		subscribers: map[int]chan *governv1.StreamEvent{},
+		subscribers: map[int]subscriber{},
 	}
 }
 
@@ -41,33 +46,45 @@ func (h *Hub) Publish(event *governv1.StreamEvent) {
 		h.ring = h.ring[len(h.ring)-h.ringSize:]
 	}
 
-	targets := make([]chan *governv1.StreamEvent, 0, len(h.subscribers))
-	for _, subscriber := range h.subscribers {
-		targets = append(targets, subscriber)
+	targets := make([]subscriber, 0, len(h.subscribers))
+	for _, target := range h.subscribers {
+		targets = append(targets, target)
 	}
 
 	h.mu.Unlock()
 
 	for _, target := range targets {
+		if !target.allow(event) {
+			continue
+		}
+
 		select {
-		case target <- event:
+		case target.stream <- event:
 		default:
 		}
 	}
 }
 
-func (h *Hub) Subscribe(ctx context.Context, from string) (<-chan *governv1.StreamEvent, bool) {
+type Filter func(event *governv1.StreamEvent) bool
+
+func (h *Hub) Subscribe(ctx context.Context, from string, allow Filter) (<-chan *governv1.StreamEvent, bool) {
+	if allow == nil {
+		allow = func(*governv1.StreamEvent) bool { return true }
+	}
+
 	backlog, complete := h.replay(from)
 
 	stream := make(chan *governv1.StreamEvent, len(backlog)+64)
 	for _, event := range backlog {
-		stream <- event
+		if allow(event) {
+			stream <- event
+		}
 	}
 
 	h.mu.Lock()
 	id := h.nextSubID
 	h.nextSubID++
-	h.subscribers[id] = stream
+	h.subscribers[id] = subscriber{stream: stream, allow: allow}
 	h.mu.Unlock()
 
 	go func() {

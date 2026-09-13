@@ -72,7 +72,12 @@ func (p *Projector) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		ResourceVersion: division.ResourceVersion,
 	}
 
-	if err := p.Store.UpsertDivision(ctx, projected, namespaces); err != nil {
+	grants := make([]Grant, 0, len(division.Spec.Access))
+	for _, grant := range division.Spec.Access {
+		grants = append(grants, Grant{Role: string(grant.Role), Group: grant.Group})
+	}
+
+	if err := p.Store.UpsertDivision(ctx, projected, namespaces, grants); err != nil {
 		return ctrl.Result{}, err
 	}
 

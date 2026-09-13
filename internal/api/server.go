@@ -18,6 +18,7 @@ import (
 type Options struct {
 	Catalog      *catalog.Service
 	Tenancy      *tenancy.Service
+	Session      *identity.Service
 	Hub          *Hub
 	Web          fs.FS
 	Logger       *slog.Logger
@@ -58,8 +59,19 @@ func NewHandler(opts Options) http.Handler {
 		mux.Handle(path, handler)
 	}
 
+	if opts.Session != nil {
+		path, handler := governv1connect.NewSessionServiceHandler(opts.Session, options...)
+		mux.Handle(path, handler)
+	}
+
 	if opts.Hub != nil {
-		mux.Handle("GET /v1/events", &eventStream{hub: opts.Hub, logger: logger, heartbeat: heartbeat})
+		mux.Handle("GET /v1/events", &eventStream{
+			hub:       opts.Hub,
+			logger:    logger,
+			heartbeat: heartbeat,
+			sessions:  opts.Session,
+			guarded:   opts.Sealer != nil,
+		})
 	}
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {

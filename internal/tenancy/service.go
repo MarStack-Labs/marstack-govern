@@ -9,14 +9,54 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	governv1 "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1"
+	"github.com/marstack-labs/marstack-govern/internal/identity"
 )
 
+type Scoper interface {
+	Scope(ctx context.Context, actor identity.Actor) (identity.Scope, error)
+}
+
 type Service struct {
-	store *Store
+	store  *Store
+	scoper Scoper
 }
 
 func NewService(store *Store) *Service {
 	return &Service{store: store}
+}
+
+func (s *Service) WithScope(scoper Scoper) *Service {
+	s.scoper = scoper
+
+	return s
+}
+
+func (s *Service) visible(ctx context.Context, namespaces []string) (bool, error) {
+	if s.scoper == nil {
+		return true, nil
+	}
+
+	actor, ok := identity.FromContext(ctx)
+	if !ok {
+		return false, connect.NewError(connect.CodeUnauthenticated, errors.New("sign in at /auth/login"))
+	}
+
+	scope, err := s.scoper.Scope(ctx, actor)
+	if err != nil {
+		return false, connect.NewError(connect.CodeUnavailable, err)
+	}
+
+	if scope.AllowAll {
+		return true, nil
+	}
+
+	for _, namespace := range namespaces {
+		if scope.Allows(namespace) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (s *Service) ListDivisions(
@@ -34,6 +74,14 @@ func (s *Service) ListDivisions(
 		Freshness: freshnessOf(divisions),
 	}
 	for _, division := range divisions {
+		visible, err := s.visible(ctx, division.Namespaces)
+		if err != nil {
+			return nil, err
+		}
+		if !visible {
+			continue
+		}
+
 		response.Divisions = append(response.Divisions, protoDivision(division))
 	}
 
@@ -47,6 +95,15 @@ func (s *Service) GetDivision(
 	req *connect.Request[governv1.GetDivisionRequest],
 ) (*connect.Response[governv1.GetDivisionResponse], error) {
 	division, err := s.store.GetDivision(ctx, req.Msg.GetDivision())
+	if err == nil {
+		visible, scopeErr := s.visible(ctx, division.Namespaces)
+		if scopeErr != nil {
+			return nil, scopeErr
+		}
+		if !visible {
+			err = ErrNotFound
+		}
+	}
 	if errors.Is(err, ErrNotFound) {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("division %s not found", req.Msg.GetDivision()))
 	}
@@ -75,6 +132,14 @@ func (s *Service) ListNamespaces(
 		Freshness:  &governv1.Freshness{},
 	}
 	for _, namespace := range namespaces {
+		visible, err := s.visible(ctx, []string{namespace.Name})
+		if err != nil {
+			return nil, err
+		}
+		if !visible {
+			continue
+		}
+
 		response.Namespaces = append(response.Namespaces, &governv1.Namespace{
 			Name:               namespace.Name,
 			Division:           namespace.Division,
@@ -96,7 +161,7 @@ func (s *Service) ListMembers(
 	*connect.Request[governv1.ListMembersRequest],
 ) (*connect.Response[governv1.ListMembersResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented,
-		errors.New("membership is read from the identity provider, which arrives with the identity slice"))
+		errors.New("group claims decide membership; listing the people inside a group needs a directory integration with the identity provider"))
 }
 
 func (s *Service) GetCapacity(

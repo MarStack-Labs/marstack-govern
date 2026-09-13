@@ -137,17 +137,17 @@ func (s *Sealer) OpenJSON(value string, target any) error {
 	return nil
 }
 
-func (s *Sealer) Write(w http.ResponseWriter, session Session) error {
+func (s *Sealer) CookieFor(session Session) (*http.Cookie, error) {
 	if session.ExpiresAt.IsZero() || session.ExpiresAt.Sub(session.IssuedAt) > maxLifetime {
 		session.ExpiresAt = session.IssuedAt.Add(maxLifetime)
 	}
 
 	value, err := s.Seal(session)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	return &http.Cookie{
 		Name:     CookieName,
 		Value:    value,
 		Path:     "/",
@@ -155,7 +155,16 @@ func (s *Sealer) Write(w http.ResponseWriter, session Session) error {
 		HttpOnly: true,
 		Secure:   s.secure,
 		SameSite: http.SameSiteLaxMode,
-	})
+	}, nil
+}
+
+func (s *Sealer) Write(w http.ResponseWriter, session Session) error {
+	cookie, err := s.CookieFor(session)
+	if err != nil {
+		return err
+	}
+
+	http.SetCookie(w, cookie)
 
 	return nil
 }
