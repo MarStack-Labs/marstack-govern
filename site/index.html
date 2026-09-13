@@ -15,6 +15,7 @@
   <span class="ms-eyebrow">govern</span>
   <span class="grow"></span>
   <a href="#demo">Demo</a>
+  <a href="#console">Console</a>
   <a href="#rule">The rule</a>
   <a href="#quickstart">Quickstart</a>
   <a href="#decisions">Decisions</a>
@@ -56,6 +57,7 @@
   <aside class="toc">
     <ol>
       <li><a href="#demo">Watch it run</a></li>
+      <li><a href="#console">The console</a></li>
       <li><a href="#rule">The one rule</a></li>
       <li><a href="#what">What it is</a></li>
       <li><a href="#quickstart">Quickstart</a></li>
@@ -100,6 +102,38 @@ agg site/demo.cast site/demo.gif</code></pre>
           The preflight and simulation numbers in that recording come from the cluster it ran
           against — two nodes with 20 cores allocatable. Against your cluster they will be
           different numbers, which is the point.
+        </p>
+      </div>
+    </section>
+
+    <section id="console">
+      <h2>The console</h2>
+
+      <p>
+        The same cluster, through the web console. It is a client of the public API, not a
+        privileged path into it: every list is filtered by what Kubernetes says the signed-in
+        person may see, confirmed with a <code>SelfSubjectAccessReview</code> under their own
+        identity.
+      </p>
+
+      <figure class="demo">
+        <img src="ui-demo.gif" alt="The margov console moving through services, divisions, requests, cost, policies, topology and preview environments of a live cluster"
+             width="900" height="569" loading="lazy">
+        <figcaption>
+          Recorded by
+          <a href="https://github.com/MarStack-Labs/marstack-govern/blob/main/site/ui-demo.sh">site/ui-demo.sh</a>,
+          which drives a real browser against a running <code>margov</code> and renders the video
+          to a gif. It needs <code>npm install playwright</code> and <code>ffmpeg</code>:
+        </figcaption>
+        <pre><code>./bin/margov serve --kube-context kind-govern &amp;
+./site/ui-demo.sh</code></pre>
+      </figure>
+
+      <div class="note" data-tone="info">
+        <p>
+          Watch what the Topology view says when there is no trace pipeline: <em>no trace metrics
+          are available, so the graph would be a guess</em>. A missing dependency is named rather
+          than drawn around.
         </p>
       </div>
     </section>
