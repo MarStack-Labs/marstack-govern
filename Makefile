@@ -9,7 +9,7 @@ PREFIX ?= /usr/local
 DIST    ?= dist
 TARGETS ?= linux/amd64 linux/arm64 darwin/arm64
 
-.PHONY: build install uninstall test vet fmt cross dist proto proto-lint web web-dev staticcheck vuln gosec secrets security check tools hooks run clean
+.PHONY: build install uninstall test vet fmt cross dist proto proto-lint generate web web-dev staticcheck vuln gosec secrets security check tools hooks run clean
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/margov ./cmd/margov
@@ -45,6 +45,10 @@ proto: proto-lint
 proto-lint:
 	$(GOBIN)/buf format -d --exit-code
 	$(GOBIN)/buf lint
+
+generate:
+	$(GOBIN)/controller-gen object:headerFile="" paths=./api/...
+	$(GOBIN)/controller-gen crd paths=./api/... output:crd:artifacts:config=deploy/crd
 
 staticcheck:
 	$(GOBIN)/staticcheck ./...
@@ -91,6 +95,7 @@ tools:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
 	go install github.com/bufbuild/buf/cmd/buf@latest
+	go install sigs.k8s.io/controller-tools/cmd/controller-gen@latest
 
 hooks:
 	git config core.hooksPath .githooks

@@ -41,7 +41,7 @@ jobs:
           GOVERN_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/govern_test?sslmode=disable
       - run: gofmt -l . | tee /dev/stderr | (! read)
 
-  proto:
+  codegen:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -59,6 +59,13 @@ jobs:
       - name: The contracts stay backward compatible
         run: buf breaking --against ".git#ref=origin/main,subdir=."
         if: github.event_name == 'pull_request'
+
+      - name: The committed deepcopy and CRDs match the types
+        run: |
+          go install sigs.k8s.io/controller-tools/cmd/controller-gen@latest
+          controller-gen object:headerFile="" paths=./api/...
+          controller-gen crd paths=./api/... output:crd:artifacts:config=deploy/crd
+          git diff --exit-code -- api deploy/crd
 
   portable:
     runs-on: ubuntu-latest
