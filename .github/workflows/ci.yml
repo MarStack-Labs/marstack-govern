@@ -26,6 +26,23 @@ jobs:
       - run: go test -race ./...
       - run: gofmt -l . | tee /dev/stderr | (! read)
 
+  proto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go install github.com/bufbuild/buf/cmd/buf@latest
+      - run: buf format -d --exit-code
+      - run: buf lint
+      - name: The contracts stay backward compatible
+        run: buf breaking --against ".git#ref=origin/main,subdir=."
+        if: github.event_name == 'pull_request'
+
   portable:
     runs-on: ubuntu-latest
     steps:

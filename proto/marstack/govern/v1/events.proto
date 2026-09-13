@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/catalog.proto";
+import "marstack/govern/v1/common.proto";
+import "marstack/govern/v1/decisions.proto";
+import "marstack/govern/v1/requests.proto";
+import "marstack/govern/v1/tenancy.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+message StreamEvent {
+  string cursor = 1;
+  Type type = 2;
+  google.protobuf.Timestamp emitted_at = 3;
+  Freshness freshness = 4;
+
+  oneof body {
+    WorkloadChanged workload_changed = 5;
+    DivisionChanged division_changed = 6;
+    RequestChanged request_changed = 7;
+    DecisionMade decision_made = 8;
+    ProjectionDegraded projection_degraded = 9;
+    Heartbeat heartbeat = 10;
+  }
+
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    TYPE_WORKLOAD_CHANGED = 1;
+    TYPE_DIVISION_CHANGED = 2;
+    TYPE_REQUEST_CHANGED = 3;
+    TYPE_DECISION_MADE = 4;
+    TYPE_PROJECTION_DEGRADED = 5;
+    TYPE_HEARTBEAT = 6;
+  }
+}
+
+message WorkloadChanged {
+  Change change = 1;
+  Workload workload = 2;
+
+  enum Change {
+    CHANGE_UNSPECIFIED = 0;
+    CHANGE_ADDED = 1;
+    CHANGE_UPDATED = 2;
+    CHANGE_REMOVED = 3;
+  }
+}
+
+message DivisionChanged {
+  Division division = 1;
+}
+
+message RequestChanged {
+  ResourceRequest request = 1;
+}
+
+message DecisionMade {
+  Decision decision = 1;
+}
+
+message ProjectionDegraded {
+  repeated DegradedSource sources = 1;
+}
+
+message Heartbeat {
+  int64 connected_seconds = 1;
+}

@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service AuditService {
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
+  rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+  rpc VerifyChain(VerifyChainRequest) returns (VerifyChainResponse);
+}
+
+message AuditEvent {
+  int64 seq = 1;
+  string audit_id = 2;
+  google.protobuf.Timestamp event_at = 3;
+  Actor actor = 4;
+  string impersonated_by = 5;
+  string verb = 6;
+  string resource = 7;
+  string subresource = 8;
+  string namespace = 9;
+  string object_name = 10;
+  string object_uid = 11;
+  int32 response_code = 12;
+  repeated string source_ips = 13;
+  string user_agent = 14;
+  string payload_json = 15;
+  string prev_hash = 16;
+  string hash = 17;
+}
+
+message ChainVerification {
+  bool intact = 1;
+  int64 checked_events = 2;
+  int64 first_seq = 3;
+  int64 last_seq = 4;
+  int64 broken_at_seq = 5;
+  string detail = 6;
+  bool archive_compared = 7;
+  google.protobuf.Timestamp verified_at = 8;
+}
+
+message ListEventsRequest {
+  string division = 1;
+  string actor = 2;
+  string verb = 3;
+  string resource = 4;
+  string object_uid = 5;
+  google.protobuf.Timestamp since = 6;
+  google.protobuf.Timestamp until = 7;
+  Page page = 8;
+}
+
+message ListEventsResponse {
+  repeated AuditEvent events = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetEventRequest {
+  int64 seq = 1;
+}
+
+message GetEventResponse {
+  AuditEvent event = 1;
+}
+
+message VerifyChainRequest {
+  int64 from_seq = 1;
+  int64 to_seq = 2;
+  bool compare_archive = 3;
+}
+
+message VerifyChainResponse {
+  ChainVerification verification = 1;
+}

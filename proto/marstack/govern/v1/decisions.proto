@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+import "marstack/govern/v1/requests.proto";
+import "marstack/govern/v1/tenancy.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service DecisionService {
+  rpc ListQueue(ListQueueRequest) returns (ListQueueResponse);
+  rpc Simulate(SimulateRequest) returns (SimulateResponse);
+  rpc Decide(DecideRequest) returns (DecideResponse);
+  rpc ListDecisions(ListDecisionsRequest) returns (ListDecisionsResponse);
+  rpc GetDecision(GetDecisionRequest) returns (GetDecisionResponse);
+  rpc Revoke(RevokeRequest) returns (RevokeResponse);
+}
+
+message Decision {
+  string uid = 1;
+  string request_uid = 2;
+  Actor decider = 3;
+  Outcome outcome = 4;
+  string reason = 5;
+  Evidence evidence = 6;
+  google.protobuf.Timestamp granted_until = 7;
+  google.protobuf.Timestamp decided_at = 8;
+  google.protobuf.Timestamp revoked_at = 9;
+  string revoked_reason = 10;
+
+  enum Outcome {
+    OUTCOME_UNSPECIFIED = 0;
+    OUTCOME_APPROVED = 1;
+    OUTCOME_REJECTED = 2;
+    OUTCOME_CHANGES_REQUESTED = 3;
+  }
+}
+
+message Evidence {
+  QuotaRecommendation recommendation = 1;
+  PreflightResult preflight = 2;
+  ImpactSimulation simulation = 3;
+  google.protobuf.Timestamp captured_at = 4;
+}
+
+message ImpactSimulation {
+  Compute division_quota_before = 1;
+  Compute division_quota_after = 2;
+  double cluster_commitment_before = 3;
+  double cluster_commitment_after = 4;
+  repeated NodeCapacity nodes_no_longer_fitting = 5;
+  repeated PendingPod pods_at_risk = 6;
+  Money monthly_cost_before = 7;
+  Money monthly_cost_after = 8;
+  bool schedulable = 9;
+  string verdict = 10;
+  google.protobuf.Timestamp simulated_at = 11;
+}
+
+message PendingPod {
+  string namespace = 1;
+  string name = 2;
+  string reason = 3;
+}
+
+message ListQueueRequest {
+  string division = 1;
+  Page page = 2;
+}
+
+message ListQueueResponse {
+  repeated ResourceRequest requests = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message SimulateRequest {
+  string request_uid = 1;
+}
+
+message SimulateResponse {
+  ImpactSimulation simulation = 1;
+  Freshness freshness = 2;
+}
+
+message DecideRequest {
+  string request_uid = 1;
+  Decision.Outcome outcome = 2;
+  string reason = 3;
+  string grant_duration = 4;
+  string evidence_digest = 5;
+}
+
+message DecideResponse {
+  Decision decision = 1;
+}
+
+message ListDecisionsRequest {
+  string division = 1;
+  Page page = 2;
+}
+
+message ListDecisionsResponse {
+  repeated Decision decisions = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetDecisionRequest {
+  string uid = 1;
+}
+
+message GetDecisionResponse {
+  Decision decision = 1;
+  Freshness freshness = 2;
+}
+
+message RevokeRequest {
+  string uid = 1;
+  string reason = 2;
+}
+
+message RevokeResponse {
+  Decision decision = 1;
+}

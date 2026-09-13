@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service TenancyService {
+  rpc ListDivisions(ListDivisionsRequest) returns (ListDivisionsResponse);
+  rpc GetDivision(GetDivisionRequest) returns (GetDivisionResponse);
+  rpc ListNamespaces(ListNamespacesRequest) returns (ListNamespacesResponse);
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+  rpc GetCapacity(GetCapacityRequest) returns (GetCapacityResponse);
+}
+
+message Division {
+  string uid = 1;
+  string name = 2;
+  string display_name = 3;
+  string tenant_name = 4;
+  Phase phase = 5;
+  Compute quota = 6;
+  Compute used = 7;
+  repeated string namespaces = 8;
+  int32 member_count = 9;
+  google.protobuf.Timestamp created_at = 10;
+
+  enum Phase {
+    PHASE_UNSPECIFIED = 0;
+    PHASE_PENDING = 1;
+    PHASE_ACTIVE = 2;
+    PHASE_SUSPENDED = 3;
+    PHASE_TERMINATING = 4;
+  }
+}
+
+message Namespace {
+  string name = 1;
+  string division = 2;
+  string environment = 3;
+  bool default_deny_present = 4;
+  bool limit_range_present = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message Member {
+  string subject = 1;
+  Role role = 2;
+  string group_claim = 3;
+  google.protobuf.Timestamp synced_at = 4;
+
+  enum Role {
+    ROLE_UNSPECIFIED = 0;
+    ROLE_VIEWER = 1;
+    ROLE_OPERATOR = 2;
+    ROLE_ADMIN = 3;
+    ROLE_APPROVER = 4;
+  }
+}
+
+message ClusterCapacity {
+  Compute allocatable = 1;
+  Compute committed = 2;
+  Compute used = 3;
+  repeated NodeCapacity nodes = 4;
+}
+
+message NodeCapacity {
+  string name = 1;
+  Compute allocatable = 2;
+  Compute committed = 3;
+  bool schedulable = 4;
+}
+
+message ListDivisionsRequest {
+  Page page = 1;
+  bool mine_only = 2;
+}
+
+message ListDivisionsResponse {
+  repeated Division divisions = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetDivisionRequest {
+  string division = 1;
+}
+
+message GetDivisionResponse {
+  Division division = 1;
+  Freshness freshness = 2;
+}
+
+message ListNamespacesRequest {
+  string division = 1;
+  Page page = 2;
+}
+
+message ListNamespacesResponse {
+  repeated Namespace namespaces = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message ListMembersRequest {
+  string division = 1;
+  Page page = 2;
+}
+
+message ListMembersResponse {
+  repeated Member members = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetCapacityRequest {}
+
+message GetCapacityResponse {
+  ClusterCapacity capacity = 1;
+  Freshness freshness = 2;
+}

@@ -1,0 +1,202 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service CatalogService {
+  rpc ListWorkloads(ListWorkloadsRequest) returns (ListWorkloadsResponse);
+  rpc GetWorkload(GetWorkloadRequest) returns (GetWorkloadResponse);
+  rpc GetProvenance(GetProvenanceRequest) returns (GetProvenanceResponse);
+  rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
+  rpc ExplainFailure(ExplainFailureRequest) returns (ExplainFailureResponse);
+  rpc GetDrift(GetDriftRequest) returns (GetDriftResponse);
+}
+
+message Workload {
+  string uid = 1;
+  string division = 2;
+  string namespace = 3;
+  string name = 4;
+  string kind = 5;
+  Health health = 6;
+  int32 replicas_desired = 7;
+  int32 replicas_ready = 8;
+  string image_ref = 9;
+  string image_digest = 10;
+  Tier tier = 11;
+  TierSource tier_source = 12;
+  google.protobuf.Timestamp tier_override_until = 13;
+  string owner_subject = 14;
+  repeated string ingress_hosts = 15;
+  Compute requested = 16;
+  GoldenSignals signals = 17;
+  google.protobuf.Timestamp created_at = 18;
+
+  enum Health {
+    HEALTH_UNSPECIFIED = 0;
+    HEALTH_HEALTHY = 1;
+    HEALTH_PROGRESSING = 2;
+    HEALTH_DEGRADED = 3;
+  }
+
+  enum Tier {
+    TIER_UNSPECIFIED = 0;
+    TIER_EXPERIMENTAL = 1;
+    TIER_INTERNAL = 2;
+    TIER_CRITICAL = 3;
+  }
+
+  enum TierSource {
+    TIER_SOURCE_UNSPECIFIED = 0;
+    TIER_SOURCE_CLASSIFIER = 1;
+    TIER_SOURCE_OVERRIDE = 2;
+  }
+}
+
+message GoldenSignals {
+  double request_rate = 1;
+  double error_ratio = 2;
+  double latency_p99_seconds = 3;
+  double cpu_saturation = 4;
+  double memory_saturation = 5;
+  repeated double sparkline = 6;
+}
+
+message Provenance {
+  string image_digest = 1;
+  string registry = 2;
+  string repository = 3;
+  string tag = 4;
+  bool tag_mutable = 5;
+  string source_repo = 6;
+  string source_revision = 7;
+  bool signed = 8;
+  string signature_issuer = 9;
+  bool slsa_attested = 10;
+  bool sbom_present = 11;
+  int32 base_image_age_days = 12;
+  Vulnerabilities vulnerabilities = 13;
+  google.protobuf.Timestamp scanned_at = 14;
+}
+
+message Vulnerabilities {
+  int32 critical = 1;
+  int32 high = 2;
+  int32 medium = 3;
+  int32 low = 4;
+}
+
+message TimelineEvent {
+  google.protobuf.Timestamp occurred_at = 1;
+  Kind kind = 2;
+  string source = 3;
+  string summary = 4;
+  map<string, string> detail = 5;
+
+  enum Kind {
+    KIND_UNSPECIFIED = 0;
+    KIND_ROLLOUT = 1;
+    KIND_KUBERNETES_EVENT = 2;
+    KIND_ALERT = 3;
+    KIND_AUDIT = 4;
+    KIND_DECISION = 5;
+    KIND_POLICY_VIOLATION = 6;
+    KIND_QUOTA_CHANGE = 7;
+  }
+}
+
+message FailureExplanation {
+  string cause = 1;
+  string evidence = 2;
+  repeated string reproduce_commands = 3;
+  repeated string log_lines = 4;
+  TimelineEvent triggering_event = 5;
+  RegressionDelta regression = 6;
+}
+
+message RegressionDelta {
+  string rollout_revision = 1;
+  google.protobuf.Timestamp rollout_at = 2;
+  double latency_p99_before = 3;
+  double latency_p99_after = 4;
+  double error_ratio_before = 5;
+  double error_ratio_after = 6;
+  string commit_range_url = 7;
+}
+
+message DriftField {
+  string path = 1;
+  string desired = 2;
+  string live = 3;
+  string changed_by = 4;
+  google.protobuf.Timestamp changed_at = 5;
+}
+
+message ListWorkloadsRequest {
+  string division = 1;
+  string namespace = 2;
+  Workload.Health health = 3;
+  string search = 4;
+  Page page = 5;
+}
+
+message ListWorkloadsResponse {
+  repeated Workload workloads = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetWorkloadRequest {
+  string uid = 1;
+}
+
+message GetWorkloadResponse {
+  Workload workload = 1;
+  Freshness freshness = 2;
+}
+
+message GetProvenanceRequest {
+  string uid = 1;
+}
+
+message GetProvenanceResponse {
+  Provenance provenance = 1;
+  Freshness freshness = 2;
+}
+
+message GetTimelineRequest {
+  string uid = 1;
+  google.protobuf.Timestamp since = 2;
+  google.protobuf.Timestamp until = 3;
+  Page page = 4;
+}
+
+message GetTimelineResponse {
+  repeated TimelineEvent events = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message ExplainFailureRequest {
+  string uid = 1;
+}
+
+message ExplainFailureResponse {
+  FailureExplanation explanation = 1;
+  Freshness freshness = 2;
+}
+
+message GetDriftRequest {
+  string uid = 1;
+}
+
+message GetDriftResponse {
+  bool drifted = 1;
+  repeated DriftField fields = 2;
+  string application = 3;
+  Freshness freshness = 4;
+}

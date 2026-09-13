@@ -1,0 +1,176 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service FinOpsService {
+  rpc GetDivisionCost(GetDivisionCostRequest) returns (GetDivisionCostResponse);
+  rpc ListWorkloadCost(ListWorkloadCostRequest) returns (ListWorkloadCostResponse);
+  rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesResponse);
+  rpc GetInvoice(GetInvoiceRequest) returns (GetInvoiceResponse);
+  rpc ListRightSizing(ListRightSizingRequest) returns (ListRightSizingResponse);
+  rpc GetPricingPolicy(GetPricingPolicyRequest) returns (GetPricingPolicyResponse);
+}
+
+message DivisionCost {
+  string division = 1;
+  string period = 2;
+  Money charged = 3;
+  Money projected_month_end = 4;
+  Money idle = 5;
+  Money unallocated_share = 6;
+  repeated CostComponent components = 7;
+  repeated WorkloadCost top_consumers = 8;
+  string pricing_policy = 9;
+  int32 pricing_policy_revision = 10;
+}
+
+message CostComponent {
+  Resource resource = 1;
+  string quantity = 2;
+  string unit = 3;
+  Money rate = 4;
+  Money amount = 5;
+
+  enum Resource {
+    RESOURCE_UNSPECIFIED = 0;
+    RESOURCE_CPU = 1;
+    RESOURCE_MEMORY = 2;
+    RESOURCE_STORAGE = 3;
+    RESOURCE_LOADBALANCER = 4;
+    RESOURCE_EGRESS = 5;
+  }
+}
+
+message WorkloadCost {
+  string workload_uid = 1;
+  string namespace = 2;
+  string name = 3;
+  Money charged = 4;
+  Money idle = 5;
+  double utilisation = 6;
+}
+
+message Invoice {
+  string uid = 1;
+  string division = 2;
+  string period_start = 3;
+  string period_end = 4;
+  string pricing_policy = 5;
+  int32 pricing_policy_revision = 6;
+  Money subtotal = 7;
+  Money unallocated_share = 8;
+  Money total = 9;
+  repeated InvoiceLine lines = 10;
+  string inputs_digest = 11;
+  google.protobuf.Timestamp generated_at = 12;
+}
+
+message InvoiceLine {
+  int32 line_no = 1;
+  string workload_label = 2;
+  CostComponent.Resource resource = 3;
+  string quantity = 4;
+  string unit = 5;
+  Money rate = 6;
+  Money amount = 7;
+}
+
+message RightSizing {
+  string workload_uid = 1;
+  string namespace = 2;
+  string name = 3;
+  string container = 4;
+  Compute requested = 5;
+  Compute observed_p95 = 6;
+  Compute proposed = 7;
+  Money monthly_saving = 8;
+  string patch = 9;
+}
+
+message PricingPolicy {
+  string name = 1;
+  int32 revision = 2;
+  string effective_from = 3;
+  string effective_to = 4;
+  string currency = 5;
+  Money cpu_core_month = 6;
+  Money memory_gb_month = 7;
+  Money storage_gb_month = 8;
+  Money loadbalancer_month = 9;
+  Money egress_gb = 10;
+  UnallocatedStrategy unallocated_strategy = 11;
+  string approved_by = 12;
+  google.protobuf.Timestamp approved_at = 13;
+
+  enum UnallocatedStrategy {
+    UNALLOCATED_STRATEGY_UNSPECIFIED = 0;
+    UNALLOCATED_STRATEGY_PLATFORM = 1;
+    UNALLOCATED_STRATEGY_PRO_RATA = 2;
+  }
+}
+
+message GetDivisionCostRequest {
+  string division = 1;
+  string period = 2;
+}
+
+message GetDivisionCostResponse {
+  DivisionCost cost = 1;
+  Freshness freshness = 2;
+}
+
+message ListWorkloadCostRequest {
+  string division = 1;
+  string period = 2;
+  Page page = 3;
+}
+
+message ListWorkloadCostResponse {
+  repeated WorkloadCost workloads = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message ListInvoicesRequest {
+  string division = 1;
+  Page page = 2;
+}
+
+message ListInvoicesResponse {
+  repeated Invoice invoices = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetInvoiceRequest {
+  string uid = 1;
+}
+
+message GetInvoiceResponse {
+  Invoice invoice = 1;
+}
+
+message ListRightSizingRequest {
+  string division = 1;
+  Page page = 2;
+}
+
+message ListRightSizingResponse {
+  repeated RightSizing recommendations = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetPricingPolicyRequest {
+  string name = 1;
+  int32 revision = 2;
+}
+
+message GetPricingPolicyResponse {
+  PricingPolicy policy = 1;
+}

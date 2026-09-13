@@ -9,7 +9,7 @@ PREFIX ?= /usr/local
 DIST    ?= dist
 TARGETS ?= linux/amd64 linux/arm64 darwin/arm64
 
-.PHONY: build install uninstall test vet fmt cross dist staticcheck vuln gosec secrets security check tools hooks run clean
+.PHONY: build install uninstall test vet fmt cross dist proto proto-lint staticcheck vuln gosec secrets security check tools hooks run clean
 
 build:
 	go build -ldflags "$(LDFLAGS)" -o bin/margov ./cmd/margov
@@ -32,6 +32,13 @@ vet:
 
 fmt:
 	gofmt -l -w .
+
+proto: proto-lint
+	$(GOBIN)/buf generate
+
+proto-lint:
+	$(GOBIN)/buf format -d --exit-code
+	$(GOBIN)/buf lint
 
 staticcheck:
 	$(GOBIN)/staticcheck ./...
@@ -77,6 +84,7 @@ tools:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	go install github.com/bufbuild/buf/cmd/buf@latest
 
 hooks:
 	git config core.hooksPath .githooks
