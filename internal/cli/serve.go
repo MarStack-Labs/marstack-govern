@@ -22,6 +22,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
 	"github.com/marstack-labs/marstack-govern/internal/metrics"
+	"github.com/marstack-labs/marstack-govern/internal/policy"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/web"
@@ -225,6 +226,7 @@ func runServe(ctx context.Context, opts serveOptions) error {
 			FinOps:        cost.NewService(manager.GetClient(), usageReader, workloadRequests{store: store}),
 			Audit:         audit.NewService(auditStore, archive),
 			RegisterAudit: registerAudit,
+			Policy:        policy.NewService(manager.GetClient()),
 			Hub:           hub,
 			Web:           assets,
 			Logger:        logger,

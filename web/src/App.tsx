@@ -9,13 +9,14 @@ import { useLiveDivisions } from "./useLiveDivisions";
 import { RequestsView } from "./RequestsView";
 import { CostView } from "./CostView";
 import { AuditView } from "./AuditView";
+import { PolicyView } from "./PolicyView";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import { Workload_Health } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
 import type { Division, Namespace } from "./gen/marstack/govern/v1/tenancy_pb";
 import { Division_Phase } from "./gen/marstack/govern/v1/tenancy_pb";
 
-type View = "services" | "divisions" | "requests" | "cost" | "audit";
+type View = "services" | "divisions" | "requests" | "cost" | "policies" | "audit";
 
 const views: { id: View; label: string; subtitle: string }[] = [
   {
@@ -37,6 +38,11 @@ const views: { id: View; label: string; subtitle: string }[] = [
     id: "cost",
     label: "Cost",
     subtitle: "reserved capacity at signed rates, with the idle beside it",
+  },
+  {
+    id: "policies",
+    label: "Policies",
+    subtitle: "the guardrails in force, and what is failing them",
   },
   {
     id: "audit",
@@ -98,6 +104,8 @@ export function App() {
           <RequestsView session={session} />
         ) : view === "cost" ? (
           <CostView session={session} />
+        ) : view === "policies" ? (
+          <PolicyView session={session} />
         ) : (
           <AuditView />
         )}

@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service PolicyService {
+  rpc ListPolicies(ListPoliciesRequest) returns (ListPoliciesResponse);
+  rpc ListViolations(ListViolationsRequest) returns (ListViolationsResponse);
+  rpc GetCompliance(GetComplianceRequest) returns (GetComplianceResponse);
+}
+
+message GuardrailPolicy {
+  string name = 1;
+  string kind = 2;
+  bool cluster_scoped = 3;
+  Enforcement enforcement = 4;
+  string description = 5;
+  repeated string categories = 6;
+  string severity = 7;
+  repeated string rules = 8;
+  bool ready = 9;
+
+  enum Enforcement {
+    ENFORCEMENT_UNSPECIFIED = 0;
+    ENFORCEMENT_AUDIT = 1;
+    ENFORCEMENT_ENFORCE = 2;
+  }
+}
+
+message Violation {
+  string policy = 1;
+  string rule = 2;
+  string namespace = 3;
+  string division = 4;
+  string resource_kind = 5;
+  string resource_name = 6;
+  Severity severity = 7;
+  Result result = 8;
+  string message = 9;
+  google.protobuf.Timestamp observed_at = 10;
+
+  enum Severity {
+    SEVERITY_UNSPECIFIED = 0;
+    SEVERITY_LOW = 1;
+    SEVERITY_MEDIUM = 2;
+    SEVERITY_HIGH = 3;
+    SEVERITY_CRITICAL = 4;
+  }
+
+  enum Result {
+    RESULT_UNSPECIFIED = 0;
+    RESULT_FAIL = 1;
+    RESULT_WARN = 2;
+    RESULT_ERROR = 3;
+  }
+}
+
+message Compliance {
+  string division = 1;
+  int32 passing = 2;
+  int32 failing = 3;
+  int32 warning = 4;
+  int32 critical = 5;
+  int32 policies_enforced = 6;
+  double compliant_ratio = 7;
+  google.protobuf.Timestamp observed_at = 8;
+}
+
+message ListPoliciesRequest {}
+
+message ListPoliciesResponse {
+  repeated GuardrailPolicy policies = 1;
+  Freshness freshness = 2;
+}
+
+message ListViolationsRequest {
+  string division = 1;
+  string namespace = 2;
+  Violation.Severity severity = 3;
+  Page page = 4;
+}
+
+message ListViolationsResponse {
+  repeated Violation violations = 1;
+  PageInfo page = 2;
+  Freshness freshness = 3;
+}
+
+message GetComplianceRequest {
+  string division = 1;
+}
+
+message GetComplianceResponse {
+  Compliance compliance = 1;
+  Freshness freshness = 2;
+}

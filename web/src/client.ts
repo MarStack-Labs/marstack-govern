@@ -7,6 +7,7 @@ import { RequestService } from "./gen/marstack/govern/v1/requests_pb";
 import { DecisionService } from "./gen/marstack/govern/v1/decisions_pb";
 import { AuditService } from "./gen/marstack/govern/v1/audit_pb";
 import { FinOpsService } from "./gen/marstack/govern/v1/finops_pb";
+import { PolicyService } from "./gen/marstack/govern/v1/policy_pb";
 import { TenancyService } from "./gen/marstack/govern/v1/tenancy_pb";
 
 const transport = createConnectTransport({
@@ -20,3 +21,4 @@ export const requests = createClient(RequestService, transport);
 export const decisions = createClient(DecisionService, transport);
 export const finops = createClient(FinOpsService, transport);
 export const auditTrail = createClient(AuditService, transport);
+export const policies = createClient(PolicyService, transport);
