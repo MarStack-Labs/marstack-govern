@@ -25,7 +25,11 @@ func Resource(resource string) schema.GroupResource {
 }
 
 func addKnownTypes(scheme *runtime.Scheme) error {
-	scheme.AddKnownTypes(GroupVersion, &Division{}, &DivisionList{})
+	scheme.AddKnownTypes(GroupVersion,
+		&Division{}, &DivisionList{},
+		&QuotaRequest{}, &QuotaRequestList{},
+		&Decision{}, &DecisionList{},
+	)
 	metav1.AddToGroupVersion(scheme, GroupVersion)
 
 	return nil
