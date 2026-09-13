@@ -279,7 +279,7 @@ asking, so putting it anywhere else would mean domain modules importing one anot
 | `catalog` | workload discovery, classification, ownership | `TierOverride` |
 | `signals` | golden signals, SLOs, error budgets, burn rate | `ServiceLevelObjective` |
 | `diagnostics` | failure explainer, timeline, rollout correlation | — |
-| `delivery` | curated templates, Argo CD integration, rollout status | — |
+| `delivery` | desired-versus-live from Argo CD, attributed to the actor who changed it | — |
 | `supplychain` | provenance, signatures, SBOM, vulnerabilities | — |
 | `policy` | Kyverno policy catalog, evaluation results, violations per division | — |
 | `access` | just-in-time token broker, TTL, revocation | `AccessGrant` |
@@ -329,6 +329,18 @@ because a calendar date passed would turn a governance control into an outage.
 The expiry therefore means *this grant is due for review*, and the review is visible rather than
 automatic. Grants that genuinely should revoke themselves — access, peering — behave differently,
 because taking those back breaks nothing that was not already borrowed.
+
+### Drift trusts Argo, and only adds what Argo cannot say
+
+Argo CD already decides whether live state matches the manifests; re-deriving that would mean two
+answers to one question. The platform reports what Argo reports, and adds the one thing Argo has no
+way to know: **who changed it**, taken from the audit trail for that exact object.
+
+One heuristic was written and then deleted: comparing `targetRevision` against the synced revision.
+For an application tracking a branch, the target is `main` and the revision is a commit SHA, so the
+comparison marks every branch-tracking application as drifted forever. The revisions are now shown as
+context beside the application name, and the drift verdict comes from Argo alone. A test pins that
+behaviour so the heuristic cannot come back.
 
 ### A failure is explained, not displayed
 

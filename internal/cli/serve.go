@@ -19,6 +19,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/db"
+	"github.com/marstack-labs/marstack-govern/internal/delivery"
 	"github.com/marstack-labs/marstack-govern/internal/diagnostics"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
@@ -237,7 +238,8 @@ func runServe(ctx context.Context, opts serveOptions) error {
 				WithDiagnostics(diagnoser{
 					collector:  &diagnostics.Collector{Client: manager.GetClient()},
 					correlator: &diagnostics.Correlator{Metrics: metricsClient},
-				}),
+				}).
+				WithDrift(delivery.NewDrift(delivery.NewArgo(manager.GetClient()), auditStore)),
 			Tenancy:       tenancy.NewService(divisions).WithScope(sessions),
 			Session:       sessions,
 			Requests:      requestService,

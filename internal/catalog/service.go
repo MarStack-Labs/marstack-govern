@@ -26,11 +26,16 @@ type Diagnoser interface {
 	Timeline(ctx context.Context, workload Workload) ([]*governv1.TimelineEvent, error)
 }
 
+type Drifter interface {
+	Of(ctx context.Context, namespace, kind, name string) (*governv1.GetDriftResponse, error)
+}
+
 type Service struct {
 	store     *Store
 	scoper    Scoper
 	prover    Prover
 	diagnoser Diagnoser
+	drifter   Drifter
 }
 
 func NewService(store *Store) *Service {
@@ -51,6 +56,12 @@ func (s *Service) WithProvenance(prover Prover) *Service {
 
 func (s *Service) WithDiagnostics(diagnoser Diagnoser) *Service {
 	s.diagnoser = diagnoser
+
+	return s
+}
+
+func (s *Service) WithDrift(drifter Drifter) *Service {
+	s.drifter = drifter
 
 	return s
 }
@@ -292,10 +303,31 @@ func (s *Service) ExplainFailure(
 }
 
 func (s *Service) GetDrift(
-	context.Context,
-	*connect.Request[governv1.GetDriftRequest],
+	ctx context.Context,
+	req *connect.Request[governv1.GetDriftRequest],
 ) (*connect.Response[governv1.GetDriftResponse], error) {
-	return nil, unimplemented("drift detection")
+	if s.drifter == nil {
+		return nil, unimplemented("drift detection")
+	}
+
+	workload, err := s.visibleWorkload(ctx, req.Msg.GetUid())
+	if err != nil {
+		return nil, err
+	}
+
+	drift, err := s.drifter.Of(ctx, workload.Namespace, workload.Kind, workload.Name)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
+
+	freshness, err := s.freshness(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	drift.Freshness = freshness
+
+	return connect.NewResponse(drift), nil
 }
 
 func (s *Service) freshness(ctx context.Context) (*governv1.Freshness, error) {

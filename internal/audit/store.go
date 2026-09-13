@@ -23,14 +23,16 @@ type Record struct {
 }
 
 type Query struct {
-	Division  string
-	Actor     string
-	Verb      string
-	Resource  string
-	ObjectUID string
-	Since     *time.Time
-	Until     *time.Time
-	Limit     int32
+	Division   string
+	Actor      string
+	Verb       string
+	Resource   string
+	ObjectUID  string
+	ObjectName string
+	Namespace  string
+	Since      *time.Time
+	Until      *time.Time
+	Limit      int32
 }
 
 func (s *Store) Tip(ctx context.Context) ([]byte, int64, error) {
@@ -102,12 +104,14 @@ func (s *Store) List(ctx context.Context, query Query) ([]Record, error) {
 		  AND ($3 = '' OR verb = $3)
 		  AND ($4 = '' OR resource = $4)
 		  AND ($5 = '' OR object_uid = $5)
-		  AND ($6::timestamptz IS NULL OR event_at >= $6)
-		  AND ($7::timestamptz IS NULL OR event_at <= $7)
+		  AND ($6 = '' OR object_name = $6)
+		  AND ($7 = '' OR namespace = $7)
+		  AND ($8::timestamptz IS NULL OR event_at >= $8)
+		  AND ($9::timestamptz IS NULL OR event_at <= $9)
 		ORDER BY seq DESC
-		LIMIT $8`,
+		LIMIT $10`,
 		query.Division, query.Actor, query.Verb, query.Resource, query.ObjectUID,
-		query.Since, query.Until, limit)
+		query.ObjectName, query.Namespace, query.Since, query.Until, limit)
 	if err != nil {
 		return nil, fmt.Errorf("list audit events: %w", err)
 	}

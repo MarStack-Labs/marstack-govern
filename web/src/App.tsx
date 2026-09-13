@@ -372,6 +372,12 @@ function DiagnosePanel({ uid }: { uid: string }) {
     retry: false,
   });
 
+  const drift = useQuery({
+    queryKey: ["drift", uid],
+    queryFn: () => catalog.getDrift({ uid }),
+    retry: false,
+  });
+
   if (explanation.error) {
     return (
       <p className="font-mono text-xs text-progressing">
@@ -408,6 +414,28 @@ function DiagnosePanel({ uid }: { uid: string }) {
           {(regression.latencyP99After * 1000).toFixed(0)}ms · errors{" "}
           {(regression.errorRatioBefore * 100).toFixed(2)}% →{" "}
           {(regression.errorRatioAfter * 100).toFixed(2)}%
+        </p>
+      ) : null}
+
+      {drift.error ? (
+        <p className="font-mono text-xs text-muted">
+          {ConnectError.from(drift.error).message}
+        </p>
+      ) : drift.data?.drifted ? (
+        <div className="flex flex-col gap-1">
+          <p className="font-mono text-xs text-degraded">
+            drifted from {drift.data.application}
+          </p>
+          {drift.data.fields.map((field, index) => (
+            <p key={index} className="font-mono text-xs text-muted">
+              {field.path}: desired {field.desired}, live {field.live}
+              {field.changedBy ? ` · last changed by ${field.changedBy}` : ""}
+            </p>
+          ))}
+        </div>
+      ) : drift.data ? (
+        <p className="font-mono text-xs text-healthy">
+          matches {drift.data.application}
         </p>
       ) : null}
 
