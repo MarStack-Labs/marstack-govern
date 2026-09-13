@@ -175,6 +175,30 @@ and it would drift from the IdP within weeks. Instead the platform accepts a `Me
 writes the outcome back to the IdP or the group repository, and continues to read effective
 membership from claims.
 
+### Reads are scoped by asking Kubernetes
+
+Reads are served from PostgreSQL, which has no idea about RBAC. Rather than reimplementing
+authorization over the projection, the platform asks Kubernetes and filters by the answer:
+
+```
+group claims  ─►  divisions the caller has a grant in  ─►  their namespaces
+                                                              │
+                        SelfSubjectAccessReview (impersonated) ┤  may I list deployments here?
+                                                              ▼
+                                             the namespaces that survive become the scope
+```
+
+The first review is cluster-wide with an empty namespace. A caller who may list workloads everywhere
+— a platform approver, a cluster admin — gets `AllowAll` and sees the whole estate, because
+Kubernetes said so and not because the application special-cased them.
+
+Decisions are cached per subject and namespace for a minute, so a dashboard refresh does not turn
+into a burst of reviews. A caller has a handful of namespaces, so the first request costs a handful
+of reviews and the rest are free.
+
+The same scope filters the event stream. Without it a viewer would receive live changes for
+namespaces they cannot read — the exact leak that a scoped list would otherwise have prevented.
+
 ### No mandatory gateway
 
 Routing all Kubernetes access through the platform would kill `kubectl`, make the platform a single
@@ -230,6 +254,7 @@ kernel or through a contract a module publishes.
 | `api` | ConnectRPC handlers, the SSE hub, authorization middleware |
 | `simulate` | the shadow world: admission dry-run, scheduler simulation, quota and cost projection |
 | `timeline` | ordered events per workload: rollouts, Kubernetes events, alerts, audit entries |
+| `identity` | who the caller is, and what Kubernetes will let them see |
 
 `simulate` and `timeline` exist as kernel modules because several features are the same machine
 pointed at different questions.
@@ -243,9 +268,11 @@ Building either twice would be the first step toward two answers to the same que
 
 ### Domain
 
+`identity` sits in the kernel rather than beside the domain modules: every read has to know who is
+asking, so putting it anywhere else would mean domain modules importing one another.
+
 | Module | Responsibility | Custom resources |
 |---|---|---|
-| `identity` | OIDC, session and active division, claims to RBAC | `MembershipRequest` |
 | `tenancy` | divisions, namespaces, quota via Capsule, limit ranges, default-deny policy | `Division` |
 | `requests` | request lifecycle, recommender, preflight | `QuotaRequest`, `AccessRequest`, `PeeringRequest` |
 | `decisions` | approval queue, impact simulation, decision record | `Decision` |

@@ -85,8 +85,28 @@ createdb govern
 
 ./bin/margov serve \
   --database-url postgres://localhost:5432/govern \
-  --kube-context kind-govern
+  --kube-context kind-govern \
+  --secure-cookies=false \
+  --insecure-dev-identity "you@example.test:payments-admins"
 ```
+
+`--insecure-dev-identity` signs every visitor in as that subject, with those group claims, and says
+so loudly in the log and across the top of the page. It exists so a local run does not need an
+identity provider. Against a real cluster, use OIDC instead:
+
+```sh
+./bin/margov serve \
+  --database-url "$GOVERN_DATABASE_URL" \
+  --oidc-issuer https://keycloak.example.test/realms/platform \
+  --oidc-client-id margov \
+  --oidc-redirect-url https://govern.example.test/auth/callback \
+  --session-key "$GOVERN_SESSION_KEY"
+```
+
+Group claims decide everything: they are matched against the `access` grants on each `Division`, and
+what a signed-in user actually sees is then confirmed with Kubernetes through a
+`SelfSubjectAccessReview` under their own identity. The portal can never show more than the same
+person's `kubectl` would.
 
 Migrations run on start. Open `http://localhost:8080` and the table fills itself from whatever the
 cluster is already running — scale a deployment in another terminal and the row updates without a
