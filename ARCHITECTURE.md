@@ -349,6 +349,15 @@ would penalise exactly the teams that size their requests honestly, and would ma
 traffic rather than with commitment. Usage is still shown — as the measure of idle, and as the input
 to right-sizing advice.
 
+### No cloud price list
+
+Consumption comes from the same Prometheus that decides quota — requested core-hours and GiB-hours,
+summed over the period. There is no OpenCost dependency, because billing on *reserved* capacity at
+*declared* rates never needs to know what a node cost the company.
+
+That also removes a whole class of disagreement: the number on the invoice and the number in the
+quota screen are computed from one series.
+
 | Concern | Handling |
 |---|---|
 | Rates | `PricingPolicy`, effective-dated and approved |
@@ -357,8 +366,12 @@ to right-sizing advice.
 | Unallocated | capacity no division reserved, allocated per `PricingPolicy` (absorbed by the platform, or pro rata) |
 | Attribution | a `division_id` label required by Kyverno at admission |
 
-Reconciliation test: the sum of every division's bill plus unallocated must equal total cluster cost.
-A non-zero difference means attribution is leaking.
+Money is exact. Amounts are rational numbers internally and are only rounded when they are rendered,
+so a month billed as 730 separate hours sums to exactly the monthly rate. A test adds those 730 hours
+up and fails on the last rupiah if the arithmetic ever drifts.
+
+Month-end invoices — the immutable snapshot citing a policy revision — are not built yet; the running
+total is available and says which policy revision produced it.
 
 ## Audit
 

@@ -66,9 +66,8 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 | PostgreSQL | the read model | yes |
 | An OIDC provider (Keycloak, Dex) | identity and group claims | yes |
 | [Cilium](https://cilium.io) | network policy, and Hubble flows for reachability | recommended |
-| [OpenCost](https://opencost.io) | consumption data for chargeback | for FinOps features |
 | [Argo CD](https://argo-cd.readthedocs.io) | GitOps, and desired-versus-live for drift | for delivery features |
-| Mimir / Loki / Tempo | metrics, logs, traces | for signals and diagnostics |
+| Mimir / Loki / Tempo | metrics, logs, traces | for signals, recommendations and chargeback |
 
 Missing optional components degrade specific features and say so in the UI. They never produce a
 guess.
@@ -119,7 +118,27 @@ To have quota requests arrive with a proposed number, point it at Prometheus or 
 ```
 
 Without it, requests still work — they simply say that no number could be proposed, rather than
-inventing one.
+inventing one. The same metrics feed chargeback, and the rates come from a `PricingPolicy`:
+
+```yaml
+apiVersion: govern.marstack.io/v1alpha1
+kind: PricingPolicy
+metadata:
+  name: standard
+spec:
+  currency: IDR
+  rates:
+    cpuCoreMonth: "150000"
+    memoryGiMonth: "25000"
+    storageGiMonth: "2000"
+  effectiveFrom: "2026-01-01"
+  unallocated: Platform
+  approvedBy: finance@example.test
+  approvedAt: "2025-12-18T09:00:00Z"
+```
+
+Divisions are billed for what they **reserved**, not what they used — reserved capacity is what other
+divisions cannot have. What was reserved and never used is shown beside the bill as idle.
 
 Migrations run on start. Open `http://localhost:8080` and the table fills itself from whatever the
 cluster is already running — scale a deployment in another terminal and the row updates without a
