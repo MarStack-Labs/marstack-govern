@@ -7,13 +7,14 @@ import { Session_AuthMode } from "./gen/marstack/govern/v1/identity_pb";
 import { useLiveWorkloads } from "./useLiveWorkloads";
 import { useLiveDivisions } from "./useLiveDivisions";
 import { RequestsView } from "./RequestsView";
+import { CostView } from "./CostView";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import { Workload_Health } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
 import type { Division, Namespace } from "./gen/marstack/govern/v1/tenancy_pb";
 import { Division_Phase } from "./gen/marstack/govern/v1/tenancy_pb";
 
-type View = "services" | "divisions" | "requests";
+type View = "services" | "divisions" | "requests" | "cost";
 
 const views: { id: View; label: string; subtitle: string }[] = [
   {
@@ -30,6 +31,11 @@ const views: { id: View; label: string; subtitle: string }[] = [
     id: "requests",
     label: "Requests",
     subtitle: "numbers proposed from usage, decided against evidence",
+  },
+  {
+    id: "cost",
+    label: "Cost",
+    subtitle: "reserved capacity at signed rates, with the idle beside it",
   },
 ];
 
@@ -82,8 +88,10 @@ export function App() {
           <ServicesView />
         ) : view === "divisions" ? (
           <DivisionsView />
-        ) : (
+        ) : view === "requests" ? (
           <RequestsView session={session} />
+        ) : (
+          <CostView session={session} />
         )}
       </main>
     </div>

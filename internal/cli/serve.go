@@ -16,6 +16,7 @@ import (
 
 	"github.com/marstack-labs/marstack-govern/internal/api"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
+	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/db"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
@@ -133,20 +134,25 @@ func runServe(ctx context.Context, opts serveOptions) error {
 	store := catalog.NewStore(pool)
 	divisions := tenancy.NewStore(pool)
 	requested := requests.NewStore(pool)
+	pricing := cost.NewStore(pool)
 	authorizer := identity.NewAuthorizer(impersonatingClients(restConfig), time.Minute)
 	sessions := identity.NewService(sealer, divisionAccess{store: divisions}, authorizer)
 	hub := api.NewHub(0)
 
-	recommender := requests.NewRecommender(metrics.New(metrics.Config{
+	metricsClient := metrics.New(metrics.Config{
 		BaseURL: opts.metricsURL,
 		Tenant:  opts.metricsTenant,
-	}), opts.recommendWindow)
+	})
+
+	recommender := requests.NewRecommender(metricsClient, opts.recommendWindow)
 
 	if !recommender.Available() {
 		logger.Warn("no metrics source configured: quota requests will arrive without a proposed number")
 	}
 
-	built, err := buildControllers(restConfig, divisions, requested, recommender, hub, logger)
+	usageReader := cost.NewReader(metricsClient)
+
+	built, err := buildControllers(restConfig, divisions, requested, pricing, recommender, hub, logger)
 	if err != nil {
 		return err
 	}
@@ -182,6 +188,7 @@ func runServe(ctx context.Context, opts serveOptions) error {
 			Session:      sessions,
 			Requests:     requestService,
 			Decisions:    requests.NewDecisionService(requestService),
+			FinOps:       cost.NewService(manager.GetClient(), usageReader, workloadRequests{store: store}),
 			Hub:          hub,
 			Web:          assets,
 			Logger:       logger,

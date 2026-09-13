@@ -10,6 +10,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/marstack-labs/marstack-govern/internal/api"
+	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/simulate"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
@@ -25,6 +26,7 @@ func buildControllers(
 	restConfig *rest.Config,
 	divisions *tenancy.Store,
 	requested *requests.Store,
+	pricing *cost.Store,
 	recommender *requests.Recommender,
 	hub *api.Hub,
 	logger *slog.Logger,
@@ -63,6 +65,7 @@ func buildControllers(
 		}).SetupWithManager},
 		{"decision controller", (&requests.DecisionReconciler{Client: client}).SetupWithManager},
 		{"request projector", (&requests.Projector{Client: client, Store: requested, Publisher: hub}).SetupWithManager},
+		{"pricing policy projector", (&cost.Projector{Client: client, Store: pricing}).SetupWithManager},
 	}
 
 	for _, registration := range registrations {

@@ -29,6 +29,7 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&Division{}, &DivisionList{},
 		&QuotaRequest{}, &QuotaRequestList{},
 		&Decision{}, &DecisionList{},
+		&PricingPolicy{}, &PricingPolicyList{},
 	)
 	metav1.AddToGroupVersion(scheme, GroupVersion)
 

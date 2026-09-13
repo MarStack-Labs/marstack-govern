@@ -336,3 +336,38 @@ func decodeCursor(cursor string) (namespace, kind, name string, err error) {
 
 	return parts[0], parts[1], parts[2], nil
 }
+
+type WorkloadRequests struct {
+	UID           string
+	Namespace     string
+	Name          string
+	CPUMillicores int64
+	MemoryBytes   int64
+}
+
+func (s *Store) RequestedByWorkload(ctx context.Context, namespaces []string) ([]WorkloadRequests, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT w.uid, w.namespace, w.name,
+		       coalesce(sum(c.cpu_request_millicores), 0) * greatest(coalesce(w.replicas_desired, 1), 1),
+		       coalesce(sum(c.memory_request_bytes), 0) * greatest(coalesce(w.replicas_desired, 1), 1)
+		FROM workloads w
+		LEFT JOIN workload_containers c ON c.workload_uid = w.uid
+		WHERE $1::text[] IS NULL OR w.namespace = ANY($1)
+		GROUP BY w.uid
+		ORDER BY w.namespace, w.name`, namespaces)
+	if err != nil {
+		return nil, fmt.Errorf("read requested capacity: %w", err)
+	}
+	defer rows.Close()
+
+	out := []WorkloadRequests{}
+	for rows.Next() {
+		var item WorkloadRequests
+		if err := rows.Scan(&item.UID, &item.Namespace, &item.Name, &item.CPUMillicores, &item.MemoryBytes); err != nil {
+			return nil, fmt.Errorf("scan requested capacity: %w", err)
+		}
+		out = append(out, item)
+	}
+
+	return out, rows.Err()
+}

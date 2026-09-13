@@ -8,6 +8,8 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/marstack-labs/marstack-govern/internal/catalog"
+	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
@@ -53,4 +55,28 @@ func impersonatingRuntimeClients(base *rest.Config, scheme *runtime.Scheme) requ
 	return func(actor identity.Actor) (client.Client, error) {
 		return kube.ImpersonateRuntime(base, scheme, actor.Subject, actor.Groups)
 	}
+}
+
+type workloadRequests struct {
+	store *catalog.Store
+}
+
+func (w workloadRequests) RequestedByWorkload(ctx context.Context, namespaces []string) ([]cost.WorkloadRequest, error) {
+	found, err := w.store.RequestedByWorkload(ctx, namespaces)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make([]cost.WorkloadRequest, 0, len(found))
+	for _, item := range found {
+		out = append(out, cost.WorkloadRequest{
+			UID:           item.UID,
+			Namespace:     item.Namespace,
+			Name:          item.Name,
+			CPUMillicores: item.CPUMillicores,
+			MemoryBytes:   item.MemoryBytes,
+		})
+	}
+
+	return out, nil
 }
