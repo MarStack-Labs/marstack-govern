@@ -1,6 +1,6 @@
 module github.com/marstack-labs/marstack-govern
 
-go 1.26.5
+go 1.26.7
 
 require (
 	connectrpc.com/connect v1.21.0

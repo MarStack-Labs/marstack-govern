@@ -67,14 +67,30 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 	w.factory.Start(ctx.Done())
 
-	for informerType, synced := range w.factory.WaitForCacheSync(ctx.Done()) {
-		if !synced {
-			return fmt.Errorf("informer cache for %s did not sync", informerType)
-		}
+	if err := w.waitForCaches(ctx); err != nil {
+		return err
 	}
 
 	<-ctx.Done()
+
+	w.factory.Shutdown()
 	close(w.events)
+
+	return nil
+}
+
+func (w *Watcher) waitForCaches(ctx context.Context) error {
+	synced := w.factory.WaitForCacheSync(ctx.Done())
+
+	if ctx.Err() != nil {
+		return nil
+	}
+
+	for informerType, ok := range synced {
+		if !ok {
+			return fmt.Errorf("informer cache for %s did not sync", informerType)
+		}
+	}
 
 	return nil
 }

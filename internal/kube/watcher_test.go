@@ -10,6 +10,22 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
+func TestWatcherStopsCleanlyWhenCancelledBeforeCachesSync(t *testing.T) {
+	client := fake.NewSimpleClientset(deployment(1, 1, 1, 1))
+	watcher := NewWatcher(client, time.Hour, 1)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	if err := watcher.Run(ctx); err != nil {
+		t.Fatalf("shutting down during startup is not a failure: %v", err)
+	}
+
+	if _, open := <-watcher.Events(); open {
+		t.Fatal("the event channel was left open after shutdown")
+	}
+}
+
 func TestWatcherEmitsExistingWorkloads(t *testing.T) {
 	client := fake.NewSimpleClientset(
 		deployment(2, 2, 1, 1),
