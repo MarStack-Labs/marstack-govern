@@ -137,6 +137,31 @@ spec:
   approvedAt: "2025-12-18T09:00:00Z"
 ```
 
+To record the audit trail, point the Kubernetes audit webhook at the platform:
+
+```yaml
+apiVersion: v1
+kind: Config
+clusters:
+  - name: margov
+    cluster:
+      server: https://govern.example.test/v1/audit
+users:
+  - name: apiserver
+    user:
+      token: "$GOVERN_AUDIT_TOKEN"
+```
+
+```sh
+  --audit-token "$GOVERN_AUDIT_TOKEN" \
+  --audit-archive /var/lib/margov/audit
+```
+
+Every event is hashed onto the one before it and written to both PostgreSQL and an append-only
+segment in the archive directory. Point that directory at object storage with retention — or a
+volume with immutability — and a rewrite becomes impossible rather than merely detectable. The Audit
+page verifies the chain on demand and says whether the archive agrees.
+
 Divisions are billed for what they **reserved**, not what they used — reserved capacity is what other
 divisions cannot have. What was reserved and never used is shown beside the bill as idle.
 

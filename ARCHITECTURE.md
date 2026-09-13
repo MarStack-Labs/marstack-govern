@@ -387,15 +387,28 @@ possibility of disagreeing with the first.
 
 ### Tamper evidence
 
-Loki is a query engine, not a guarantee. Anyone with object storage access can delete chunks. The
-integrity guarantee comes from two properties Loki does not provide:
-
 ```
 hash chain   every event carries the hash of its predecessor
-WORM         S3 Object Lock, with retention set in bucket policy rather than app config
+canonical    the exact bytes that were hashed are stored beside the row
+archive      append-only segments, written before the batch is acknowledged
+WORM         retention set on the storage the archive lives on, not in app config
 ```
 
-Testable: alter one stored event and chain verification must fail.
+The canonical blob exists because the queryable columns cannot be trusted to round-trip: `jsonb`
+reorders keys and `timestamptz` truncates to microseconds, so re-hashing what came back out of the
+database would fail on data nobody touched. The blob is what the hash covers; the columns are an
+index over it, and verification checks that the identifying fields in the index still agree with what
+was signed.
+
+What this buys, stated precisely: the chain makes a rewrite **detectable**, including by someone with
+database superuser rights, because they would have to recompute every subsequent hash and still
+disagree with the archive. Making a rewrite **impossible** is the storage layer's job.
+
+Ingestion is single-writer because the chain is strictly ordered. That is a deliberate throughput
+ceiling in exchange for a property that cannot otherwise be stated honestly.
+
+Testable, and tested: alter one event and verification names it; drop an event from the archive and
+verification says which one is missing.
 
 ## Failure modes
 
