@@ -59,11 +59,89 @@ func (d *DecisionService) ListQueue(
 }
 
 func (d *DecisionService) Simulate(
-	context.Context,
-	*connect.Request[governv1.SimulateRequest],
+	ctx context.Context,
+	req *connect.Request[governv1.SimulateRequest],
 ) (*connect.Response[governv1.SimulateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented,
-		errors.New("scheduler simulation arrives with the simulation slice; preflight already reports cluster commitment"))
+	if _, err := d.service.caller(ctx); err != nil {
+		return nil, err
+	}
+
+	stored, err := d.service.store.GetRequest(ctx, req.Msg.GetRequestUid())
+	if errors.Is(err, ErrNotFound) {
+		return nil, connect.NewError(connect.CodeNotFound,
+			fmt.Errorf("request %s not found", req.Msg.GetRequestUid()))
+	}
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	request := &governv1alpha1.QuotaRequest{}
+	key := types.NamespacedName{Namespace: stored.Namespace, Name: stored.Name}
+	if err := d.service.reader.Get(ctx, key, request); err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+
+	if request.Status.Simulation == nil {
+		return nil, connect.NewError(connect.CodeUnavailable,
+			errors.New("the cluster has not been simulated for this request yet"))
+	}
+
+	return connect.NewResponse(&governv1.SimulateResponse{
+		Simulation: protoSimulation(request),
+		Freshness: &governv1.Freshness{
+			ObservedAt: timestamppb.New(request.Status.Simulation.SimulatedAt.Time),
+		},
+	}), nil
+}
+
+func protoSimulation(request *governv1alpha1.QuotaRequest) *governv1.ImpactSimulation {
+	simulation := request.Status.Simulation
+
+	out := &governv1.ImpactSimulation{
+		DivisionQuotaBefore:     protoCompute(recommendedCurrent(request)),
+		DivisionQuotaAfter:      protoCompute(request.Spec.Target),
+		ClusterCommitmentBefore: float64(simulation.CommitmentBeforePercent) / 100,
+		ClusterCommitmentAfter:  float64(simulation.CommitmentAfterPercent) / 100,
+		Schedulable:             simulation.Schedulable,
+		Verdict:                 simulation.Verdict,
+	}
+
+	for _, name := range simulation.NodesExhausted {
+		out.NodesNoLongerFitting = append(out.NodesNoLongerFitting, &governv1.NodeCapacity{
+			Name:        name,
+			Schedulable: false,
+		})
+	}
+
+	for _, pending := range simulation.PendingNow {
+		out.PodsAtRisk = append(out.PodsAtRisk, &governv1.PendingPod{
+			Namespace: pending.Namespace,
+			Name:      pending.Name,
+			Reason:    pending.Reason,
+		})
+	}
+
+	for range simulation.UnplacedPods {
+		out.PodsAtRisk = append(out.PodsAtRisk, &governv1.PendingPod{
+			Namespace: request.Spec.Division,
+			Name:      "a pod of the division's typical size",
+			Reason:    "no node has room for it, even though the quota would allow it",
+		})
+	}
+
+	if simulation.SimulatedAt != nil {
+		out.SimulatedAt = timestamppb.New(simulation.SimulatedAt.Time)
+	}
+
+	return out
+}
+
+func recommendedCurrent(request *governv1alpha1.QuotaRequest) governv1alpha1.Quota {
+	if request.Status.Recommendation != nil {
+		return request.Status.Recommendation.Current
+	}
+
+	return governv1alpha1.Quota{}
 }
 
 func (d *DecisionService) Decide(
@@ -136,6 +214,7 @@ func (d *DecisionService) Decide(
 			Evidence: governv1alpha1.Evidence{
 				Recommendation: request.Status.Recommendation,
 				Preflight:      request.Status.Preflight,
+				Simulation:     request.Status.Simulation,
 				Digest:         request.Status.EvidenceDigest,
 				CapturedAt:     metav1.Now(),
 			},

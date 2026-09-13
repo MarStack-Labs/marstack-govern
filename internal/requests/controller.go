@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -18,12 +19,14 @@ import (
 
 	governv1alpha1 "github.com/marstack-labs/marstack-govern/api/v1alpha1"
 	"github.com/marstack-labs/marstack-govern/internal/metrics"
+	"github.com/marstack-labs/marstack-govern/internal/simulate"
 )
 
 type RequestReconciler struct {
 	client.Client
 	Recommender *Recommender
 	Preflight   *Preflight
+	Simulator   *simulate.Simulator
 }
 
 func (r *RequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
@@ -75,9 +78,10 @@ func (r *RequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	status.Recommendation = r.recommend(ctx, division, current, &status.Conditions)
 	status.Preflight = r.preflight(ctx, request, division, &status.Conditions)
+	status.Simulation = r.simulate(ctx, request, division, current, &status.Conditions)
 	status.Phase = governv1alpha1.RequestAwaitingDecision
 
-	digest, err := EvidenceDigest(status.Recommendation, status.Preflight)
+	digest, err := EvidenceDigest(status.Recommendation, status.Preflight, status.Simulation)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -146,6 +150,103 @@ func (r *RequestReconciler) preflight(
 	setCondition(conditions, governv1alpha1.ConditionPreflight, state, reason, message)
 
 	return result
+}
+
+func (r *RequestReconciler) simulate(
+	ctx context.Context,
+	request *governv1alpha1.QuotaRequest,
+	division *governv1alpha1.Division,
+	current Compute,
+	conditions *[]metav1.Condition,
+) *governv1alpha1.Simulation {
+	if r.Simulator == nil {
+		setCondition(conditions, governv1alpha1.ConditionSimulated, metav1.ConditionFalse,
+			"NotSimulated", "no cluster snapshot is available to simulate against")
+		return nil
+	}
+
+	target := quotaOf(request.Spec.Target)
+
+	committed, err := r.committed(ctx)
+	if err != nil {
+		setCondition(conditions, governv1alpha1.ConditionSimulated, metav1.ConditionFalse, "Failed", err.Error())
+		return nil
+	}
+
+	impact, err := r.Simulator.Impact(ctx, division.Status.Namespaces,
+		simulate.Compute{CPUMillicores: current.CPUMillicores, MemoryBytes: current.MemoryBytes},
+		simulate.Compute{CPUMillicores: target.CPUMillicores, MemoryBytes: target.MemoryBytes},
+		simulate.Compute{CPUMillicores: committed.CPUMillicores, MemoryBytes: committed.MemoryBytes},
+	)
+	if err != nil {
+		setCondition(conditions, governv1alpha1.ConditionSimulated, metav1.ConditionFalse, "Failed", err.Error())
+		return nil
+	}
+
+	state := metav1.ConditionTrue
+	reason := "Fits"
+	if !impact.Schedulable {
+		state, reason = metav1.ConditionFalse, "WouldNotFit"
+	}
+
+	setCondition(conditions, governv1alpha1.ConditionSimulated, state, reason, impact.Verdict)
+
+	return toAPISimulation(impact)
+}
+
+func (r *RequestReconciler) committed(ctx context.Context) (Compute, error) {
+	divisions := &governv1alpha1.DivisionList{}
+	if err := r.List(ctx, divisions); err != nil {
+		return Compute{}, fmt.Errorf("list divisions: %w", err)
+	}
+
+	total := Compute{}
+	for i := range divisions.Items {
+		quota := quotaOf(divisions.Items[i].Spec.Quota)
+		total.CPUMillicores += quota.CPUMillicores
+		total.MemoryBytes += quota.MemoryBytes
+	}
+
+	return total, nil
+}
+
+func toAPISimulation(impact simulate.Impact) *governv1alpha1.Simulation {
+	at := metav1.NewTime(impact.SimulatedAt)
+
+	out := &governv1alpha1.Simulation{
+		Schedulable:             impact.Schedulable,
+		TypicalPodCPUMillicores: impact.TypicalPod.CPU,
+		TypicalPodMemoryBytes:   impact.TypicalPod.Mem,
+		HeadroomPods:            bounded(impact.HeadroomPods),
+		PlacedPods:              bounded(impact.PlacedPods),
+		UnplacedPods:            bounded(impact.UnplacedPods),
+		NodesExhausted:          impact.NodesExhausted,
+		CommitmentBeforePercent: bounded(int(impact.CommitBefore * 100)),
+		CommitmentAfterPercent:  bounded(int(impact.CommitAfter * 100)),
+		Verdict:                 impact.Verdict,
+		SimulatedAt:             &at,
+	}
+
+	for _, pending := range impact.PendingNow {
+		out.PendingNow = append(out.PendingNow, governv1alpha1.PendingPod{
+			Namespace: pending.Namespace,
+			Name:      pending.Name,
+			Reason:    pending.Reason,
+		})
+	}
+
+	return out
+}
+
+func bounded(value int) int32 {
+	if value > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if value < math.MinInt32 {
+		return math.MinInt32
+	}
+
+	return int32(value)
 }
 
 func (r *RequestReconciler) writeStatus(
@@ -323,11 +424,16 @@ func (r *DecisionReconciler) now() time.Time {
 	return time.Now()
 }
 
-func EvidenceDigest(recommendation *governv1alpha1.Recommendation, preflight *governv1alpha1.PreflightResult) (string, error) {
+func EvidenceDigest(
+	recommendation *governv1alpha1.Recommendation,
+	preflight *governv1alpha1.PreflightResult,
+	simulation *governv1alpha1.Simulation,
+) (string, error) {
 	payload, err := json.Marshal(struct {
 		Recommendation *governv1alpha1.Recommendation  `json:"recommendation"`
 		Preflight      *governv1alpha1.PreflightResult `json:"preflight"`
-	}{Recommendation: recommendation, Preflight: preflight})
+		Simulation     *governv1alpha1.Simulation      `json:"simulation"`
+	}{Recommendation: recommendation, Preflight: preflight, Simulation: simulation})
 	if err != nil {
 		return "", fmt.Errorf("encode evidence: %w", err)
 	}

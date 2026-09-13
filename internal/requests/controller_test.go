@@ -19,6 +19,7 @@ import (
 
 	governv1alpha1 "github.com/marstack-labs/marstack-govern/api/v1alpha1"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
+	"github.com/marstack-labs/marstack-govern/internal/simulate"
 )
 
 func TestANewRequestArrivesWithEvidence(t *testing.T) {
@@ -197,12 +198,12 @@ func TestAWithdrawnRequestStopsThere(t *testing.T) {
 }
 
 func TestTheEvidenceDigestChangesWithTheEvidence(t *testing.T) {
-	first, err := requests.EvidenceDigest(nil, &governv1alpha1.PreflightResult{Admitted: true})
+	first, err := requests.EvidenceDigest(nil, &governv1alpha1.PreflightResult{Admitted: true}, nil)
 	if err != nil {
 		t.Fatalf("digest: %v", err)
 	}
 
-	second, err := requests.EvidenceDigest(nil, &governv1alpha1.PreflightResult{Admitted: false})
+	second, err := requests.EvidenceDigest(nil, &governv1alpha1.PreflightResult{Admitted: false}, nil)
 	if err != nil {
 		t.Fatalf("digest: %v", err)
 	}
@@ -265,6 +266,7 @@ func reconcileRequest(t *testing.T, c client.Client, recommender *requests.Recom
 		Client:      c,
 		Recommender: recommender,
 		Preflight:   &requests.Preflight{Client: c},
+		Simulator:   &simulate.Simulator{Client: c},
 	})
 }
 
@@ -383,6 +385,38 @@ func quotaRequest(cpu int64, memoryGi int64) *governv1alpha1.QuotaRequest {
 	}
 }
 
+func namedNode(name string, cpuMillis, memoryBytes int64) *corev1.Node {
+	return &corev1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: name},
+		Status: corev1.NodeStatus{
+			Allocatable: corev1.ResourceList{
+				corev1.ResourceCPU:    *resource.NewMilliQuantity(cpuMillis, resource.DecimalSI),
+				corev1.ResourceMemory: *resource.NewQuantity(memoryBytes, resource.BinarySI),
+			},
+			Conditions: []corev1.NodeCondition{{Type: corev1.NodeReady, Status: corev1.ConditionTrue}},
+		},
+	}
+}
+
+func sizedPod(name, namespace, nodeName string, cpuMillis, memoryBytes int64) *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: corev1.PodSpec{
+			NodeName: nodeName,
+			Containers: []corev1.Container{{
+				Name: "app",
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceCPU:    *resource.NewMilliQuantity(cpuMillis, resource.DecimalSI),
+						corev1.ResourceMemory: *resource.NewQuantity(memoryBytes, resource.BinarySI),
+					},
+				},
+			}},
+		},
+		Status: corev1.PodStatus{Phase: corev1.PodRunning},
+	}
+}
+
 func node(cpu int64, memoryGi int64) *corev1.Node {
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: "node-1"},
@@ -415,4 +449,66 @@ func findCondition(conditions []metav1.Condition, conditionType string) *metav1.
 	}
 
 	return nil
+}
+
+func TestTheSimulationJoinsTheEvidence(t *testing.T) {
+	c := newCluster(t, division(8, 16), quotaRequest(12, 24), node(40, 96))
+	reconcileRequest(t, c, withMetrics(t))
+
+	request := readRequest(t, c)
+
+	if request.Status.Simulation == nil {
+		t.Fatal("the request carries no simulation")
+	}
+	if !request.Status.Simulation.Schedulable {
+		t.Errorf("simulation: got %+v", request.Status.Simulation)
+	}
+	if request.Status.Simulation.HeadroomPods == 0 {
+		t.Error("the simulation placed no pods for a quota that grew")
+	}
+	if !conditionTrue(request.Status.Conditions, governv1alpha1.ConditionSimulated) {
+		t.Error("Simulated is not true")
+	}
+
+	withoutSimulation, err := requests.EvidenceDigest(
+		request.Status.Recommendation, request.Status.Preflight, nil)
+	if err != nil {
+		t.Fatalf("digest: %v", err)
+	}
+
+	if withoutSimulation == request.Status.EvidenceDigest {
+		t.Fatal("the digest ignores the simulation, so an approver could be shown one and bound to another")
+	}
+}
+
+func TestAFragmentedClusterIsReportedEvenWhenTheQuotaFits(t *testing.T) {
+	objects := []client.Object{division(8, 16), quotaRequest(12, 24)}
+
+	for i := range 6 {
+		name := fmt.Sprintf("node-%d", i)
+		objects = append(objects,
+			namedNode(name, 4000, 8*gibibyte),
+			sizedPod(fmt.Sprintf("filler-%d", i), "other", name, 3300, 6*gibibyte),
+		)
+	}
+	objects = append(objects, sizedPod("api", "payments-dev", "node-0", 2000, 4*gibibyte))
+
+	c := newCluster(t, objects...)
+	reconcileRequest(t, c, withMetrics(t))
+
+	request := readRequest(t, c)
+
+	if request.Status.Preflight == nil || !request.Status.Preflight.Admitted {
+		t.Fatalf("preflight should admit a target the cluster has room for on paper: %+v", request.Status.Preflight)
+	}
+
+	if request.Status.Simulation == nil {
+		t.Fatal("the request carries no simulation")
+	}
+	if request.Status.Simulation.Schedulable {
+		t.Fatal("the simulation agreed with the arithmetic instead of packing the nodes")
+	}
+	if request.Status.Simulation.UnplacedPods == 0 {
+		t.Error("no pod was reported as unplaceable")
+	}
 }

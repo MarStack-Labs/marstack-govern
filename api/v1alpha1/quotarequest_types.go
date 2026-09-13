@@ -20,6 +20,7 @@ const (
 const (
 	ConditionRecommended = "Recommended"
 	ConditionPreflight   = "Preflight"
+	ConditionSimulated   = "Simulated"
 	ConditionDecided     = "Decided"
 	ConditionApplied     = "Applied"
 )
@@ -94,6 +95,51 @@ type PreflightFinding struct {
 	Field string `json:"field,omitempty"`
 }
 
+type Simulation struct {
+	Schedulable bool `json:"schedulable"`
+
+	// +optional
+	TypicalPodCPUMillicores int64 `json:"typicalPodCpuMillicores,omitempty"`
+
+	// +optional
+	TypicalPodMemoryBytes int64 `json:"typicalPodMemoryBytes,omitempty"`
+
+	// +optional
+	HeadroomPods int32 `json:"headroomPods,omitempty"`
+
+	// +optional
+	PlacedPods int32 `json:"placedPods,omitempty"`
+
+	// +optional
+	UnplacedPods int32 `json:"unplacedPods,omitempty"`
+
+	// +optional
+	NodesExhausted []string `json:"nodesExhausted,omitempty"`
+
+	// +optional
+	PendingNow []PendingPod `json:"pendingNow,omitempty"`
+
+	// +optional
+	CommitmentBeforePercent int32 `json:"commitmentBeforePercent,omitempty"`
+
+	// +optional
+	CommitmentAfterPercent int32 `json:"commitmentAfterPercent,omitempty"`
+
+	// +optional
+	Verdict string `json:"verdict,omitempty"`
+
+	// +optional
+	SimulatedAt *metav1.Time `json:"simulatedAt,omitempty"`
+}
+
+type PendingPod struct {
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+
+	// +optional
+	Reason string `json:"reason,omitempty"`
+}
+
 type QuotaRequestStatus struct {
 	// +optional
 	Phase RequestPhase `json:"phase,omitempty"`
@@ -103,6 +149,9 @@ type QuotaRequestStatus struct {
 
 	// +optional
 	Preflight *PreflightResult `json:"preflight,omitempty"`
+
+	// +optional
+	Simulation *Simulation `json:"simulation,omitempty"`
 
 	// +optional
 	DecisionRef string `json:"decisionRef,omitempty"`

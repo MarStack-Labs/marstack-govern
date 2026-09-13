@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ConnectError } from "@connectrpc/connect";
 
-import { useRecommendation, useRequests } from "./useRequests";
+import { useRecommendation, useRequests, useSimulation } from "./useRequests";
 import { Decision_Outcome } from "./gen/marstack/govern/v1/decisions_pb";
 import type { ResourceRequest } from "./gen/marstack/govern/v1/requests_pb";
 import { ResourceRequest_Phase } from "./gen/marstack/govern/v1/requests_pb";
@@ -277,6 +277,8 @@ function Evidence({ request }: { request: ResourceRequest }) {
         </p>
       )}
 
+      <SimulationLine requestUid={request.uid} />
+
       {preflight ? (
         <div className="flex flex-col gap-1">
           <p className={`font-mono text-xs ${preflight.admitted ? "text-healthy" : "text-degraded"}`}>
@@ -294,6 +296,43 @@ function Evidence({ request }: { request: ResourceRequest }) {
       <p className="font-mono text-[10px] text-muted">
         digest {request.evidenceDigest.slice(0, 12) || "none"}
       </p>
+    </div>
+  );
+}
+
+function SimulationLine({ requestUid }: { requestUid: string }) {
+  const simulation = useSimulation(requestUid);
+
+  if (simulation.error) {
+    return (
+      <p className="font-mono text-xs text-progressing">
+        no simulation: {ConnectError.from(simulation.error).message}
+      </p>
+    );
+  }
+
+  const impact = simulation.data?.simulation;
+  if (!impact) {
+    return <p className="font-mono text-xs text-muted">packing the cluster…</p>;
+  }
+
+  const nodes = impact.nodesNoLongerFitting.map((node) => node.name);
+
+  return (
+    <div className="flex flex-col gap-1">
+      <p className={`font-mono text-xs ${impact.schedulable ? "text-healthy" : "text-degraded"}`}>
+        simulation: {impact.verdict}
+      </p>
+      <p className="font-mono text-xs text-muted">
+        cluster commitment {Math.round(impact.clusterCommitmentBefore * 100)}% →{" "}
+        {Math.round(impact.clusterCommitmentAfter * 100)}%
+        {nodes.length > 0 ? ` · nodes that fill up: ${nodes.join(", ")}` : ""}
+      </p>
+      {impact.podsAtRisk.slice(0, 3).map((pod, index) => (
+        <p key={index} className="font-mono text-xs text-degraded">
+          at risk: {pod.namespace}/{pod.name} — {pod.reason}
+        </p>
+      ))}
     </div>
   );
 }

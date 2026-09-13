@@ -12,6 +12,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/db/dbtest"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
+	"github.com/marstack-labs/marstack-govern/internal/simulate"
 )
 
 func TestARequestIsFiledAsTheCallerAndArrivesWithANumber(t *testing.T) {
@@ -49,6 +50,7 @@ func TestARequestIsFiledAsTheCallerAndArrivesWithANumber(t *testing.T) {
 		Client:      c,
 		Recommender: withMetrics(t),
 		Preflight:   &requests.Preflight{Client: c},
+		Simulator:   &simulate.Simulator{Client: c},
 	}, "payments-dev", name)
 
 	project(t, c, store, "payments-dev", name)

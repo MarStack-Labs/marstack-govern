@@ -92,6 +92,14 @@ export function useRequests(division?: string) {
   };
 }
 
+export function useSimulation(requestUid: string) {
+  return useQuery({
+    queryKey: ["simulation", requestUid],
+    queryFn: () => decisions.simulate({ requestUid }),
+    retry: false,
+  });
+}
+
 export function useRecommendation(division?: string) {
   return useQuery({
     queryKey: ["recommendation", division ?? ""],

@@ -11,6 +11,7 @@ import (
 
 	"github.com/marstack-labs/marstack-govern/internal/api"
 	"github.com/marstack-labs/marstack-govern/internal/requests"
+	"github.com/marstack-labs/marstack-govern/internal/simulate"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 )
 
@@ -46,6 +47,7 @@ func buildControllers(
 
 	client := manager.GetClient()
 	preflight := &requests.Preflight{Client: client}
+	simulator := &simulate.Simulator{Client: client}
 
 	registrations := []struct {
 		name  string
@@ -57,6 +59,7 @@ func buildControllers(
 			Client:      client,
 			Recommender: recommender,
 			Preflight:   preflight,
+			Simulator:   simulator,
 		}).SetupWithManager},
 		{"decision controller", (&requests.DecisionReconciler{Client: client}).SetupWithManager},
 		{"request projector", (&requests.Projector{Client: client, Store: requested, Publisher: hub}).SetupWithManager},

@@ -226,6 +226,57 @@ spec:
                       window:
                         type: string
                     type: object
+                  simulation:
+                    properties:
+                      commitmentAfterPercent:
+                        format: int32
+                        type: integer
+                      commitmentBeforePercent:
+                        format: int32
+                        type: integer
+                      headroomPods:
+                        format: int32
+                        type: integer
+                      nodesExhausted:
+                        items:
+                          type: string
+                        type: array
+                      pendingNow:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            namespace:
+                              type: string
+                            reason:
+                              type: string
+                          required:
+                          - name
+                          - namespace
+                          type: object
+                        type: array
+                      placedPods:
+                        format: int32
+                        type: integer
+                      schedulable:
+                        type: boolean
+                      simulatedAt:
+                        format: date-time
+                        type: string
+                      typicalPodCpuMillicores:
+                        format: int64
+                        type: integer
+                      typicalPodMemoryBytes:
+                        format: int64
+                        type: integer
+                      unplacedPods:
+                        format: int32
+                        type: integer
+                      verdict:
+                        type: string
+                    required:
+                    - schedulable
+                    type: object
                 required:
                 - capturedAt
                 - digest

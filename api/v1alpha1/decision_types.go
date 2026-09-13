@@ -33,6 +33,9 @@ type Evidence struct {
 	// +optional
 	Preflight *PreflightResult `json:"preflight,omitempty"`
 
+	// +optional
+	Simulation *Simulation `json:"simulation,omitempty"`
+
 	// +kubebuilder:validation:MinLength=1
 	Digest string `json:"digest"`
 
