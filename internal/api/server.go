@@ -11,6 +11,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1/governv1connect"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
+	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/version"
 )
@@ -19,6 +20,8 @@ type Options struct {
 	Catalog      *catalog.Service
 	Tenancy      *tenancy.Service
 	Session      *identity.Service
+	Requests     *requests.Service
+	Decisions    *requests.DecisionService
 	Hub          *Hub
 	Web          fs.FS
 	Logger       *slog.Logger
@@ -61,6 +64,16 @@ func NewHandler(opts Options) http.Handler {
 
 	if opts.Session != nil {
 		path, handler := governv1connect.NewSessionServiceHandler(opts.Session, options...)
+		mux.Handle(path, handler)
+	}
+
+	if opts.Requests != nil {
+		path, handler := governv1connect.NewRequestServiceHandler(opts.Requests, options...)
+		mux.Handle(path, handler)
+	}
+
+	if opts.Decisions != nil {
+		path, handler := governv1connect.NewDecisionServiceHandler(opts.Decisions, options...)
 		mux.Handle(path, handler)
 	}
 

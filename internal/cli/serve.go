@@ -19,25 +19,31 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/db"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
+	"github.com/marstack-labs/marstack-govern/internal/metrics"
+	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/web"
 )
 
 type serveOptions struct {
-	addr        string
-	databaseURL string
-	kubeconfig  string
-	kubeContext string
-	resync      time.Duration
-	logLevel    string
-	auth        authOptions
+	addr            string
+	databaseURL     string
+	kubeconfig      string
+	kubeContext     string
+	resync          time.Duration
+	logLevel        string
+	metricsURL      string
+	metricsTenant   string
+	recommendWindow time.Duration
+	auth            authOptions
 }
 
 func newServeCommand() *cobra.Command {
 	opts := serveOptions{
-		addr:   ":8080",
-		resync: 10 * time.Minute,
-		auth:   authOptions{secureCookies: true},
+		addr:            ":8080",
+		resync:          10 * time.Minute,
+		recommendWindow: requests.DefaultWindow,
+		auth:            authOptions{secureCookies: true},
 	}
 
 	cmd := &cobra.Command{
@@ -56,6 +62,10 @@ func newServeCommand() *cobra.Command {
 	flags.StringVar(&opts.kubeContext, "kube-context", "", "kubeconfig context to use")
 	flags.DurationVar(&opts.resync, "resync", opts.resync, "informer resync period")
 	flags.StringVar(&opts.logLevel, "log-level", "info", "debug, info, warn or error")
+
+	flags.StringVar(&opts.metricsURL, "metrics-url", "", "Prometheus or Mimir base url used to propose quota numbers")
+	flags.StringVar(&opts.metricsTenant, "metrics-tenant", "", "value for X-Scope-OrgID when querying Mimir")
+	flags.DurationVar(&opts.recommendWindow, "recommend-window", opts.recommendWindow, "how far back usage is read when proposing a quota")
 
 	flags.StringVar(&opts.auth.sessionKey, "session-key", "", "32 byte session key, hex or base64 (falls back to GOVERN_SESSION_KEY)")
 	flags.BoolVar(&opts.auth.secureCookies, "secure-cookies", opts.auth.secureCookies, "only send the session cookie over https")
@@ -122,14 +132,39 @@ func runServe(ctx context.Context, opts serveOptions) error {
 
 	store := catalog.NewStore(pool)
 	divisions := tenancy.NewStore(pool)
+	requested := requests.NewStore(pool)
 	authorizer := identity.NewAuthorizer(impersonatingClients(restConfig), time.Minute)
 	sessions := identity.NewService(sealer, divisionAccess{store: divisions}, authorizer)
 	hub := api.NewHub(0)
 
-	manager, err := tenancy.NewManager(restConfig, divisions, hub, logger)
+	recommender := requests.NewRecommender(metrics.New(metrics.Config{
+		BaseURL: opts.metricsURL,
+		Tenant:  opts.metricsTenant,
+	}), opts.recommendWindow)
+
+	if !recommender.Available() {
+		logger.Warn("no metrics source configured: quota requests will arrive without a proposed number")
+	}
+
+	built, err := buildControllers(restConfig, divisions, requested, recommender, hub, logger)
 	if err != nil {
 		return err
 	}
+
+	manager := built.manager
+
+	scheme, err := tenancy.NewScheme()
+	if err != nil {
+		return err
+	}
+
+	requestService := requests.NewService(
+		manager.GetClient(),
+		impersonatingRuntimeClients(restConfig, scheme),
+		requested,
+		recommender,
+		built.preflight,
+	)
 
 	watcher := kube.NewWatcher(client, opts.resync, 512)
 	projector := catalog.NewProjector(store, watcher.Events(), hub, logger)
@@ -145,6 +180,8 @@ func runServe(ctx context.Context, opts serveOptions) error {
 			Catalog:      catalog.NewService(store).WithScope(sessions),
 			Tenancy:      tenancy.NewService(divisions).WithScope(sessions),
 			Session:      sessions,
+			Requests:     requestService,
+			Decisions:    requests.NewDecisionService(requestService),
 			Hub:          hub,
 			Web:          assets,
 			Logger:       logger,

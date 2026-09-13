@@ -3,11 +3,14 @@ package cli
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
+	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 )
 
@@ -43,5 +46,11 @@ func (d divisionAccess) DivisionAccess(ctx context.Context) ([]identity.Division
 func impersonatingClients(base *rest.Config) identity.ClientFactory {
 	return func(subject string, groups []string) (kubernetes.Interface, error) {
 		return kube.Impersonate(base, subject, groups)
+	}
+}
+
+func impersonatingRuntimeClients(base *rest.Config, scheme *runtime.Scheme) requests.ClientFactory {
+	return func(actor identity.Actor) (client.Client, error) {
+		return kube.ImpersonateRuntime(base, scheme, actor.Subject, actor.Groups)
 	}
 }

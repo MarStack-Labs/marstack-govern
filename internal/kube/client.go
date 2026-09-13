@@ -5,9 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ClientConfig struct {
@@ -106,4 +108,20 @@ func restConfig(cfg ClientConfig) (*rest.Config, error) {
 	}
 
 	return restCfg, nil
+}
+
+func ImpersonateRuntime(base *rest.Config, scheme *runtime.Scheme, subject string, groups []string) (client.Client, error) {
+	if subject == "" {
+		return nil, fmt.Errorf("impersonation requires a subject")
+	}
+
+	cfg := rest.CopyConfig(base)
+	cfg.Impersonate = rest.ImpersonationConfig{UserName: subject, Groups: groups}
+
+	runtimeClient, err := client.New(cfg, client.Options{Scheme: scheme})
+	if err != nil {
+		return nil, fmt.Errorf("build impersonating runtime client for %s: %w", subject, err)
+	}
+
+	return runtimeClient, nil
 }
