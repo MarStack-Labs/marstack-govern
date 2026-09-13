@@ -274,8 +274,7 @@ asking, so putting it anywhere else would mean domain modules importing one anot
 | Module | Responsibility | Custom resources |
 |---|---|---|
 | `tenancy` | divisions, namespaces, quota via Capsule, limit ranges, default-deny policy | `Division` |
-| `requests` | request lifecycle, recommender, preflight | `QuotaRequest`, `AccessRequest`, `PeeringRequest` |
-| `decisions` | approval queue, impact simulation, decision record | `Decision` |
+| `requests` | request lifecycle, recommender, preflight, decisions | `QuotaRequest`, `Decision` |
 | `finops` | consumption, rates, chargeback, invoices, idle, right-sizing | `PricingPolicy` |
 | `catalog` | workload discovery, classification, ownership | `TierOverride` |
 | `signals` | golden signals, SLOs, error budgets, burn rate | `ServiceLevelObjective` |
@@ -311,6 +310,16 @@ When an approver opens a request, they see what granting it does: how cluster co
 which nodes no longer fit, which pods would go `Pending`, and how the division's monthly bill moves.
 Scheduler simulation, not arithmetic — arithmetic cannot tell you that 4 spare cores spread across
 6 nodes will not fit a 2-core pod.
+
+### A grant that lapses is flagged, not reverted
+
+Every approval carries an expiry. When it passes, the decision is marked expired and the request
+moves to `Expired` — but the quota itself is left alone. Silently shrinking a live division's quota
+because a calendar date passed would turn a governance control into an outage.
+
+The expiry therefore means *this grant is due for review*, and the review is visible rather than
+automatic. Grants that genuinely should revoke themselves — access, peering — behave differently,
+because taking those back breaks nothing that was not already borrowed.
 
 ### Decisions are time-bound and evidenced
 

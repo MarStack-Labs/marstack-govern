@@ -48,9 +48,12 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
 
 ## Status
 
-Early, but the vertical axis runs: workloads are discovered by informers, projected into PostgreSQL,
-served over ConnectRPC, streamed to the browser over SSE, and rendered in a live table. Tenancy,
-requests, decisions, simulation and FinOps arrive in the slices after this one.
+Working end to end: workloads are discovered, divisions are reconciled into namespaces with quota and
+isolation, sign-in is OIDC with Kubernetes deciding what each person may see, and quota requests
+arrive with a number proposed from observed usage and are decided against recorded evidence.
+
+Scheduler simulation, FinOps, audit integrity, supply chain and diagnostics are the slices after
+this one.
 
 ## Prerequisites
 
@@ -107,6 +110,16 @@ Group claims decide everything: they are matched against the `access` grants on 
 what a signed-in user actually sees is then confirmed with Kubernetes through a
 `SelfSubjectAccessReview` under their own identity. The portal can never show more than the same
 person's `kubectl` would.
+
+To have quota requests arrive with a proposed number, point it at Prometheus or Mimir:
+
+```sh
+  --metrics-url http://mimir.monitoring:9009/prometheus \
+  --metrics-tenant payments
+```
+
+Without it, requests still work — they simply say that no number could be proposed, rather than
+inventing one.
 
 Migrations run on start. Open `http://localhost:8080` and the table fills itself from whatever the
 cluster is already running — scale a deployment in another terminal and the row updates without a
@@ -175,7 +188,10 @@ internal/
   catalog/           workload discovery: store, projector, service
   cli/               command tree
   db/                connection pool, embedded migrations, migration runner
+  identity/          sessions, OIDC, impersonation, authorization
   kube/              client, impersonation, informers, workload conversion
+  metrics/           Prometheus and Mimir queries
+  requests/          quota requests, recommender, preflight, decisions
   tenancy/           division controller, projector, service
   version/           build metadata
   web/dist/          built UI, embedded into the binary
