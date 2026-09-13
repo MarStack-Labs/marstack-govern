@@ -24,7 +24,7 @@ func TestHealthzReportsTheVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get healthz: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("status: got %d, want 200", response.StatusCode)
@@ -49,7 +49,7 @@ func TestTheUiIsEmbeddedInTheBinary(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get index: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("status: got %d, want 200", response.StatusCode)
@@ -74,7 +74,7 @@ func TestUnknownPathsFallBackToTheApp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get deep link: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if response.StatusCode != http.StatusOK {
 		t.Fatalf("status: got %d, want 200", response.StatusCode)
@@ -101,7 +101,7 @@ func TestEventStreamEmitsFramesWithCursors(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open stream: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if contentType := response.Header.Get("Content-Type"); contentType != "text/event-stream" {
 		t.Fatalf("content type: got %q", contentType)
@@ -154,7 +154,7 @@ func TestEventStreamAsksForAResyncWhenTheCursorIsTooOld(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open stream: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if frame := readFrame(t, response.Body); !strings.Contains(frame, "event: resync") {
 		t.Fatalf("the client was not told to resync: %s", frame)
@@ -231,7 +231,7 @@ func TestRpcsRefuseAnonymousCallersWhenSessionsAreOn(t *testing.T) {
 	if err != nil {
 		t.Fatalf("call rpc: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 
 	if response.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("status: got %d, want 401 (%s)", response.StatusCode, readAll(t, response.Body))

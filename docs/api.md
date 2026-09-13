@@ -18,6 +18,8 @@ Protos carry no comments; the reasoning lives here.
 | `DecisionService` | `decisions.proto` | approval queue, impact simulation, decisions, revocation |
 | `FinOpsService` | `finops.proto` | cost, invoices, right-sizing, pricing policy |
 | `AuditService` | `audit.proto` | audit stream, chain verification |
+| `PolicyService` | `policy.proto` | guardrail catalog, violations, compliance |
+| `TopologyService` | `topology.proto` | traced service graph, network reachability |
 
 `common.proto` holds shared types; `events.proto` defines the live stream payloads.
 

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service TopologyService {
+  rpc GetServiceGraph(GetServiceGraphRequest) returns (GetServiceGraphResponse);
+  rpc GetReachability(GetReachabilityRequest) returns (GetReachabilityResponse);
+}
+
+message ServiceEdge {
+  string client = 1;
+  string server = 2;
+  double requests_per_second = 3;
+  double error_ratio = 4;
+}
+
+message NetworkPath {
+  string from = 1;
+  string to = 2;
+  bool allowed = 3;
+  bool observed = 4;
+  string allowed_by = 5;
+  Verdict verdict = 6;
+
+  enum Verdict {
+    VERDICT_UNSPECIFIED = 0;
+    VERDICT_ALLOWED_AND_USED = 1;
+    VERDICT_ALLOWED_UNUSED = 2;
+    VERDICT_OBSERVED_NOT_ALLOWED = 3;
+    VERDICT_DENIED = 4;
+  }
+}
+
+message GetServiceGraphRequest {
+  string division = 1;
+}
+
+message GetServiceGraphResponse {
+  repeated ServiceEdge edges = 1;
+  Freshness freshness = 2;
+  google.protobuf.Timestamp observed_at = 3;
+}
+
+message GetReachabilityRequest {
+  string division = 1;
+}
+
+message GetReachabilityResponse {
+  repeated NetworkPath paths = 1;
+  bool traffic_observed = 2;
+  Freshness freshness = 3;
+}

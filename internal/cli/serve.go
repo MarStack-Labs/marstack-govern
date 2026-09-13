@@ -28,6 +28,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/requests"
 	"github.com/marstack-labs/marstack-govern/internal/supplychain"
 	"github.com/marstack-labs/marstack-govern/internal/tenancy"
+	"github.com/marstack-labs/marstack-govern/internal/topology"
 	"github.com/marstack-labs/marstack-govern/internal/web"
 )
 
@@ -248,6 +249,7 @@ func runServe(ctx context.Context, opts serveOptions) error {
 			Audit:         audit.NewService(auditStore, archive),
 			RegisterAudit: registerAudit,
 			Policy:        policy.NewService(manager.GetClient()),
+			Topology:      topology.NewService(manager.GetClient(), topology.NewGraph(metricsClient, time.Hour)),
 			Hub:           hub,
 			Web:           assets,
 			Logger:        logger,

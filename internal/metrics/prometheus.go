@@ -47,8 +47,37 @@ func (c *Client) Available() bool {
 	return c != nil && c.baseURL != ""
 }
 
+type Sample struct {
+	Labels map[string]string
+	Value  float64
+}
+
 func (c *Client) Scalar(ctx context.Context, query string) (float64, bool, error) {
 	return c.ScalarAt(ctx, query, time.Time{})
+}
+
+func (c *Client) Vector(ctx context.Context, query string) ([]Sample, error) {
+	if !c.Available() {
+		return nil, ErrUnavailable
+	}
+
+	payload, err := c.query(ctx, query, time.Time{})
+	if err != nil {
+		return nil, err
+	}
+
+	samples := make([]Sample, 0, len(payload.Data.Result))
+
+	for _, result := range payload.Data.Result {
+		value, err := sampleValue(result.Value)
+		if err != nil {
+			return nil, err
+		}
+
+		samples = append(samples, Sample{Labels: result.Metric, Value: value})
+	}
+
+	return samples, nil
 }
 
 func (c *Client) ScalarAt(ctx context.Context, query string, at time.Time) (float64, bool, error) {
@@ -56,6 +85,36 @@ func (c *Client) ScalarAt(ctx context.Context, query string, at time.Time) (floa
 		return 0, false, ErrUnavailable
 	}
 
+	payload, err := c.query(ctx, query, at)
+	if err != nil {
+		return 0, false, err
+	}
+
+	if len(payload.Data.Result) == 0 {
+		return 0, false, nil
+	}
+
+	value, err := sampleValue(payload.Data.Result[0].Value)
+	if err != nil {
+		return 0, false, err
+	}
+
+	return value, true, nil
+}
+
+type answer struct {
+	Status string `json:"status"`
+	Data   struct {
+		ResultType string `json:"resultType"`
+		Result     []struct {
+			Metric map[string]string `json:"metric"`
+			Value  []any             `json:"value"`
+		} `json:"result"`
+	} `json:"data"`
+	Error string `json:"error"`
+}
+
+func (c *Client) query(ctx context.Context, query string, at time.Time) (answer, error) {
 	values := url.Values{"query": {query}}
 	if !at.IsZero() {
 		values.Set("time", strconv.FormatInt(at.Unix(), 10))
@@ -65,7 +124,7 @@ func (c *Client) ScalarAt(ctx context.Context, query string, at time.Time) (floa
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return 0, false, fmt.Errorf("build metrics request: %w", err)
+		return answer{}, fmt.Errorf("build metrics request: %w", err)
 	}
 	if c.tenant != "" {
 		request.Header.Set("X-Scope-OrgID", c.tenant)
@@ -73,51 +132,40 @@ func (c *Client) ScalarAt(ctx context.Context, query string, at time.Time) (floa
 
 	response, err := c.http.Do(request)
 	if err != nil {
-		return 0, false, fmt.Errorf("query metrics: %w", err)
+		return answer{}, fmt.Errorf("query metrics: %w", err)
 	}
 	defer func() { _ = response.Body.Close() }()
 
 	if response.StatusCode != http.StatusOK {
-		return 0, false, fmt.Errorf("metrics query answered %s", response.Status)
+		return answer{}, fmt.Errorf("metrics query answered %s", response.Status)
 	}
 
-	var payload struct {
-		Status string `json:"status"`
-		Data   struct {
-			ResultType string `json:"resultType"`
-			Result     []struct {
-				Value []any `json:"value"`
-			} `json:"result"`
-		} `json:"data"`
-		Error string `json:"error"`
-	}
-
+	var payload answer
 	if err := json.NewDecoder(response.Body).Decode(&payload); err != nil {
-		return 0, false, fmt.Errorf("decode metrics answer: %w", err)
+		return answer{}, fmt.Errorf("decode metrics answer: %w", err)
 	}
 
 	if payload.Status != "success" {
-		return 0, false, fmt.Errorf("metrics query failed: %s", payload.Error)
+		return answer{}, fmt.Errorf("metrics query failed: %s", payload.Error)
 	}
 
-	if len(payload.Data.Result) == 0 {
-		return 0, false, nil
-	}
+	return payload, nil
+}
 
-	value := payload.Data.Result[0].Value
+func sampleValue(value []any) (float64, error) {
 	if len(value) != 2 {
-		return 0, false, fmt.Errorf("metrics answer carries no sample")
+		return 0, fmt.Errorf("metrics answer carries no sample")
 	}
 
 	raw, ok := value[1].(string)
 	if !ok {
-		return 0, false, fmt.Errorf("metrics sample is not a string")
+		return 0, fmt.Errorf("metrics sample is not a string")
 	}
 
 	parsed, err := strconv.ParseFloat(raw, 64)
 	if err != nil {
-		return 0, false, fmt.Errorf("parse metrics sample %q: %w", raw, err)
+		return 0, fmt.Errorf("parse metrics sample %q: %w", raw, err)
 	}
 
-	return parsed, true, nil
+	return parsed, nil
 }

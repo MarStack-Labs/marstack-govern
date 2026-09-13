@@ -363,6 +363,34 @@ more wins, and there is a test that feeds both signals and asserts the answer is
 Every explanation carries the `kubectl` commands that reproduce it — including `logs --previous`
 when the evidence is in a container that already died.
 
+### Reachability is policy compared against traffic, and neither alone
+
+Two questions are usually answered separately and badly. *What can talk to what* is read from
+NetworkPolicy, and it always over-states: an allowance written two years ago for a service that no
+longer exists still reads as a live path. *What does talk to what* is read from trace metrics, and it
+always under-states: a path used once a month looks closed.
+
+Putting them side by side is what makes either useful, so a path carries both bits and a verdict
+drawn from the pair:
+
+```
+allowed  + observed     → allowed and used
+allowed  + not observed → an allowance nobody uses — a candidate for removal
+denied   + observed     → traffic no policy permits — either a gap or an out-of-band path
+denied   + not observed → denied
+```
+
+The middle two are the whole point. The first is how a default-deny cluster silently loosens over
+time; the second is how you learn a policy is not doing what its author believed.
+
+Two rules keep the verdict honest. A namespace is only treated as guarded when some policy in it
+actually lists the `Ingress` policy type — an egress-only policy leaves ingress wide open, and
+reading it as closed would report a namespace as protected when it is not. And when no trace metrics
+exist, the graph is not drawn at all: `Edges` returns `ErrNoTraces` and the service answers
+`Unavailable`. Guessing edges from Services and Endpoints would produce a plausible diagram of calls
+that may never happen, which is worse than no diagram. Reachability still answers in that case, with
+`traffic_observed` false so the page can say the verdicts come from policy alone.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The

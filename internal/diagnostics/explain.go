@@ -28,7 +28,7 @@ type Subject struct {
 func Explain(subject Subject, pods []corev1.Pod, events []corev1.Event) Explanation {
 	sorted := append([]corev1.Pod(nil), pods...)
 	sort.SliceStable(sorted, func(i, j int) bool {
-		return sorted[i].CreationTimestamp.Time.After(sorted[j].CreationTimestamp.Time)
+		return sorted[i].CreationTimestamp.After(sorted[j].CreationTimestamp.Time)
 	})
 
 	for _, rule := range []func(Subject, []corev1.Pod, []corev1.Event) (Explanation, bool){
