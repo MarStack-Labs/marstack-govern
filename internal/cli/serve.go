@@ -18,6 +18,7 @@ import (
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/db"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
+	"github.com/marstack-labs/marstack-govern/internal/tenancy"
 	"github.com/marstack-labs/marstack-govern/internal/web"
 )
 
@@ -87,12 +88,21 @@ func runServe(ctx context.Context, opts serveOptions) error {
 		logger.Info("applied migrations", "versions", applied)
 	}
 
-	client, _, err := kube.NewClient(kube.ClientConfig{
+	client, restConfig, err := kube.NewClient(kube.ClientConfig{
 		Kubeconfig: opts.kubeconfig,
 		Context:    opts.kubeContext,
 		QPS:        50,
 		Burst:      100,
 	})
+	if err != nil {
+		return err
+	}
+
+	if err := kube.RequireDivisionCRD(client); err != nil {
+		return err
+	}
+
+	manager, err := tenancy.NewManager(restConfig, logger)
 	if err != nil {
 		return err
 	}
@@ -124,6 +134,7 @@ func runServe(ctx context.Context, opts serveOptions) error {
 
 	group.Go(func() error { return watcher.Run(groupCtx) })
 	group.Go(func() error { return projector.Run(groupCtx) })
+	group.Go(func() error { return manager.Start(groupCtx) })
 
 	group.Go(func() error {
 		logger.Info("listening", "addr", opts.addr)

@@ -58,6 +58,23 @@ func Impersonate(base *rest.Config, subject string, groups []string) (kubernetes
 	return client, nil
 }
 
+func RequireDivisionCRD(client kubernetes.Interface) error {
+	const groupVersion = "govern.marstack.io/v1alpha1"
+
+	resources, err := client.Discovery().ServerResourcesForGroupVersion(groupVersion)
+	if err != nil {
+		return fmt.Errorf("the cluster does not serve %s: apply deploy/crd first: %w", groupVersion, err)
+	}
+
+	for _, resource := range resources.APIResources {
+		if resource.Kind == "Division" {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%s is served but has no Division resource: apply deploy/crd first", groupVersion)
+}
+
 func restConfig(cfg ClientConfig) (*rest.Config, error) {
 	path := cfg.Kubeconfig
 	if path == "" {
