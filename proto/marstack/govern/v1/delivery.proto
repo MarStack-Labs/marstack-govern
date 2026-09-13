@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package marstack.govern.v1;
+
+import "google/protobuf/timestamp.proto";
+import "marstack/govern/v1/common.proto";
+
+option go_package = "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1;governv1";
+
+service DeliveryService {
+  rpc ListTemplates(ListTemplatesRequest) returns (ListTemplatesResponse);
+  rpc Scaffold(ScaffoldRequest) returns (ScaffoldResponse);
+  rpc OpenChange(OpenChangeRequest) returns (OpenChangeResponse);
+  rpc ListChanges(ListChangesRequest) returns (ListChangesResponse);
+}
+
+message Template {
+  string name = 1;
+  string version = 2;
+  string description = 3;
+  string reference = 4;
+  repeated TemplateField fields = 5;
+}
+
+message TemplateField {
+  string name = 1;
+  string label = 2;
+  string kind = 3;
+  string default_value = 4;
+  bool required = 5;
+  string help = 6;
+}
+
+message Scaffolded {
+  string path = 1;
+  string content = 2;
+}
+
+message MergeRequest {
+  string id = 1;
+  string title = 2;
+  string branch = 3;
+  string url = 4;
+  string author = 5;
+  string state = 6;
+  google.protobuf.Timestamp opened_at = 7;
+}
+
+message ListTemplatesRequest {}
+
+message ListTemplatesResponse {
+  repeated Template templates = 1;
+  Freshness freshness = 2;
+}
+
+message ScaffoldRequest {
+  string division = 1;
+  string environment = 2;
+  string template = 3;
+  string name = 4;
+  map<string, string> values = 5;
+}
+
+message ScaffoldResponse {
+  repeated Scaffolded files = 1;
+  bool admitted = 2;
+  repeated PreflightFinding findings = 3;
+}
+
+message PreflightFinding {
+  string severity = 1;
+  string check = 2;
+  string message = 3;
+  string field = 4;
+}
+
+message OpenChangeRequest {
+  string division = 1;
+  string environment = 2;
+  string template = 3;
+  string name = 4;
+  map<string, string> values = 5;
+  string reason = 6;
+}
+
+message OpenChangeResponse {
+  MergeRequest change = 1;
+}
+
+message ListChangesRequest {
+  string division = 1;
+}
+
+message ListChangesResponse {
+  repeated MergeRequest changes = 1;
+  Freshness freshness = 2;
+}

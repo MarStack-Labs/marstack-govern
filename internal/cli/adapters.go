@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"os"
 	"sort"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -16,6 +17,7 @@ import (
 	governv1 "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
+	"github.com/marstack-labs/marstack-govern/internal/delivery"
 	"github.com/marstack-labs/marstack-govern/internal/diagnostics"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
 	"github.com/marstack-labs/marstack-govern/internal/kube"
@@ -192,4 +194,31 @@ func (d diagnoser) Timeline(ctx context.Context, workload catalog.Workload) ([]*
 	})
 
 	return events, nil
+}
+
+func buildDelivery(reader client.Client, opts serveOptions) *delivery.Service {
+	catalogue := delivery.NewCatalogue(delivery.NewRegistry(delivery.RegistryConfig{
+		Host:      opts.templateRegistry,
+		Namespace: opts.templateNamespace,
+		Token:     opts.registryToken,
+		Insecure:  opts.registryInsecure,
+	}))
+
+	service := delivery.NewService(reader, catalogue).
+		WithAdmission(&delivery.DryRun{Client: reader})
+
+	token := opts.forgeToken
+	if token == "" {
+		token = os.Getenv("GOVERN_FORGE_TOKEN")
+	}
+
+	if token == "" || opts.gitopsRepoFormat == "" {
+		return service
+	}
+
+	forge := delivery.NewGitHub(delivery.GitHubConfig{BaseURL: opts.forgeBaseURL, Token: token})
+
+	return service.WithForge(forge, func(division string) string {
+		return fmt.Sprintf(opts.gitopsRepoFormat, division)
+	})
 }

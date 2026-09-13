@@ -59,8 +59,10 @@ reclaimed when their lease ends.
 
 Attribution is enforced at admission, so a `kubectl` write cannot claim to be someone else.
 
-Not built yet: the scaffolding wizard and merge-request creation, month-end invoice generation, and
-per-workload right-sizing.
+The scaffolding wizard renders from a registry-discovered template catalogue, checks the result
+against the real admission chain, and opens a merge request against the division's GitOps repository.
+Month-end invoices are generated once the period closes and cite the pricing policy revision that
+priced them.
 
 ## Prerequisites
 

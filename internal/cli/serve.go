@@ -34,23 +34,28 @@ import (
 )
 
 type serveOptions struct {
-	addr             string
-	databaseURL      string
-	kubeconfig       string
-	kubeContext      string
-	resync           time.Duration
-	logLevel         string
-	metricsURL       string
-	metricsTenant    string
-	recommendWindow  time.Duration
-	auditToken       string
-	auditArchive     string
-	registryToken    string
-	registryInsecure bool
-	billingInterval  time.Duration
-	webhookCertDir   string
-	webhookPort      int
-	auth             authOptions
+	addr              string
+	databaseURL       string
+	kubeconfig        string
+	kubeContext       string
+	resync            time.Duration
+	logLevel          string
+	metricsURL        string
+	metricsTenant     string
+	recommendWindow   time.Duration
+	auditToken        string
+	auditArchive      string
+	registryToken     string
+	registryInsecure  bool
+	billingInterval   time.Duration
+	templateRegistry  string
+	templateNamespace string
+	forgeToken        string
+	forgeBaseURL      string
+	gitopsRepoFormat  string
+	webhookCertDir    string
+	webhookPort       int
+	auth              authOptions
 }
 
 func newServeCommand() *cobra.Command {
@@ -89,6 +94,12 @@ func newServeCommand() *cobra.Command {
 
 	flags.StringVar(&opts.auditToken, "audit-token", "", "bearer token the Kubernetes audit webhook must present (falls back to GOVERN_AUDIT_TOKEN)")
 	flags.StringVar(&opts.auditArchive, "audit-archive", "", "directory for append-only audit segments, ideally backed by object storage with retention")
+
+	flags.StringVar(&opts.templateRegistry, "template-registry", "", "OCI registry host holding the curated chart catalogue")
+	flags.StringVar(&opts.templateNamespace, "template-namespace", "charts", "repository prefix within the registry that holds charts")
+	flags.StringVar(&opts.forgeToken, "forge-token", "", "token for opening merge requests (falls back to GOVERN_FORGE_TOKEN)")
+	flags.StringVar(&opts.forgeBaseURL, "forge-url", "", "git forge api base url; defaults to github.com")
+	flags.StringVar(&opts.gitopsRepoFormat, "gitops-repo", "", "gitops repository per division, with %s for the division name")
 
 	flags.DurationVar(&opts.billingInterval, "billing-interval", opts.billingInterval, "how often to look for a finished month that has not been invoiced")
 
@@ -263,6 +274,7 @@ func runServe(ctx context.Context, opts serveOptions) error {
 			RegisterAudit: registerAudit,
 			Policy:        policy.NewService(manager.GetClient()),
 			Topology:      topology.NewService(manager.GetClient(), topology.NewGraph(metricsClient, time.Hour)),
+			Delivery:      buildDelivery(manager.GetClient(), opts),
 			Environments: environments.NewService(
 				manager.GetClient(),
 				environments.ClientFactory(impersonatingRuntimeClients(restConfig, scheme)),

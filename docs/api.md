@@ -21,6 +21,7 @@ Protos carry no comments; the reasoning lives here.
 | `PolicyService` | `policy.proto` | guardrail catalog, violations, compliance |
 | `TopologyService` | `topology.proto` | traced service graph, network reachability |
 | `EnvironmentService` | `environments.proto` | preview environments, leases, renewals |
+| `DeliveryService` | `delivery.proto` | template catalogue, scaffolding, merge requests |
 
 `common.proto` holds shared types; `events.proto` defines the live stream payloads.
 

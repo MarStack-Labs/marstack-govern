@@ -496,6 +496,31 @@ Each proposal carries the money it frees at the current rate and the `kubectl pa
 A workload that was never observed produces no proposal at all — an unused request and an unmeasured
 one look identical in the requests alone, and only one of them is safe to shrink.
 
+### Scaffolding writes a merge request, never the cluster
+
+The wizard does not create anything. It renders an Argo CD `Application` for the division's
+namespace, runs it through the real admission chain with `dryRun=All`, and — only if the cluster
+would accept it — opens a merge request against the division's GitOps repository. Git stays the
+desired state; the platform stays the thing that decided.
+
+Order is the whole point:
+
+```
+render → dry run through admission → open the merge request
+```
+
+A wizard that opens the merge request first produces a pull request nobody can merge, and the
+author finds out from a failed sync hours later. `TestAManifestTheClusterWouldRejectNeverReachesTheForge`
+asserts the forge is never called when admission refuses, and that the refusal repeats the reason.
+
+The template catalogue is **discovered from the OCI registry**, not maintained as a file. Charts are
+read from the registry's catalogue endpoint, their form fields derived from annotations on the chart
+config, and a value with no default is marked as one the requester must answer. A catalogue kept in
+Git is the same staleness trap as a hand-written service catalogue, one level up.
+
+Without a forge token the platform still renders and checks the manifest, and says plainly that it
+can preview but not open. Silently producing nothing would look like success.
+
 ### Decisions are time-bound and evidenced
 
 Every approval carries an expiry and a reason, and a controller revokes it when it lapses. The

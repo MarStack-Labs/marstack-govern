@@ -17,13 +17,14 @@ import { AuditView } from "./AuditView";
 import { PolicyView } from "./PolicyView";
 import { TopologyView } from "./TopologyView";
 import { EnvironmentsView } from "./EnvironmentsView";
+import { DeployView } from "./DeployView";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import { Workload_Health } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
 import type { Division, Namespace } from "./gen/marstack/govern/v1/tenancy_pb";
 import { Division_Phase } from "./gen/marstack/govern/v1/tenancy_pb";
 
-type View = "services" | "divisions" | "requests" | "cost" | "policies" | "topology" | "environments" | "audit";
+type View = "services" | "divisions" | "requests" | "cost" | "policies" | "topology" | "environments" | "deploy" | "audit";
 
 const views: { id: View; label: string; subtitle: string }[] = [
   {
@@ -60,6 +61,11 @@ const views: { id: View; label: string; subtitle: string }[] = [
     id: "environments",
     label: "Environments",
     subtitle: "previews that hold a namespace only as long as their lease",
+  },
+  {
+    id: "deploy",
+    label: "Deploy",
+    subtitle: "curated templates, checked against admission before a merge request is opened",
   },
   {
     id: "audit",
@@ -127,6 +133,8 @@ export function App() {
           <TopologyView session={session} />
         ) : view === "environments" ? (
           <EnvironmentsView session={session} />
+        ) : view === "deploy" ? (
+          <DeployView session={session} />
         ) : (
           <AuditView />
         )}
