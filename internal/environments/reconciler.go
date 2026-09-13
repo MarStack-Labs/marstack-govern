@@ -82,7 +82,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 			fmt.Sprintf("the lease was shortened to the %s ceiling", MaxTTL))
 	} else {
 		setCondition(&status.Conditions, governv1alpha1.ConditionLeaseValid, metav1.ConditionTrue, "Granted",
-			fmt.Sprintf("the lease runs for %s and ends at %s", lease.Granted, lease.ExpiresAt.UTC().Format(time.RFC3339)))
+			fmt.Sprintf("the lease runs for %s and ends at %s", FormatTTL(lease.Granted),
+				lease.ExpiresAt.UTC().Format(time.RFC3339)))
 	}
 
 	if lease.Expired(now) {

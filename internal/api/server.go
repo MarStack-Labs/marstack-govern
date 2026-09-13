@@ -133,7 +133,7 @@ func NewHandler(opts Options) http.Handler {
 	})
 
 	if opts.Web != nil {
-		mux.Handle("GET /", singlePageHandler(opts.Web))
+		mux.Handle("/", singlePageHandler(opts.Web))
 	}
 
 	var handler http.Handler = mux
@@ -156,6 +156,13 @@ func singlePageHandler(web fs.FS) http.Handler {
 	files := http.FileServer(http.FS(web))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead {
+			w.Header().Set("Allow", "GET, HEAD")
+			http.Error(w, "the console is served over GET", http.StatusMethodNotAllowed)
+
+			return
+		}
+
 		if _, err := fs.Stat(web, trimLeadingSlash(r.URL.Path)); err != nil {
 			r = r.Clone(r.Context())
 			r.URL.Path = "/"

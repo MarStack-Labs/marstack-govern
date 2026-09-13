@@ -105,7 +105,8 @@ type EphemeralEnvironmentStatus struct {
 // +kubebuilder:printcolumn:name="Change",type=integer,JSONPath=`.spec.change.number`
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`
 // +kubebuilder:printcolumn:name="Namespace",type=string,JSONPath=`.status.namespace`
-// +kubebuilder:printcolumn:name="Expires",type=date,JSONPath=`.status.expiresAt`
+// +kubebuilder:printcolumn:name="Lease",type=string,JSONPath=`.status.grantedTtl`
+// +kubebuilder:printcolumn:name="Expires",type=string,JSONPath=`.status.expiresAt`
 // +kubebuilder:printcolumn:name="Requester",type=string,JSONPath=`.spec.requestedBy`
 type EphemeralEnvironment struct {
 	metav1.TypeMeta   `json:",inline"`

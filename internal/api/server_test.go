@@ -13,6 +13,9 @@ import (
 	governv1 "github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
+	"github.com/marstack-labs/marstack-govern/internal/policy"
+	"github.com/marstack-labs/marstack-govern/internal/tenancy"
+	"github.com/marstack-labs/marstack-govern/internal/topology"
 	"github.com/marstack-labs/marstack-govern/internal/web"
 )
 
@@ -235,5 +238,48 @@ func TestRpcsRefuseAnonymousCallersWhenSessionsAreOn(t *testing.T) {
 
 	if response.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("status: got %d, want 401 (%s)", response.StatusCode, readAll(t, response.Body))
+	}
+}
+
+func TestTheConsoleAndTheServicesShareOneMux(t *testing.T) {
+	assets, err := web.Assets()
+	if err != nil {
+		t.Fatalf("open assets: %v", err)
+	}
+
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			t.Fatalf("serving the console alongside the services panicked: %v", recovered)
+		}
+	}()
+
+	server := httptest.NewServer(NewHandler(Options{
+		Web:      assets,
+		Catalog:  &catalog.Service{},
+		Tenancy:  &tenancy.Service{},
+		Policy:   &policy.Service{},
+		Topology: &topology.Service{},
+	}))
+	defer server.Close()
+
+	response, err := server.Client().Get(server.URL + "/")
+	if err != nil {
+		t.Fatalf("get index: %v", err)
+	}
+	defer func() { _ = response.Body.Close() }()
+
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status: got %d, want the console", response.StatusCode)
+	}
+
+	posted, err := server.Client().Post(server.URL+"/", "application/json", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatalf("post to the console path: %v", err)
+	}
+	defer func() { _ = posted.Body.Close() }()
+
+	if posted.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("status: got %d, want the console to refuse a write rather than answer it",
+			posted.StatusCode)
 	}
 }
