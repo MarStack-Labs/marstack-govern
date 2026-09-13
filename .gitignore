@@ -1,0 +1,11 @@
+bin/
+dist/
+data/
+coverage.out
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+CLAUDE.md
+node_modules/
+web/dist/
