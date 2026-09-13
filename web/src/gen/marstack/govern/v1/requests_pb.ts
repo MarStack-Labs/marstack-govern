@@ -16,7 +16,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file marstack/govern/v1/requests.proto.
  */
 export const file_marstack_govern_v1_requests: GenFile = /*@__PURE__*/
-  fileDesc("CiFtYXJzdGFjay9nb3Zlcm4vdjEvcmVxdWVzdHMucHJvdG8SEm1hcnN0YWNrLmdvdmVybi52MSLyBwoPUmVzb3VyY2VSZXF1ZXN0EgsKA3VpZBgBIAEoCRI2CgRraW5kGAIgASgOMigubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdC5LaW5kEgwKBG5hbWUYAyABKAkSEQoJbmFtZXNwYWNlGAQgASgJEhAKCGRpdmlzaW9uGAUgASgJEiwKCXJlcXVlc3RlchgGIAEoCzIZLm1hcnN0YWNrLmdvdmVybi52MS5BY3RvchIOCgZyZWFzb24YByABKAkSOAoFcGhhc2UYCCABKA4yKS5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0LlBoYXNlEiwKBXF1b3RhGAkgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhU3BlYxIuCgZhY2Nlc3MYCiABKAsyHi5tYXJzdGFjay5nb3Zlcm4udjEuQWNjZXNzU3BlYxIwCgdwZWVyaW5nGAsgASgLMh8ubWFyc3RhY2suZ292ZXJuLnYxLlBlZXJpbmdTcGVjEj8KDnJlY29tbWVuZGF0aW9uGAwgASgLMicubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhUmVjb21tZW5kYXRpb24SNgoJcHJlZmxpZ2h0GA0gASgLMiMubWFyc3RhY2suZ292ZXJuLnYxLlByZWZsaWdodFJlc3VsdBIuCgpjcmVhdGVkX2F0GA4gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgpleHBpcmVzX2F0GA8gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCKYAQoES2luZBIUChBLSU5EX1VOU1BFQ0lGSUVEEAASDgoKS0lORF9RVU9UQRABEg8KC0tJTkRfQUNDRVNTEAISEAoMS0lORF9QRUVSSU5HEAMSEwoPS0lORF9NRU1CRVJTSElQEAQSEgoOS0lORF9OQU1FU1BBQ0UQBRIeChpLSU5EX0VQSEVNRVJBTF9FTlZJUk9OTUVOVBAGIuoBCgVQaGFzZRIVChFQSEFTRV9VTlNQRUNJRklFRBAAEhEKDVBIQVNFX1BFTkRJTkcQARIaChZQSEFTRV9QUkVGTElHSFRfRkFJTEVEEAISGwoXUEhBU0VfQVdBSVRJTkdfREVDSVNJT04QAxISCg5QSEFTRV9BUFBST1ZFRBAEEhIKDlBIQVNFX1JFSkVDVEVEEAUSGwoXUEhBU0VfQ0hBTkdFU19SRVFVRVNURUQQBhIRCg1QSEFTRV9BUFBMSUVEEAcSEQoNUEhBU0VfRVhQSVJFRBAIEhMKD1BIQVNFX1dJVEhEUkFXThAJIjgKCVF1b3RhU3BlYxIrCgZ0YXJnZXQYASABKAsyGy5tYXJzdGFjay5nb3Zlcm4udjEuQ29tcHV0ZSJgCgpBY2Nlc3NTcGVjEhEKCW5hbWVzcGFjZRgBIAEoCRItCgRyb2xlGAIgASgOMh8ubWFyc3RhY2suZ292ZXJuLnYxLk1lbWJlci5Sb2xlEhAKCGR1cmF0aW9uGAMgASgJIlwKC1BlZXJpbmdTcGVjEhYKDmZyb21fbmFtZXNwYWNlGAEgASgJEhQKDHRvX25hbWVzcGFjZRgCIAEoCRINCgVwb3J0cxgDIAMoBRIQCghkdXJhdGlvbhgEIAEoCSLmAgoTUXVvdGFSZWNvbW1lbmRhdGlvbhIsCgdjdXJyZW50GAEgASgLMhsubWFyc3RhY2suZ292ZXJuLnYxLkNvbXB1dGUSMQoMb2JzZXJ2ZWRfcDk1GAIgASgLMhsubWFyc3RhY2suZ292ZXJuLnYxLkNvbXB1dGUSMQoMb2JzZXJ2ZWRfcDk5GAMgASgLMhsubWFyc3RhY2suZ292ZXJuLnYxLkNvbXB1dGUSLQoIcHJvcG9zZWQYBCABKAsyGy5tYXJzdGFjay5nb3Zlcm4udjEuQ29tcHV0ZRIWCg5oZWFkcm9vbV9yYXRpbxgFIAEoARIxCg1leGhhdXN0aW9uX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIiChpleGhhdXN0aW9uX2NvbmZpZGVuY2VfZGF5cxgHIAEoBRIOCgZ3aW5kb3cYCCABKAkSDQoFYmFzaXMYCSABKAki7wEKD1ByZWZsaWdodFJlc3VsdBIQCghhZG1pdHRlZBgBIAEoCBI3CgpyZWplY3Rpb25zGAIgAygLMiMubWFyc3RhY2suZ292ZXJuLnYxLlBvbGljeVJlamVjdGlvbhIMCgRkaWZmGAMgASgJEjAKC3F1b3RhX2FmdGVyGAQgASgLMhsubWFyc3RhY2suZ292ZXJuLnYxLkNvbXB1dGUSHwoXcXVvdGFfdXRpbGlzYXRpb25fYWZ0ZXIYBSABKAESMAoMZXZhbHVhdGVkX2F0GAYgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCLcAQoPUG9saWN5UmVqZWN0aW9uEg4KBnBvbGljeRgBIAEoCRIMCgRydWxlGAIgASgJEg0KBWZpZWxkGAMgASgJEg8KB21lc3NhZ2UYBCABKAkSPgoIc2V2ZXJpdHkYBSABKA4yLC5tYXJzdGFjay5nb3Zlcm4udjEuUG9saWN5UmVqZWN0aW9uLlNldmVyaXR5IksKCFNldmVyaXR5EhgKFFNFVkVSSVRZX1VOU1BFQ0lGSUVEEAASEQoNU0VWRVJJVFlfV0FSThABEhIKDlNFVkVSSVRZX0JMT0NLEAIiOQoVUmVjb21tZW5kUXVvdGFSZXF1ZXN0EhAKCGRpdmlzaW9uGAEgASgJEg4KBndpbmRvdxgCIAEoCSKLAQoWUmVjb21tZW5kUXVvdGFSZXNwb25zZRI/Cg5yZWNvbW1lbmRhdGlvbhgBIAEoCzInLm1hcnN0YWNrLmdvdmVybi52MS5RdW90YVJlY29tbWVuZGF0aW9uEjAKCWZyZXNobmVzcxgCIAEoCzIdLm1hcnN0YWNrLmdvdmVybi52MS5GcmVzaG5lc3Mi/gEKEFByZWZsaWdodFJlcXVlc3QSEAoIZGl2aXNpb24YASABKAkSNgoEa2luZBgCIAEoDjIoLm1hcnN0YWNrLmdvdmVybi52MS5SZXNvdXJjZVJlcXVlc3QuS2luZBIsCgVxdW90YRgDIAEoCzIdLm1hcnN0YWNrLmdvdmVybi52MS5RdW90YVNwZWMSLgoGYWNjZXNzGAQgASgLMh4ubWFyc3RhY2suZ292ZXJuLnYxLkFjY2Vzc1NwZWMSMAoHcGVlcmluZxgFIAEoCzIfLm1hcnN0YWNrLmdvdmVybi52MS5QZWVyaW5nU3BlYxIQCghtYW5pZmVzdBgGIAEoCSJ6ChFQcmVmbGlnaHRSZXNwb25zZRIzCgZyZXN1bHQYASABKAsyIy5tYXJzdGFjay5nb3Zlcm4udjEuUHJlZmxpZ2h0UmVzdWx0EjAKCWZyZXNobmVzcxgCIAEoCzIdLm1hcnN0YWNrLmdvdmVybi52MS5GcmVzaG5lc3MimQIKFFN1Ym1pdFJlcXVlc3RSZXF1ZXN0EhAKCGRpdmlzaW9uGAEgASgJEjYKBGtpbmQYAiABKA4yKC5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0LktpbmQSDgoGcmVhc29uGAMgASgJEiwKBXF1b3RhGAQgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhU3BlYxIuCgZhY2Nlc3MYBSABKAsyHi5tYXJzdGFjay5nb3Zlcm4udjEuQWNjZXNzU3BlYxIwCgdwZWVyaW5nGAYgASgLMh8ubWFyc3RhY2suZ292ZXJuLnYxLlBlZXJpbmdTcGVjEhcKD2lkZW1wb3RlbmN5X2tleRgHIAEoCSJNChVTdWJtaXRSZXF1ZXN0UmVzcG9uc2USNAoHcmVxdWVzdBgBIAEoCzIjLm1hcnN0YWNrLmdvdmVybi52MS5SZXNvdXJjZVJlcXVlc3QinAEKE0xpc3RSZXF1ZXN0c1JlcXVlc3QSEAoIZGl2aXNpb24YASABKAkSOAoFcGhhc2UYAiABKA4yKS5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0LlBoYXNlEhEKCW1pbmVfb25seRgDIAEoCBImCgRwYWdlGAQgASgLMhgubWFyc3RhY2suZ292ZXJuLnYxLlBhZ2UiqwEKFExpc3RSZXF1ZXN0c1Jlc3BvbnNlEjUKCHJlcXVlc3RzGAEgAygLMiMubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdBIqCgRwYWdlGAIgASgLMhwubWFyc3RhY2suZ292ZXJuLnYxLlBhZ2VJbmZvEjAKCWZyZXNobmVzcxgDIAEoCzIdLm1hcnN0YWNrLmdvdmVybi52MS5GcmVzaG5lc3MiIAoRR2V0UmVxdWVzdFJlcXVlc3QSCwoDdWlkGAEgASgJInwKEkdldFJlcXVlc3RSZXNwb25zZRI0CgdyZXF1ZXN0GAEgASgLMiMubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdBIwCglmcmVzaG5lc3MYAiABKAsyHS5tYXJzdGFjay5nb3Zlcm4udjEuRnJlc2huZXNzIjUKFldpdGhkcmF3UmVxdWVzdFJlcXVlc3QSCwoDdWlkGAEgASgJEg4KBnJlYXNvbhgCIAEoCSJPChdXaXRoZHJhd1JlcXVlc3RSZXNwb25zZRI0CgdyZXF1ZXN0GAEgASgLMiMubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdDLlBAoOUmVxdWVzdFNlcnZpY2USZwoOUmVjb21tZW5kUXVvdGESKS5tYXJzdGFjay5nb3Zlcm4udjEuUmVjb21tZW5kUXVvdGFSZXF1ZXN0GioubWFyc3RhY2suZ292ZXJuLnYxLlJlY29tbWVuZFF1b3RhUmVzcG9uc2USWAoJUHJlZmxpZ2h0EiQubWFyc3RhY2suZ292ZXJuLnYxLlByZWZsaWdodFJlcXVlc3QaJS5tYXJzdGFjay5nb3Zlcm4udjEuUHJlZmxpZ2h0UmVzcG9uc2USZAoNU3VibWl0UmVxdWVzdBIoLm1hcnN0YWNrLmdvdmVybi52MS5TdWJtaXRSZXF1ZXN0UmVxdWVzdBopLm1hcnN0YWNrLmdvdmVybi52MS5TdWJtaXRSZXF1ZXN0UmVzcG9uc2USYQoMTGlzdFJlcXVlc3RzEicubWFyc3RhY2suZ292ZXJuLnYxLkxpc3RSZXF1ZXN0c1JlcXVlc3QaKC5tYXJzdGFjay5nb3Zlcm4udjEuTGlzdFJlcXVlc3RzUmVzcG9uc2USWwoKR2V0UmVxdWVzdBIlLm1hcnN0YWNrLmdvdmVybi52MS5HZXRSZXF1ZXN0UmVxdWVzdBomLm1hcnN0YWNrLmdvdmVybi52MS5HZXRSZXF1ZXN0UmVzcG9uc2USagoPV2l0aGRyYXdSZXF1ZXN0EioubWFyc3RhY2suZ292ZXJuLnYxLldpdGhkcmF3UmVxdWVzdFJlcXVlc3QaKy5tYXJzdGFjay5nb3Zlcm4udjEuV2l0aGRyYXdSZXF1ZXN0UmVzcG9uc2VC2wEKFmNvbS5tYXJzdGFjay5nb3Zlcm4udjFCDVJlcXVlc3RzUHJvdG9QAVpIZ2l0aHViLmNvbS9tYXJzdGFjay1sYWJzL21hcnN0YWNrLWdvdmVybi9nZW4vbWFyc3RhY2svZ292ZXJuL3YxO2dvdmVybnYxogIDTUdYqgISTWFyc3RhY2suR292ZXJuLlYxygISTWFyc3RhY2tcR292ZXJuXFYx4gIeTWFyc3RhY2tcR292ZXJuXFYxXEdQQk1ldGFkYXRh6gIUTWFyc3RhY2s6OkdvdmVybjo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_marstack_govern_v1_common, file_marstack_govern_v1_tenancy]);
+  fileDesc("CiFtYXJzdGFjay9nb3Zlcm4vdjEvcmVxdWVzdHMucHJvdG8SEm1hcnN0YWNrLmdvdmVybi52MSK5CAoPUmVzb3VyY2VSZXF1ZXN0EgsKA3VpZBgBIAEoCRI2CgRraW5kGAIgASgOMigubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdC5LaW5kEgwKBG5hbWUYAyABKAkSEQoJbmFtZXNwYWNlGAQgASgJEhAKCGRpdmlzaW9uGAUgASgJEiwKCXJlcXVlc3RlchgGIAEoCzIZLm1hcnN0YWNrLmdvdmVybi52MS5BY3RvchIOCgZyZWFzb24YByABKAkSOAoFcGhhc2UYCCABKA4yKS5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0LlBoYXNlEiwKBXF1b3RhGAkgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhU3BlYxIuCgZhY2Nlc3MYCiABKAsyHi5tYXJzdGFjay5nb3Zlcm4udjEuQWNjZXNzU3BlYxIwCgdwZWVyaW5nGAsgASgLMh8ubWFyc3RhY2suZ292ZXJuLnYxLlBlZXJpbmdTcGVjEj8KDnJlY29tbWVuZGF0aW9uGAwgASgLMicubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhUmVjb21tZW5kYXRpb24SNgoJcHJlZmxpZ2h0GA0gASgLMiMubWFyc3RhY2suZ292ZXJuLnYxLlByZWZsaWdodFJlc3VsdBIuCgpjcmVhdGVkX2F0GA4gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIuCgpleHBpcmVzX2F0GA8gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIXCg9ldmlkZW5jZV9kaWdlc3QYECABKAkSLAoHZGVjaWRlZBgRIAEoCzIbLm1hcnN0YWNrLmdvdmVybi52MS5EZWNpZGVkIpgBCgRLaW5kEhQKEEtJTkRfVU5TUEVDSUZJRUQQABIOCgpLSU5EX1FVT1RBEAESDwoLS0lORF9BQ0NFU1MQAhIQCgxLSU5EX1BFRVJJTkcQAxITCg9LSU5EX01FTUJFUlNISVAQBBISCg5LSU5EX05BTUVTUEFDRRAFEh4KGktJTkRfRVBIRU1FUkFMX0VOVklST05NRU5UEAYi6gEKBVBoYXNlEhUKEVBIQVNFX1VOU1BFQ0lGSUVEEAASEQoNUEhBU0VfUEVORElORxABEhoKFlBIQVNFX1BSRUZMSUdIVF9GQUlMRUQQAhIbChdQSEFTRV9BV0FJVElOR19ERUNJU0lPThADEhIKDlBIQVNFX0FQUFJPVkVEEAQSEgoOUEhBU0VfUkVKRUNURUQQBRIbChdQSEFTRV9DSEFOR0VTX1JFUVVFU1RFRBAGEhEKDVBIQVNFX0FQUExJRUQQBxIRCg1QSEFTRV9FWFBJUkVEEAgSEwoPUEhBU0VfV0lUSERSQVdOEAkiqwEKB0RlY2lkZWQSCwoDdWlkGAEgASgJEg8KB2RlY2lkZXIYAiABKAkSDwoHb3V0Y29tZRgDIAEoCRIOCgZyZWFzb24YBCABKAkSLgoKZGVjaWRlZF9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASMQoNZ3JhbnRlZF91bnRpbBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiOAoJUXVvdGFTcGVjEisKBnRhcmdldBgBIAEoCzIbLm1hcnN0YWNrLmdvdmVybi52MS5Db21wdXRlImAKCkFjY2Vzc1NwZWMSEQoJbmFtZXNwYWNlGAEgASgJEi0KBHJvbGUYAiABKA4yHy5tYXJzdGFjay5nb3Zlcm4udjEuTWVtYmVyLlJvbGUSEAoIZHVyYXRpb24YAyABKAkiXAoLUGVlcmluZ1NwZWMSFgoOZnJvbV9uYW1lc3BhY2UYASABKAkSFAoMdG9fbmFtZXNwYWNlGAIgASgJEg0KBXBvcnRzGAMgAygFEhAKCGR1cmF0aW9uGAQgASgJIuYCChNRdW90YVJlY29tbWVuZGF0aW9uEiwKB2N1cnJlbnQYASABKAsyGy5tYXJzdGFjay5nb3Zlcm4udjEuQ29tcHV0ZRIxCgxvYnNlcnZlZF9wOTUYAiABKAsyGy5tYXJzdGFjay5nb3Zlcm4udjEuQ29tcHV0ZRIxCgxvYnNlcnZlZF9wOTkYAyABKAsyGy5tYXJzdGFjay5nb3Zlcm4udjEuQ29tcHV0ZRItCghwcm9wb3NlZBgEIAEoCzIbLm1hcnN0YWNrLmdvdmVybi52MS5Db21wdXRlEhYKDmhlYWRyb29tX3JhdGlvGAUgASgBEjEKDWV4aGF1c3Rpb25fYXQYBiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEiIKGmV4aGF1c3Rpb25fY29uZmlkZW5jZV9kYXlzGAcgASgFEg4KBndpbmRvdxgIIAEoCRINCgViYXNpcxgJIAEoCSLvAQoPUHJlZmxpZ2h0UmVzdWx0EhAKCGFkbWl0dGVkGAEgASgIEjcKCnJlamVjdGlvbnMYAiADKAsyIy5tYXJzdGFjay5nb3Zlcm4udjEuUG9saWN5UmVqZWN0aW9uEgwKBGRpZmYYAyABKAkSMAoLcXVvdGFfYWZ0ZXIYBCABKAsyGy5tYXJzdGFjay5nb3Zlcm4udjEuQ29tcHV0ZRIfChdxdW90YV91dGlsaXNhdGlvbl9hZnRlchgFIAEoARIwCgxldmFsdWF0ZWRfYXQYBiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wItwBCg9Qb2xpY3lSZWplY3Rpb24SDgoGcG9saWN5GAEgASgJEgwKBHJ1bGUYAiABKAkSDQoFZmllbGQYAyABKAkSDwoHbWVzc2FnZRgEIAEoCRI+CghzZXZlcml0eRgFIAEoDjIsLm1hcnN0YWNrLmdvdmVybi52MS5Qb2xpY3lSZWplY3Rpb24uU2V2ZXJpdHkiSwoIU2V2ZXJpdHkSGAoUU0VWRVJJVFlfVU5TUEVDSUZJRUQQABIRCg1TRVZFUklUWV9XQVJOEAESEgoOU0VWRVJJVFlfQkxPQ0sQAiI5ChVSZWNvbW1lbmRRdW90YVJlcXVlc3QSEAoIZGl2aXNpb24YASABKAkSDgoGd2luZG93GAIgASgJIosBChZSZWNvbW1lbmRRdW90YVJlc3BvbnNlEj8KDnJlY29tbWVuZGF0aW9uGAEgASgLMicubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhUmVjb21tZW5kYXRpb24SMAoJZnJlc2huZXNzGAIgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLkZyZXNobmVzcyL+AQoQUHJlZmxpZ2h0UmVxdWVzdBIQCghkaXZpc2lvbhgBIAEoCRI2CgRraW5kGAIgASgOMigubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdC5LaW5kEiwKBXF1b3RhGAMgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLlF1b3RhU3BlYxIuCgZhY2Nlc3MYBCABKAsyHi5tYXJzdGFjay5nb3Zlcm4udjEuQWNjZXNzU3BlYxIwCgdwZWVyaW5nGAUgASgLMh8ubWFyc3RhY2suZ292ZXJuLnYxLlBlZXJpbmdTcGVjEhAKCG1hbmlmZXN0GAYgASgJInoKEVByZWZsaWdodFJlc3BvbnNlEjMKBnJlc3VsdBgBIAEoCzIjLm1hcnN0YWNrLmdvdmVybi52MS5QcmVmbGlnaHRSZXN1bHQSMAoJZnJlc2huZXNzGAIgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLkZyZXNobmVzcyKZAgoUU3VibWl0UmVxdWVzdFJlcXVlc3QSEAoIZGl2aXNpb24YASABKAkSNgoEa2luZBgCIAEoDjIoLm1hcnN0YWNrLmdvdmVybi52MS5SZXNvdXJjZVJlcXVlc3QuS2luZBIOCgZyZWFzb24YAyABKAkSLAoFcXVvdGEYBCABKAsyHS5tYXJzdGFjay5nb3Zlcm4udjEuUXVvdGFTcGVjEi4KBmFjY2VzcxgFIAEoCzIeLm1hcnN0YWNrLmdvdmVybi52MS5BY2Nlc3NTcGVjEjAKB3BlZXJpbmcYBiABKAsyHy5tYXJzdGFjay5nb3Zlcm4udjEuUGVlcmluZ1NwZWMSFwoPaWRlbXBvdGVuY3lfa2V5GAcgASgJIk0KFVN1Ym1pdFJlcXVlc3RSZXNwb25zZRI0CgdyZXF1ZXN0GAEgASgLMiMubWFyc3RhY2suZ292ZXJuLnYxLlJlc291cmNlUmVxdWVzdCKcAQoTTGlzdFJlcXVlc3RzUmVxdWVzdBIQCghkaXZpc2lvbhgBIAEoCRI4CgVwaGFzZRgCIAEoDjIpLm1hcnN0YWNrLmdvdmVybi52MS5SZXNvdXJjZVJlcXVlc3QuUGhhc2USEQoJbWluZV9vbmx5GAMgASgIEiYKBHBhZ2UYBCABKAsyGC5tYXJzdGFjay5nb3Zlcm4udjEuUGFnZSKrAQoUTGlzdFJlcXVlc3RzUmVzcG9uc2USNQoIcmVxdWVzdHMYASADKAsyIy5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0EioKBHBhZ2UYAiABKAsyHC5tYXJzdGFjay5nb3Zlcm4udjEuUGFnZUluZm8SMAoJZnJlc2huZXNzGAMgASgLMh0ubWFyc3RhY2suZ292ZXJuLnYxLkZyZXNobmVzcyIgChFHZXRSZXF1ZXN0UmVxdWVzdBILCgN1aWQYASABKAkifAoSR2V0UmVxdWVzdFJlc3BvbnNlEjQKB3JlcXVlc3QYASABKAsyIy5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0EjAKCWZyZXNobmVzcxgCIAEoCzIdLm1hcnN0YWNrLmdvdmVybi52MS5GcmVzaG5lc3MiNQoWV2l0aGRyYXdSZXF1ZXN0UmVxdWVzdBILCgN1aWQYASABKAkSDgoGcmVhc29uGAIgASgJIk8KF1dpdGhkcmF3UmVxdWVzdFJlc3BvbnNlEjQKB3JlcXVlc3QYASABKAsyIy5tYXJzdGFjay5nb3Zlcm4udjEuUmVzb3VyY2VSZXF1ZXN0MuUECg5SZXF1ZXN0U2VydmljZRJnCg5SZWNvbW1lbmRRdW90YRIpLm1hcnN0YWNrLmdvdmVybi52MS5SZWNvbW1lbmRRdW90YVJlcXVlc3QaKi5tYXJzdGFjay5nb3Zlcm4udjEuUmVjb21tZW5kUXVvdGFSZXNwb25zZRJYCglQcmVmbGlnaHQSJC5tYXJzdGFjay5nb3Zlcm4udjEuUHJlZmxpZ2h0UmVxdWVzdBolLm1hcnN0YWNrLmdvdmVybi52MS5QcmVmbGlnaHRSZXNwb25zZRJkCg1TdWJtaXRSZXF1ZXN0EigubWFyc3RhY2suZ292ZXJuLnYxLlN1Ym1pdFJlcXVlc3RSZXF1ZXN0GikubWFyc3RhY2suZ292ZXJuLnYxLlN1Ym1pdFJlcXVlc3RSZXNwb25zZRJhCgxMaXN0UmVxdWVzdHMSJy5tYXJzdGFjay5nb3Zlcm4udjEuTGlzdFJlcXVlc3RzUmVxdWVzdBooLm1hcnN0YWNrLmdvdmVybi52MS5MaXN0UmVxdWVzdHNSZXNwb25zZRJbCgpHZXRSZXF1ZXN0EiUubWFyc3RhY2suZ292ZXJuLnYxLkdldFJlcXVlc3RSZXF1ZXN0GiYubWFyc3RhY2suZ292ZXJuLnYxLkdldFJlcXVlc3RSZXNwb25zZRJqCg9XaXRoZHJhd1JlcXVlc3QSKi5tYXJzdGFjay5nb3Zlcm4udjEuV2l0aGRyYXdSZXF1ZXN0UmVxdWVzdBorLm1hcnN0YWNrLmdvdmVybi52MS5XaXRoZHJhd1JlcXVlc3RSZXNwb25zZULbAQoWY29tLm1hcnN0YWNrLmdvdmVybi52MUINUmVxdWVzdHNQcm90b1ABWkhnaXRodWIuY29tL21hcnN0YWNrLWxhYnMvbWFyc3RhY2stZ292ZXJuL2dlbi9tYXJzdGFjay9nb3Zlcm4vdjE7Z292ZXJudjGiAgNNR1iqAhJNYXJzdGFjay5Hb3Zlcm4uVjHKAhJNYXJzdGFja1xHb3Zlcm5cVjHiAh5NYXJzdGFja1xHb3Zlcm5cVjFcR1BCTWV0YWRhdGHqAhRNYXJzdGFjazo6R292ZXJuOjpWMWIGcHJvdG8z", [file_google_protobuf_timestamp, file_marstack_govern_v1_common, file_marstack_govern_v1_tenancy]);
 
 /**
  * @generated from message marstack.govern.v1.ResourceRequest
@@ -96,6 +96,16 @@ export type ResourceRequest = Message<"marstack.govern.v1.ResourceRequest"> & {
    * @generated from field: google.protobuf.Timestamp expires_at = 15;
    */
   expiresAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: string evidence_digest = 16;
+   */
+  evidenceDigest: string;
+
+  /**
+   * @generated from field: marstack.govern.v1.Decided decided = 17;
+   */
+  decided?: Decided | undefined;
 };
 
 /**
@@ -213,6 +223,48 @@ export const ResourceRequest_PhaseSchema: GenEnum<ResourceRequest_Phase> = /*@__
   enumDesc(file_marstack_govern_v1_requests, 0, 1);
 
 /**
+ * @generated from message marstack.govern.v1.Decided
+ */
+export type Decided = Message<"marstack.govern.v1.Decided"> & {
+  /**
+   * @generated from field: string uid = 1;
+   */
+  uid: string;
+
+  /**
+   * @generated from field: string decider = 2;
+   */
+  decider: string;
+
+  /**
+   * @generated from field: string outcome = 3;
+   */
+  outcome: string;
+
+  /**
+   * @generated from field: string reason = 4;
+   */
+  reason: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp decided_at = 5;
+   */
+  decidedAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp granted_until = 6;
+   */
+  grantedUntil?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message marstack.govern.v1.Decided.
+ * Use `create(DecidedSchema)` to create a new message.
+ */
+export const DecidedSchema: GenMessage<Decided> = /*@__PURE__*/
+  messageDesc(file_marstack_govern_v1_requests, 1);
+
+/**
  * @generated from message marstack.govern.v1.QuotaSpec
  */
 export type QuotaSpec = Message<"marstack.govern.v1.QuotaSpec"> & {
@@ -227,7 +279,7 @@ export type QuotaSpec = Message<"marstack.govern.v1.QuotaSpec"> & {
  * Use `create(QuotaSpecSchema)` to create a new message.
  */
 export const QuotaSpecSchema: GenMessage<QuotaSpec> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 1);
+  messageDesc(file_marstack_govern_v1_requests, 2);
 
 /**
  * @generated from message marstack.govern.v1.AccessSpec
@@ -254,7 +306,7 @@ export type AccessSpec = Message<"marstack.govern.v1.AccessSpec"> & {
  * Use `create(AccessSpecSchema)` to create a new message.
  */
 export const AccessSpecSchema: GenMessage<AccessSpec> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 2);
+  messageDesc(file_marstack_govern_v1_requests, 3);
 
 /**
  * @generated from message marstack.govern.v1.PeeringSpec
@@ -286,7 +338,7 @@ export type PeeringSpec = Message<"marstack.govern.v1.PeeringSpec"> & {
  * Use `create(PeeringSpecSchema)` to create a new message.
  */
 export const PeeringSpecSchema: GenMessage<PeeringSpec> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 3);
+  messageDesc(file_marstack_govern_v1_requests, 4);
 
 /**
  * @generated from message marstack.govern.v1.QuotaRecommendation
@@ -343,7 +395,7 @@ export type QuotaRecommendation = Message<"marstack.govern.v1.QuotaRecommendatio
  * Use `create(QuotaRecommendationSchema)` to create a new message.
  */
 export const QuotaRecommendationSchema: GenMessage<QuotaRecommendation> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 4);
+  messageDesc(file_marstack_govern_v1_requests, 5);
 
 /**
  * @generated from message marstack.govern.v1.PreflightResult
@@ -385,7 +437,7 @@ export type PreflightResult = Message<"marstack.govern.v1.PreflightResult"> & {
  * Use `create(PreflightResultSchema)` to create a new message.
  */
 export const PreflightResultSchema: GenMessage<PreflightResult> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 5);
+  messageDesc(file_marstack_govern_v1_requests, 6);
 
 /**
  * @generated from message marstack.govern.v1.PolicyRejection
@@ -422,7 +474,7 @@ export type PolicyRejection = Message<"marstack.govern.v1.PolicyRejection"> & {
  * Use `create(PolicyRejectionSchema)` to create a new message.
  */
 export const PolicyRejectionSchema: GenMessage<PolicyRejection> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 6);
+  messageDesc(file_marstack_govern_v1_requests, 7);
 
 /**
  * @generated from enum marstack.govern.v1.PolicyRejection.Severity
@@ -448,7 +500,7 @@ export enum PolicyRejection_Severity {
  * Describes the enum marstack.govern.v1.PolicyRejection.Severity.
  */
 export const PolicyRejection_SeveritySchema: GenEnum<PolicyRejection_Severity> = /*@__PURE__*/
-  enumDesc(file_marstack_govern_v1_requests, 6, 0);
+  enumDesc(file_marstack_govern_v1_requests, 7, 0);
 
 /**
  * @generated from message marstack.govern.v1.RecommendQuotaRequest
@@ -470,7 +522,7 @@ export type RecommendQuotaRequest = Message<"marstack.govern.v1.RecommendQuotaRe
  * Use `create(RecommendQuotaRequestSchema)` to create a new message.
  */
 export const RecommendQuotaRequestSchema: GenMessage<RecommendQuotaRequest> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 7);
+  messageDesc(file_marstack_govern_v1_requests, 8);
 
 /**
  * @generated from message marstack.govern.v1.RecommendQuotaResponse
@@ -492,7 +544,7 @@ export type RecommendQuotaResponse = Message<"marstack.govern.v1.RecommendQuotaR
  * Use `create(RecommendQuotaResponseSchema)` to create a new message.
  */
 export const RecommendQuotaResponseSchema: GenMessage<RecommendQuotaResponse> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 8);
+  messageDesc(file_marstack_govern_v1_requests, 9);
 
 /**
  * @generated from message marstack.govern.v1.PreflightRequest
@@ -534,7 +586,7 @@ export type PreflightRequest = Message<"marstack.govern.v1.PreflightRequest"> & 
  * Use `create(PreflightRequestSchema)` to create a new message.
  */
 export const PreflightRequestSchema: GenMessage<PreflightRequest> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 9);
+  messageDesc(file_marstack_govern_v1_requests, 10);
 
 /**
  * @generated from message marstack.govern.v1.PreflightResponse
@@ -556,7 +608,7 @@ export type PreflightResponse = Message<"marstack.govern.v1.PreflightResponse"> 
  * Use `create(PreflightResponseSchema)` to create a new message.
  */
 export const PreflightResponseSchema: GenMessage<PreflightResponse> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 10);
+  messageDesc(file_marstack_govern_v1_requests, 11);
 
 /**
  * @generated from message marstack.govern.v1.SubmitRequestRequest
@@ -603,7 +655,7 @@ export type SubmitRequestRequest = Message<"marstack.govern.v1.SubmitRequestRequ
  * Use `create(SubmitRequestRequestSchema)` to create a new message.
  */
 export const SubmitRequestRequestSchema: GenMessage<SubmitRequestRequest> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 11);
+  messageDesc(file_marstack_govern_v1_requests, 12);
 
 /**
  * @generated from message marstack.govern.v1.SubmitRequestResponse
@@ -620,7 +672,7 @@ export type SubmitRequestResponse = Message<"marstack.govern.v1.SubmitRequestRes
  * Use `create(SubmitRequestResponseSchema)` to create a new message.
  */
 export const SubmitRequestResponseSchema: GenMessage<SubmitRequestResponse> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 12);
+  messageDesc(file_marstack_govern_v1_requests, 13);
 
 /**
  * @generated from message marstack.govern.v1.ListRequestsRequest
@@ -652,7 +704,7 @@ export type ListRequestsRequest = Message<"marstack.govern.v1.ListRequestsReques
  * Use `create(ListRequestsRequestSchema)` to create a new message.
  */
 export const ListRequestsRequestSchema: GenMessage<ListRequestsRequest> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 13);
+  messageDesc(file_marstack_govern_v1_requests, 14);
 
 /**
  * @generated from message marstack.govern.v1.ListRequestsResponse
@@ -679,7 +731,7 @@ export type ListRequestsResponse = Message<"marstack.govern.v1.ListRequestsRespo
  * Use `create(ListRequestsResponseSchema)` to create a new message.
  */
 export const ListRequestsResponseSchema: GenMessage<ListRequestsResponse> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 14);
+  messageDesc(file_marstack_govern_v1_requests, 15);
 
 /**
  * @generated from message marstack.govern.v1.GetRequestRequest
@@ -696,7 +748,7 @@ export type GetRequestRequest = Message<"marstack.govern.v1.GetRequestRequest"> 
  * Use `create(GetRequestRequestSchema)` to create a new message.
  */
 export const GetRequestRequestSchema: GenMessage<GetRequestRequest> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 15);
+  messageDesc(file_marstack_govern_v1_requests, 16);
 
 /**
  * @generated from message marstack.govern.v1.GetRequestResponse
@@ -718,7 +770,7 @@ export type GetRequestResponse = Message<"marstack.govern.v1.GetRequestResponse"
  * Use `create(GetRequestResponseSchema)` to create a new message.
  */
 export const GetRequestResponseSchema: GenMessage<GetRequestResponse> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 16);
+  messageDesc(file_marstack_govern_v1_requests, 17);
 
 /**
  * @generated from message marstack.govern.v1.WithdrawRequestRequest
@@ -740,7 +792,7 @@ export type WithdrawRequestRequest = Message<"marstack.govern.v1.WithdrawRequest
  * Use `create(WithdrawRequestRequestSchema)` to create a new message.
  */
 export const WithdrawRequestRequestSchema: GenMessage<WithdrawRequestRequest> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 17);
+  messageDesc(file_marstack_govern_v1_requests, 18);
 
 /**
  * @generated from message marstack.govern.v1.WithdrawRequestResponse
@@ -757,7 +809,7 @@ export type WithdrawRequestResponse = Message<"marstack.govern.v1.WithdrawReques
  * Use `create(WithdrawRequestResponseSchema)` to create a new message.
  */
 export const WithdrawRequestResponseSchema: GenMessage<WithdrawRequestResponse> = /*@__PURE__*/
-  messageDesc(file_marstack_govern_v1_requests, 18);
+  messageDesc(file_marstack_govern_v1_requests, 19);
 
 /**
  * @generated from service marstack.govern.v1.RequestService

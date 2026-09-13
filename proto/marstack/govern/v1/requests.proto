@@ -33,6 +33,8 @@ message ResourceRequest {
   PreflightResult preflight = 13;
   google.protobuf.Timestamp created_at = 14;
   google.protobuf.Timestamp expires_at = 15;
+  string evidence_digest = 16;
+  Decided decided = 17;
 
   enum Kind {
     KIND_UNSPECIFIED = 0;
@@ -56,6 +58,15 @@ message ResourceRequest {
     PHASE_EXPIRED = 8;
     PHASE_WITHDRAWN = 9;
   }
+}
+
+message Decided {
+  string uid = 1;
+  string decider = 2;
+  string outcome = 3;
+  string reason = 4;
+  google.protobuf.Timestamp decided_at = 5;
+  google.protobuf.Timestamp granted_until = 6;
 }
 
 message QuotaSpec {

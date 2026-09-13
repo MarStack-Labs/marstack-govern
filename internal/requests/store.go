@@ -32,6 +32,7 @@ type Request struct {
 	Requester       string
 	Reason          string
 	Phase           string
+	EvidenceDigest  string
 	Spec            json.RawMessage
 	Recommendation  json.RawMessage
 	Preflight       json.RawMessage
@@ -58,10 +59,11 @@ func (s *Store) UpsertRequest(ctx context.Context, request Request) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO requests (
 		    uid, kind, name, namespace, division_uid, requester, acting_division,
-		    reason, spec, recommendation, preflight, phase, created_at, resource_version, observed_at
+		    reason, spec, recommendation, preflight, phase, evidence_digest,
+		    created_at, resource_version, observed_at
 		) VALUES (
 		    $1, $2, $3, $4, (SELECT uid FROM divisions WHERE name = $5), $6, $5,
-		    $7, $8, $9, $10, $11, $12, $13, now()
+		    $7, $8, $9, $10, $11, nullif($12, ''), $13, $14, now()
 		)
 		ON CONFLICT (uid) DO UPDATE SET
 		    division_uid   = excluded.division_uid,
@@ -71,12 +73,13 @@ func (s *Store) UpsertRequest(ctx context.Context, request Request) error {
 		    recommendation = excluded.recommendation,
 		    preflight      = excluded.preflight,
 		    phase          = excluded.phase,
+		    evidence_digest = excluded.evidence_digest,
 		    resource_version = excluded.resource_version,
 		    observed_at    = now()`,
 		request.UID, request.Kind, request.Name, request.Namespace, request.Division,
 		request.Requester, request.Reason, request.Spec,
 		nullableJSON(request.Recommendation), nullableJSON(request.Preflight),
-		request.Phase, request.CreatedAt, request.ResourceVersion,
+		request.Phase, request.EvidenceDigest, request.CreatedAt, request.ResourceVersion,
 	)
 	if err != nil {
 		return fmt.Errorf("upsert request %s/%s: %w", request.Namespace, request.Name, err)
@@ -155,7 +158,7 @@ func (s *Store) GetRequest(ctx context.Context, uid string) (Request, error) {
 
 const selectRequests = `
 	SELECT r.uid, r.kind, r.name, r.namespace, coalesce(d.name, r.acting_division),
-	       r.requester, r.reason, r.phase, r.spec,
+	       r.requester, r.reason, r.phase, coalesce(r.evidence_digest, ''), r.spec,
 	       coalesce(r.recommendation, 'null'::jsonb), coalesce(r.preflight, 'null'::jsonb),
 	       r.created_at, r.resource_version, r.observed_at,
 	       dec.uid, dec.decider, dec.outcome, dec.reason, dec.evidence,
@@ -179,7 +182,7 @@ func scanRequests(rows pgx.Rows) ([]Request, error) {
 
 		if err := rows.Scan(
 			&request.UID, &request.Kind, &request.Name, &request.Namespace, &request.Division,
-			&request.Requester, &request.Reason, &request.Phase, &request.Spec,
+			&request.Requester, &request.Reason, &request.Phase, &request.EvidenceDigest, &request.Spec,
 			&request.Recommendation, &request.Preflight,
 			&request.CreatedAt, &request.ResourceVersion, &request.ObservedAt,
 			&decisionUID, &decider, &outcome, &decisionReason, &evidence,

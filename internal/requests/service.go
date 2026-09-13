@@ -393,6 +393,7 @@ func protoRequestFromCR(request *governv1alpha1.QuotaRequest) *governv1.Resource
 		Quota:          &governv1.QuotaSpec{Target: protoCompute(request.Spec.Target)},
 		Recommendation: protoRecommendation(request.Status.Recommendation),
 		Preflight:      protoPreflight(request.Status.Preflight),
+		EvidenceDigest: request.Status.EvidenceDigest,
 		CreatedAt:      timestamppb.New(request.CreationTimestamp.Time),
 	}
 }
@@ -404,16 +405,31 @@ func protoRequest(request Request) (*governv1.ResourceRequest, error) {
 	}
 
 	out := &governv1.ResourceRequest{
-		Uid:       request.UID,
-		Kind:      governv1.ResourceRequest_KIND_QUOTA,
-		Name:      request.Name,
-		Namespace: request.Namespace,
-		Division:  request.Division,
-		Reason:    request.Reason,
-		Phase:     protoPhase(request.Phase),
-		Requester: &governv1.Actor{Subject: request.Requester},
-		Quota:     &governv1.QuotaSpec{Target: protoCompute(spec.Target)},
-		CreatedAt: timestamppb.New(request.CreatedAt),
+		Uid:            request.UID,
+		Kind:           governv1.ResourceRequest_KIND_QUOTA,
+		Name:           request.Name,
+		Namespace:      request.Namespace,
+		Division:       request.Division,
+		Reason:         request.Reason,
+		Phase:          protoPhase(request.Phase),
+		Requester:      &governv1.Actor{Subject: request.Requester},
+		Quota:          &governv1.QuotaSpec{Target: protoCompute(spec.Target)},
+		EvidenceDigest: request.EvidenceDigest,
+		CreatedAt:      timestamppb.New(request.CreatedAt),
+	}
+
+	if request.Decision != nil {
+		decided := &governv1.Decided{
+			Uid:       request.Decision.UID,
+			Decider:   request.Decision.Decider,
+			Outcome:   request.Decision.Outcome,
+			Reason:    request.Decision.Reason,
+			DecidedAt: timestamppb.New(request.Decision.DecidedAt),
+		}
+		if request.Decision.GrantedUntil != nil {
+			decided.GrantedUntil = timestamppb.New(*request.Decision.GrantedUntil)
+		}
+		out.Decided = decided
 	}
 
 	if len(request.Recommendation) > 0 && string(request.Recommendation) != "null" {

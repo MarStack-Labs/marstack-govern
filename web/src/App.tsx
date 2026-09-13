@@ -6,13 +6,14 @@ import type { Session } from "./gen/marstack/govern/v1/identity_pb";
 import { Session_AuthMode } from "./gen/marstack/govern/v1/identity_pb";
 import { useLiveWorkloads } from "./useLiveWorkloads";
 import { useLiveDivisions } from "./useLiveDivisions";
+import { RequestsView } from "./RequestsView";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import { Workload_Health } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
 import type { Division, Namespace } from "./gen/marstack/govern/v1/tenancy_pb";
 import { Division_Phase } from "./gen/marstack/govern/v1/tenancy_pb";
 
-type View = "services" | "divisions";
+type View = "services" | "divisions" | "requests";
 
 const views: { id: View; label: string; subtitle: string }[] = [
   {
@@ -24,6 +25,11 @@ const views: { id: View; label: string; subtitle: string }[] = [
     id: "divisions",
     label: "Divisions",
     subtitle: "quota, isolation and access, reconciled from the Division resource",
+  },
+  {
+    id: "requests",
+    label: "Requests",
+    subtitle: "numbers proposed from usage, decided against evidence",
   },
 ];
 
@@ -72,7 +78,13 @@ export function App() {
       </header>
 
       <main className="px-8 py-6">
-        {view === "services" ? <ServicesView /> : <DivisionsView />}
+        {view === "services" ? (
+          <ServicesView />
+        ) : view === "divisions" ? (
+          <DivisionsView />
+        ) : (
+          <RequestsView session={session} />
+        )}
       </main>
     </div>
   );

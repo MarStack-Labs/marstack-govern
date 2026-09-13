@@ -199,7 +199,7 @@ func (x PolicyRejection_Severity) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PolicyRejection_Severity.Descriptor instead.
 func (PolicyRejection_Severity) EnumDescriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{6, 0}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{7, 0}
 }
 
 type ResourceRequest struct {
@@ -219,6 +219,8 @@ type ResourceRequest struct {
 	Preflight      *PreflightResult       `protobuf:"bytes,13,opt,name=preflight,proto3" json:"preflight,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	ExpiresAt      *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	EvidenceDigest string                 `protobuf:"bytes,16,opt,name=evidence_digest,json=evidenceDigest,proto3" json:"evidence_digest,omitempty"`
+	Decided        *Decided               `protobuf:"bytes,17,opt,name=decided,proto3" json:"decided,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -358,6 +360,104 @@ func (x *ResourceRequest) GetExpiresAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *ResourceRequest) GetEvidenceDigest() string {
+	if x != nil {
+		return x.EvidenceDigest
+	}
+	return ""
+}
+
+func (x *ResourceRequest) GetDecided() *Decided {
+	if x != nil {
+		return x.Decided
+	}
+	return nil
+}
+
+type Decided struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Uid           string                 `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Decider       string                 `protobuf:"bytes,2,opt,name=decider,proto3" json:"decider,omitempty"`
+	Outcome       string                 `protobuf:"bytes,3,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	Reason        string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
+	DecidedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=decided_at,json=decidedAt,proto3" json:"decided_at,omitempty"`
+	GrantedUntil  *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=granted_until,json=grantedUntil,proto3" json:"granted_until,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Decided) Reset() {
+	*x = Decided{}
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Decided) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Decided) ProtoMessage() {}
+
+func (x *Decided) ProtoReflect() protoreflect.Message {
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Decided.ProtoReflect.Descriptor instead.
+func (*Decided) Descriptor() ([]byte, []int) {
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Decided) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *Decided) GetDecider() string {
+	if x != nil {
+		return x.Decider
+	}
+	return ""
+}
+
+func (x *Decided) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *Decided) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *Decided) GetDecidedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DecidedAt
+	}
+	return nil
+}
+
+func (x *Decided) GetGrantedUntil() *timestamppb.Timestamp {
+	if x != nil {
+		return x.GrantedUntil
+	}
+	return nil
+}
+
 type QuotaSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Target        *Compute               `protobuf:"bytes,1,opt,name=target,proto3" json:"target,omitempty"`
@@ -367,7 +467,7 @@ type QuotaSpec struct {
 
 func (x *QuotaSpec) Reset() {
 	*x = QuotaSpec{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[1]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -379,7 +479,7 @@ func (x *QuotaSpec) String() string {
 func (*QuotaSpec) ProtoMessage() {}
 
 func (x *QuotaSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[1]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -392,7 +492,7 @@ func (x *QuotaSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuotaSpec.ProtoReflect.Descriptor instead.
 func (*QuotaSpec) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{1}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *QuotaSpec) GetTarget() *Compute {
@@ -413,7 +513,7 @@ type AccessSpec struct {
 
 func (x *AccessSpec) Reset() {
 	*x = AccessSpec{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[2]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -425,7 +525,7 @@ func (x *AccessSpec) String() string {
 func (*AccessSpec) ProtoMessage() {}
 
 func (x *AccessSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[2]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -438,7 +538,7 @@ func (x *AccessSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccessSpec.ProtoReflect.Descriptor instead.
 func (*AccessSpec) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{2}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *AccessSpec) GetNamespace() string {
@@ -474,7 +574,7 @@ type PeeringSpec struct {
 
 func (x *PeeringSpec) Reset() {
 	*x = PeeringSpec{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[3]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -486,7 +586,7 @@ func (x *PeeringSpec) String() string {
 func (*PeeringSpec) ProtoMessage() {}
 
 func (x *PeeringSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[3]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -499,7 +599,7 @@ func (x *PeeringSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeeringSpec.ProtoReflect.Descriptor instead.
 func (*PeeringSpec) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{3}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *PeeringSpec) GetFromNamespace() string {
@@ -547,7 +647,7 @@ type QuotaRecommendation struct {
 
 func (x *QuotaRecommendation) Reset() {
 	*x = QuotaRecommendation{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[4]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -559,7 +659,7 @@ func (x *QuotaRecommendation) String() string {
 func (*QuotaRecommendation) ProtoMessage() {}
 
 func (x *QuotaRecommendation) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[4]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +672,7 @@ func (x *QuotaRecommendation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuotaRecommendation.ProtoReflect.Descriptor instead.
 func (*QuotaRecommendation) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{4}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *QuotaRecommendation) GetCurrent() *Compute {
@@ -652,7 +752,7 @@ type PreflightResult struct {
 
 func (x *PreflightResult) Reset() {
 	*x = PreflightResult{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[5]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -664,7 +764,7 @@ func (x *PreflightResult) String() string {
 func (*PreflightResult) ProtoMessage() {}
 
 func (x *PreflightResult) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[5]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -677,7 +777,7 @@ func (x *PreflightResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreflightResult.ProtoReflect.Descriptor instead.
 func (*PreflightResult) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{5}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *PreflightResult) GetAdmitted() bool {
@@ -735,7 +835,7 @@ type PolicyRejection struct {
 
 func (x *PolicyRejection) Reset() {
 	*x = PolicyRejection{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[6]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -747,7 +847,7 @@ func (x *PolicyRejection) String() string {
 func (*PolicyRejection) ProtoMessage() {}
 
 func (x *PolicyRejection) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[6]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -760,7 +860,7 @@ func (x *PolicyRejection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PolicyRejection.ProtoReflect.Descriptor instead.
 func (*PolicyRejection) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{6}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *PolicyRejection) GetPolicy() string {
@@ -808,7 +908,7 @@ type RecommendQuotaRequest struct {
 
 func (x *RecommendQuotaRequest) Reset() {
 	*x = RecommendQuotaRequest{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[7]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -820,7 +920,7 @@ func (x *RecommendQuotaRequest) String() string {
 func (*RecommendQuotaRequest) ProtoMessage() {}
 
 func (x *RecommendQuotaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[7]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -833,7 +933,7 @@ func (x *RecommendQuotaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecommendQuotaRequest.ProtoReflect.Descriptor instead.
 func (*RecommendQuotaRequest) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{7}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RecommendQuotaRequest) GetDivision() string {
@@ -860,7 +960,7 @@ type RecommendQuotaResponse struct {
 
 func (x *RecommendQuotaResponse) Reset() {
 	*x = RecommendQuotaResponse{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[8]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -872,7 +972,7 @@ func (x *RecommendQuotaResponse) String() string {
 func (*RecommendQuotaResponse) ProtoMessage() {}
 
 func (x *RecommendQuotaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[8]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -885,7 +985,7 @@ func (x *RecommendQuotaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecommendQuotaResponse.ProtoReflect.Descriptor instead.
 func (*RecommendQuotaResponse) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{8}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RecommendQuotaResponse) GetRecommendation() *QuotaRecommendation {
@@ -916,7 +1016,7 @@ type PreflightRequest struct {
 
 func (x *PreflightRequest) Reset() {
 	*x = PreflightRequest{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[9]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -928,7 +1028,7 @@ func (x *PreflightRequest) String() string {
 func (*PreflightRequest) ProtoMessage() {}
 
 func (x *PreflightRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[9]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -941,7 +1041,7 @@ func (x *PreflightRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreflightRequest.ProtoReflect.Descriptor instead.
 func (*PreflightRequest) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{9}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *PreflightRequest) GetDivision() string {
@@ -996,7 +1096,7 @@ type PreflightResponse struct {
 
 func (x *PreflightResponse) Reset() {
 	*x = PreflightResponse{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[10]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1008,7 +1108,7 @@ func (x *PreflightResponse) String() string {
 func (*PreflightResponse) ProtoMessage() {}
 
 func (x *PreflightResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[10]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1021,7 +1121,7 @@ func (x *PreflightResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PreflightResponse.ProtoReflect.Descriptor instead.
 func (*PreflightResponse) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{10}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *PreflightResponse) GetResult() *PreflightResult {
@@ -1053,7 +1153,7 @@ type SubmitRequestRequest struct {
 
 func (x *SubmitRequestRequest) Reset() {
 	*x = SubmitRequestRequest{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[11]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1065,7 +1165,7 @@ func (x *SubmitRequestRequest) String() string {
 func (*SubmitRequestRequest) ProtoMessage() {}
 
 func (x *SubmitRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[11]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1078,7 +1178,7 @@ func (x *SubmitRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitRequestRequest.ProtoReflect.Descriptor instead.
 func (*SubmitRequestRequest) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{11}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SubmitRequestRequest) GetDivision() string {
@@ -1139,7 +1239,7 @@ type SubmitRequestResponse struct {
 
 func (x *SubmitRequestResponse) Reset() {
 	*x = SubmitRequestResponse{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[12]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1151,7 +1251,7 @@ func (x *SubmitRequestResponse) String() string {
 func (*SubmitRequestResponse) ProtoMessage() {}
 
 func (x *SubmitRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[12]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1264,7 @@ func (x *SubmitRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitRequestResponse.ProtoReflect.Descriptor instead.
 func (*SubmitRequestResponse) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{12}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *SubmitRequestResponse) GetRequest() *ResourceRequest {
@@ -1186,7 +1286,7 @@ type ListRequestsRequest struct {
 
 func (x *ListRequestsRequest) Reset() {
 	*x = ListRequestsRequest{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[13]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1198,7 +1298,7 @@ func (x *ListRequestsRequest) String() string {
 func (*ListRequestsRequest) ProtoMessage() {}
 
 func (x *ListRequestsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[13]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1211,7 +1311,7 @@ func (x *ListRequestsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRequestsRequest.ProtoReflect.Descriptor instead.
 func (*ListRequestsRequest) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{13}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListRequestsRequest) GetDivision() string {
@@ -1253,7 +1353,7 @@ type ListRequestsResponse struct {
 
 func (x *ListRequestsResponse) Reset() {
 	*x = ListRequestsResponse{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[14]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1265,7 +1365,7 @@ func (x *ListRequestsResponse) String() string {
 func (*ListRequestsResponse) ProtoMessage() {}
 
 func (x *ListRequestsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[14]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1278,7 +1378,7 @@ func (x *ListRequestsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListRequestsResponse.ProtoReflect.Descriptor instead.
 func (*ListRequestsResponse) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{14}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListRequestsResponse) GetRequests() []*ResourceRequest {
@@ -1311,7 +1411,7 @@ type GetRequestRequest struct {
 
 func (x *GetRequestRequest) Reset() {
 	*x = GetRequestRequest{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[15]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1323,7 +1423,7 @@ func (x *GetRequestRequest) String() string {
 func (*GetRequestRequest) ProtoMessage() {}
 
 func (x *GetRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[15]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1336,7 +1436,7 @@ func (x *GetRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequestRequest.ProtoReflect.Descriptor instead.
 func (*GetRequestRequest) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{15}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetRequestRequest) GetUid() string {
@@ -1356,7 +1456,7 @@ type GetRequestResponse struct {
 
 func (x *GetRequestResponse) Reset() {
 	*x = GetRequestResponse{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[16]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1368,7 +1468,7 @@ func (x *GetRequestResponse) String() string {
 func (*GetRequestResponse) ProtoMessage() {}
 
 func (x *GetRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[16]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1381,7 +1481,7 @@ func (x *GetRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequestResponse.ProtoReflect.Descriptor instead.
 func (*GetRequestResponse) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{16}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetRequestResponse) GetRequest() *ResourceRequest {
@@ -1408,7 +1508,7 @@ type WithdrawRequestRequest struct {
 
 func (x *WithdrawRequestRequest) Reset() {
 	*x = WithdrawRequestRequest{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[17]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1420,7 +1520,7 @@ func (x *WithdrawRequestRequest) String() string {
 func (*WithdrawRequestRequest) ProtoMessage() {}
 
 func (x *WithdrawRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[17]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1433,7 +1533,7 @@ func (x *WithdrawRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WithdrawRequestRequest.ProtoReflect.Descriptor instead.
 func (*WithdrawRequestRequest) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{17}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *WithdrawRequestRequest) GetUid() string {
@@ -1459,7 +1559,7 @@ type WithdrawRequestResponse struct {
 
 func (x *WithdrawRequestResponse) Reset() {
 	*x = WithdrawRequestResponse{}
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[18]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1471,7 +1571,7 @@ func (x *WithdrawRequestResponse) String() string {
 func (*WithdrawRequestResponse) ProtoMessage() {}
 
 func (x *WithdrawRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_marstack_govern_v1_requests_proto_msgTypes[18]
+	mi := &file_marstack_govern_v1_requests_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1484,7 +1584,7 @@ func (x *WithdrawRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WithdrawRequestResponse.ProtoReflect.Descriptor instead.
 func (*WithdrawRequestResponse) Descriptor() ([]byte, []int) {
-	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{18}
+	return file_marstack_govern_v1_requests_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *WithdrawRequestResponse) GetRequest() *ResourceRequest {
@@ -1498,7 +1598,7 @@ var File_marstack_govern_v1_requests_proto protoreflect.FileDescriptor
 
 const file_marstack_govern_v1_requests_proto_rawDesc = "" +
 	"\n" +
-	"!marstack/govern/v1/requests.proto\x12\x12marstack.govern.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1fmarstack/govern/v1/common.proto\x1a marstack/govern/v1/tenancy.proto\"\xfb\b\n" +
+	"!marstack/govern/v1/requests.proto\x12\x12marstack.govern.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1fmarstack/govern/v1/common.proto\x1a marstack/govern/v1/tenancy.proto\"\xdb\t\n" +
 	"\x0fResourceRequest\x12\x10\n" +
 	"\x03uid\x18\x01 \x01(\tR\x03uid\x12<\n" +
 	"\x04kind\x18\x02 \x01(\x0e2(.marstack.govern.v1.ResourceRequest.KindR\x04kind\x12\x12\n" +
@@ -1517,7 +1617,9 @@ const file_marstack_govern_v1_requests_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"expires_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"\x98\x01\n" +
+	"expires_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12'\n" +
+	"\x0fevidence_digest\x18\x10 \x01(\tR\x0eevidenceDigest\x125\n" +
+	"\adecided\x18\x11 \x01(\v2\x1b.marstack.govern.v1.DecidedR\adecided\"\x98\x01\n" +
 	"\x04Kind\x12\x14\n" +
 	"\x10KIND_UNSPECIFIED\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -1537,7 +1639,15 @@ const file_marstack_govern_v1_requests_proto_rawDesc = "" +
 	"\x17PHASE_CHANGES_REQUESTED\x10\x06\x12\x11\n" +
 	"\rPHASE_APPLIED\x10\a\x12\x11\n" +
 	"\rPHASE_EXPIRED\x10\b\x12\x13\n" +
-	"\x0fPHASE_WITHDRAWN\x10\t\"@\n" +
+	"\x0fPHASE_WITHDRAWN\x10\t\"\xe3\x01\n" +
+	"\aDecided\x12\x10\n" +
+	"\x03uid\x18\x01 \x01(\tR\x03uid\x12\x18\n" +
+	"\adecider\x18\x02 \x01(\tR\adecider\x12\x18\n" +
+	"\aoutcome\x18\x03 \x01(\tR\aoutcome\x12\x16\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\x129\n" +
+	"\n" +
+	"decided_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tdecidedAt\x12?\n" +
+	"\rgranted_until\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\fgrantedUntil\"@\n" +
 	"\tQuotaSpec\x123\n" +
 	"\x06target\x18\x01 \x01(\v2\x1b.marstack.govern.v1.ComputeR\x06target\"{\n" +
 	"\n" +
@@ -1648,98 +1758,102 @@ func file_marstack_govern_v1_requests_proto_rawDescGZIP() []byte {
 }
 
 var file_marstack_govern_v1_requests_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_marstack_govern_v1_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_marstack_govern_v1_requests_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_marstack_govern_v1_requests_proto_goTypes = []any{
 	(ResourceRequest_Kind)(0),       // 0: marstack.govern.v1.ResourceRequest.Kind
 	(ResourceRequest_Phase)(0),      // 1: marstack.govern.v1.ResourceRequest.Phase
 	(PolicyRejection_Severity)(0),   // 2: marstack.govern.v1.PolicyRejection.Severity
 	(*ResourceRequest)(nil),         // 3: marstack.govern.v1.ResourceRequest
-	(*QuotaSpec)(nil),               // 4: marstack.govern.v1.QuotaSpec
-	(*AccessSpec)(nil),              // 5: marstack.govern.v1.AccessSpec
-	(*PeeringSpec)(nil),             // 6: marstack.govern.v1.PeeringSpec
-	(*QuotaRecommendation)(nil),     // 7: marstack.govern.v1.QuotaRecommendation
-	(*PreflightResult)(nil),         // 8: marstack.govern.v1.PreflightResult
-	(*PolicyRejection)(nil),         // 9: marstack.govern.v1.PolicyRejection
-	(*RecommendQuotaRequest)(nil),   // 10: marstack.govern.v1.RecommendQuotaRequest
-	(*RecommendQuotaResponse)(nil),  // 11: marstack.govern.v1.RecommendQuotaResponse
-	(*PreflightRequest)(nil),        // 12: marstack.govern.v1.PreflightRequest
-	(*PreflightResponse)(nil),       // 13: marstack.govern.v1.PreflightResponse
-	(*SubmitRequestRequest)(nil),    // 14: marstack.govern.v1.SubmitRequestRequest
-	(*SubmitRequestResponse)(nil),   // 15: marstack.govern.v1.SubmitRequestResponse
-	(*ListRequestsRequest)(nil),     // 16: marstack.govern.v1.ListRequestsRequest
-	(*ListRequestsResponse)(nil),    // 17: marstack.govern.v1.ListRequestsResponse
-	(*GetRequestRequest)(nil),       // 18: marstack.govern.v1.GetRequestRequest
-	(*GetRequestResponse)(nil),      // 19: marstack.govern.v1.GetRequestResponse
-	(*WithdrawRequestRequest)(nil),  // 20: marstack.govern.v1.WithdrawRequestRequest
-	(*WithdrawRequestResponse)(nil), // 21: marstack.govern.v1.WithdrawRequestResponse
-	(*Actor)(nil),                   // 22: marstack.govern.v1.Actor
-	(*timestamppb.Timestamp)(nil),   // 23: google.protobuf.Timestamp
-	(*Compute)(nil),                 // 24: marstack.govern.v1.Compute
-	(Member_Role)(0),                // 25: marstack.govern.v1.Member.Role
-	(*Freshness)(nil),               // 26: marstack.govern.v1.Freshness
-	(*Page)(nil),                    // 27: marstack.govern.v1.Page
-	(*PageInfo)(nil),                // 28: marstack.govern.v1.PageInfo
+	(*Decided)(nil),                 // 4: marstack.govern.v1.Decided
+	(*QuotaSpec)(nil),               // 5: marstack.govern.v1.QuotaSpec
+	(*AccessSpec)(nil),              // 6: marstack.govern.v1.AccessSpec
+	(*PeeringSpec)(nil),             // 7: marstack.govern.v1.PeeringSpec
+	(*QuotaRecommendation)(nil),     // 8: marstack.govern.v1.QuotaRecommendation
+	(*PreflightResult)(nil),         // 9: marstack.govern.v1.PreflightResult
+	(*PolicyRejection)(nil),         // 10: marstack.govern.v1.PolicyRejection
+	(*RecommendQuotaRequest)(nil),   // 11: marstack.govern.v1.RecommendQuotaRequest
+	(*RecommendQuotaResponse)(nil),  // 12: marstack.govern.v1.RecommendQuotaResponse
+	(*PreflightRequest)(nil),        // 13: marstack.govern.v1.PreflightRequest
+	(*PreflightResponse)(nil),       // 14: marstack.govern.v1.PreflightResponse
+	(*SubmitRequestRequest)(nil),    // 15: marstack.govern.v1.SubmitRequestRequest
+	(*SubmitRequestResponse)(nil),   // 16: marstack.govern.v1.SubmitRequestResponse
+	(*ListRequestsRequest)(nil),     // 17: marstack.govern.v1.ListRequestsRequest
+	(*ListRequestsResponse)(nil),    // 18: marstack.govern.v1.ListRequestsResponse
+	(*GetRequestRequest)(nil),       // 19: marstack.govern.v1.GetRequestRequest
+	(*GetRequestResponse)(nil),      // 20: marstack.govern.v1.GetRequestResponse
+	(*WithdrawRequestRequest)(nil),  // 21: marstack.govern.v1.WithdrawRequestRequest
+	(*WithdrawRequestResponse)(nil), // 22: marstack.govern.v1.WithdrawRequestResponse
+	(*Actor)(nil),                   // 23: marstack.govern.v1.Actor
+	(*timestamppb.Timestamp)(nil),   // 24: google.protobuf.Timestamp
+	(*Compute)(nil),                 // 25: marstack.govern.v1.Compute
+	(Member_Role)(0),                // 26: marstack.govern.v1.Member.Role
+	(*Freshness)(nil),               // 27: marstack.govern.v1.Freshness
+	(*Page)(nil),                    // 28: marstack.govern.v1.Page
+	(*PageInfo)(nil),                // 29: marstack.govern.v1.PageInfo
 }
 var file_marstack_govern_v1_requests_proto_depIdxs = []int32{
 	0,  // 0: marstack.govern.v1.ResourceRequest.kind:type_name -> marstack.govern.v1.ResourceRequest.Kind
-	22, // 1: marstack.govern.v1.ResourceRequest.requester:type_name -> marstack.govern.v1.Actor
+	23, // 1: marstack.govern.v1.ResourceRequest.requester:type_name -> marstack.govern.v1.Actor
 	1,  // 2: marstack.govern.v1.ResourceRequest.phase:type_name -> marstack.govern.v1.ResourceRequest.Phase
-	4,  // 3: marstack.govern.v1.ResourceRequest.quota:type_name -> marstack.govern.v1.QuotaSpec
-	5,  // 4: marstack.govern.v1.ResourceRequest.access:type_name -> marstack.govern.v1.AccessSpec
-	6,  // 5: marstack.govern.v1.ResourceRequest.peering:type_name -> marstack.govern.v1.PeeringSpec
-	7,  // 6: marstack.govern.v1.ResourceRequest.recommendation:type_name -> marstack.govern.v1.QuotaRecommendation
-	8,  // 7: marstack.govern.v1.ResourceRequest.preflight:type_name -> marstack.govern.v1.PreflightResult
-	23, // 8: marstack.govern.v1.ResourceRequest.created_at:type_name -> google.protobuf.Timestamp
-	23, // 9: marstack.govern.v1.ResourceRequest.expires_at:type_name -> google.protobuf.Timestamp
-	24, // 10: marstack.govern.v1.QuotaSpec.target:type_name -> marstack.govern.v1.Compute
-	25, // 11: marstack.govern.v1.AccessSpec.role:type_name -> marstack.govern.v1.Member.Role
-	24, // 12: marstack.govern.v1.QuotaRecommendation.current:type_name -> marstack.govern.v1.Compute
-	24, // 13: marstack.govern.v1.QuotaRecommendation.observed_p95:type_name -> marstack.govern.v1.Compute
-	24, // 14: marstack.govern.v1.QuotaRecommendation.observed_p99:type_name -> marstack.govern.v1.Compute
-	24, // 15: marstack.govern.v1.QuotaRecommendation.proposed:type_name -> marstack.govern.v1.Compute
-	23, // 16: marstack.govern.v1.QuotaRecommendation.exhaustion_at:type_name -> google.protobuf.Timestamp
-	9,  // 17: marstack.govern.v1.PreflightResult.rejections:type_name -> marstack.govern.v1.PolicyRejection
-	24, // 18: marstack.govern.v1.PreflightResult.quota_after:type_name -> marstack.govern.v1.Compute
-	23, // 19: marstack.govern.v1.PreflightResult.evaluated_at:type_name -> google.protobuf.Timestamp
-	2,  // 20: marstack.govern.v1.PolicyRejection.severity:type_name -> marstack.govern.v1.PolicyRejection.Severity
-	7,  // 21: marstack.govern.v1.RecommendQuotaResponse.recommendation:type_name -> marstack.govern.v1.QuotaRecommendation
-	26, // 22: marstack.govern.v1.RecommendQuotaResponse.freshness:type_name -> marstack.govern.v1.Freshness
-	0,  // 23: marstack.govern.v1.PreflightRequest.kind:type_name -> marstack.govern.v1.ResourceRequest.Kind
-	4,  // 24: marstack.govern.v1.PreflightRequest.quota:type_name -> marstack.govern.v1.QuotaSpec
-	5,  // 25: marstack.govern.v1.PreflightRequest.access:type_name -> marstack.govern.v1.AccessSpec
-	6,  // 26: marstack.govern.v1.PreflightRequest.peering:type_name -> marstack.govern.v1.PeeringSpec
-	8,  // 27: marstack.govern.v1.PreflightResponse.result:type_name -> marstack.govern.v1.PreflightResult
-	26, // 28: marstack.govern.v1.PreflightResponse.freshness:type_name -> marstack.govern.v1.Freshness
-	0,  // 29: marstack.govern.v1.SubmitRequestRequest.kind:type_name -> marstack.govern.v1.ResourceRequest.Kind
-	4,  // 30: marstack.govern.v1.SubmitRequestRequest.quota:type_name -> marstack.govern.v1.QuotaSpec
-	5,  // 31: marstack.govern.v1.SubmitRequestRequest.access:type_name -> marstack.govern.v1.AccessSpec
-	6,  // 32: marstack.govern.v1.SubmitRequestRequest.peering:type_name -> marstack.govern.v1.PeeringSpec
-	3,  // 33: marstack.govern.v1.SubmitRequestResponse.request:type_name -> marstack.govern.v1.ResourceRequest
-	1,  // 34: marstack.govern.v1.ListRequestsRequest.phase:type_name -> marstack.govern.v1.ResourceRequest.Phase
-	27, // 35: marstack.govern.v1.ListRequestsRequest.page:type_name -> marstack.govern.v1.Page
-	3,  // 36: marstack.govern.v1.ListRequestsResponse.requests:type_name -> marstack.govern.v1.ResourceRequest
-	28, // 37: marstack.govern.v1.ListRequestsResponse.page:type_name -> marstack.govern.v1.PageInfo
-	26, // 38: marstack.govern.v1.ListRequestsResponse.freshness:type_name -> marstack.govern.v1.Freshness
-	3,  // 39: marstack.govern.v1.GetRequestResponse.request:type_name -> marstack.govern.v1.ResourceRequest
-	26, // 40: marstack.govern.v1.GetRequestResponse.freshness:type_name -> marstack.govern.v1.Freshness
-	3,  // 41: marstack.govern.v1.WithdrawRequestResponse.request:type_name -> marstack.govern.v1.ResourceRequest
-	10, // 42: marstack.govern.v1.RequestService.RecommendQuota:input_type -> marstack.govern.v1.RecommendQuotaRequest
-	12, // 43: marstack.govern.v1.RequestService.Preflight:input_type -> marstack.govern.v1.PreflightRequest
-	14, // 44: marstack.govern.v1.RequestService.SubmitRequest:input_type -> marstack.govern.v1.SubmitRequestRequest
-	16, // 45: marstack.govern.v1.RequestService.ListRequests:input_type -> marstack.govern.v1.ListRequestsRequest
-	18, // 46: marstack.govern.v1.RequestService.GetRequest:input_type -> marstack.govern.v1.GetRequestRequest
-	20, // 47: marstack.govern.v1.RequestService.WithdrawRequest:input_type -> marstack.govern.v1.WithdrawRequestRequest
-	11, // 48: marstack.govern.v1.RequestService.RecommendQuota:output_type -> marstack.govern.v1.RecommendQuotaResponse
-	13, // 49: marstack.govern.v1.RequestService.Preflight:output_type -> marstack.govern.v1.PreflightResponse
-	15, // 50: marstack.govern.v1.RequestService.SubmitRequest:output_type -> marstack.govern.v1.SubmitRequestResponse
-	17, // 51: marstack.govern.v1.RequestService.ListRequests:output_type -> marstack.govern.v1.ListRequestsResponse
-	19, // 52: marstack.govern.v1.RequestService.GetRequest:output_type -> marstack.govern.v1.GetRequestResponse
-	21, // 53: marstack.govern.v1.RequestService.WithdrawRequest:output_type -> marstack.govern.v1.WithdrawRequestResponse
-	48, // [48:54] is the sub-list for method output_type
-	42, // [42:48] is the sub-list for method input_type
-	42, // [42:42] is the sub-list for extension type_name
-	42, // [42:42] is the sub-list for extension extendee
-	0,  // [0:42] is the sub-list for field type_name
+	5,  // 3: marstack.govern.v1.ResourceRequest.quota:type_name -> marstack.govern.v1.QuotaSpec
+	6,  // 4: marstack.govern.v1.ResourceRequest.access:type_name -> marstack.govern.v1.AccessSpec
+	7,  // 5: marstack.govern.v1.ResourceRequest.peering:type_name -> marstack.govern.v1.PeeringSpec
+	8,  // 6: marstack.govern.v1.ResourceRequest.recommendation:type_name -> marstack.govern.v1.QuotaRecommendation
+	9,  // 7: marstack.govern.v1.ResourceRequest.preflight:type_name -> marstack.govern.v1.PreflightResult
+	24, // 8: marstack.govern.v1.ResourceRequest.created_at:type_name -> google.protobuf.Timestamp
+	24, // 9: marstack.govern.v1.ResourceRequest.expires_at:type_name -> google.protobuf.Timestamp
+	4,  // 10: marstack.govern.v1.ResourceRequest.decided:type_name -> marstack.govern.v1.Decided
+	24, // 11: marstack.govern.v1.Decided.decided_at:type_name -> google.protobuf.Timestamp
+	24, // 12: marstack.govern.v1.Decided.granted_until:type_name -> google.protobuf.Timestamp
+	25, // 13: marstack.govern.v1.QuotaSpec.target:type_name -> marstack.govern.v1.Compute
+	26, // 14: marstack.govern.v1.AccessSpec.role:type_name -> marstack.govern.v1.Member.Role
+	25, // 15: marstack.govern.v1.QuotaRecommendation.current:type_name -> marstack.govern.v1.Compute
+	25, // 16: marstack.govern.v1.QuotaRecommendation.observed_p95:type_name -> marstack.govern.v1.Compute
+	25, // 17: marstack.govern.v1.QuotaRecommendation.observed_p99:type_name -> marstack.govern.v1.Compute
+	25, // 18: marstack.govern.v1.QuotaRecommendation.proposed:type_name -> marstack.govern.v1.Compute
+	24, // 19: marstack.govern.v1.QuotaRecommendation.exhaustion_at:type_name -> google.protobuf.Timestamp
+	10, // 20: marstack.govern.v1.PreflightResult.rejections:type_name -> marstack.govern.v1.PolicyRejection
+	25, // 21: marstack.govern.v1.PreflightResult.quota_after:type_name -> marstack.govern.v1.Compute
+	24, // 22: marstack.govern.v1.PreflightResult.evaluated_at:type_name -> google.protobuf.Timestamp
+	2,  // 23: marstack.govern.v1.PolicyRejection.severity:type_name -> marstack.govern.v1.PolicyRejection.Severity
+	8,  // 24: marstack.govern.v1.RecommendQuotaResponse.recommendation:type_name -> marstack.govern.v1.QuotaRecommendation
+	27, // 25: marstack.govern.v1.RecommendQuotaResponse.freshness:type_name -> marstack.govern.v1.Freshness
+	0,  // 26: marstack.govern.v1.PreflightRequest.kind:type_name -> marstack.govern.v1.ResourceRequest.Kind
+	5,  // 27: marstack.govern.v1.PreflightRequest.quota:type_name -> marstack.govern.v1.QuotaSpec
+	6,  // 28: marstack.govern.v1.PreflightRequest.access:type_name -> marstack.govern.v1.AccessSpec
+	7,  // 29: marstack.govern.v1.PreflightRequest.peering:type_name -> marstack.govern.v1.PeeringSpec
+	9,  // 30: marstack.govern.v1.PreflightResponse.result:type_name -> marstack.govern.v1.PreflightResult
+	27, // 31: marstack.govern.v1.PreflightResponse.freshness:type_name -> marstack.govern.v1.Freshness
+	0,  // 32: marstack.govern.v1.SubmitRequestRequest.kind:type_name -> marstack.govern.v1.ResourceRequest.Kind
+	5,  // 33: marstack.govern.v1.SubmitRequestRequest.quota:type_name -> marstack.govern.v1.QuotaSpec
+	6,  // 34: marstack.govern.v1.SubmitRequestRequest.access:type_name -> marstack.govern.v1.AccessSpec
+	7,  // 35: marstack.govern.v1.SubmitRequestRequest.peering:type_name -> marstack.govern.v1.PeeringSpec
+	3,  // 36: marstack.govern.v1.SubmitRequestResponse.request:type_name -> marstack.govern.v1.ResourceRequest
+	1,  // 37: marstack.govern.v1.ListRequestsRequest.phase:type_name -> marstack.govern.v1.ResourceRequest.Phase
+	28, // 38: marstack.govern.v1.ListRequestsRequest.page:type_name -> marstack.govern.v1.Page
+	3,  // 39: marstack.govern.v1.ListRequestsResponse.requests:type_name -> marstack.govern.v1.ResourceRequest
+	29, // 40: marstack.govern.v1.ListRequestsResponse.page:type_name -> marstack.govern.v1.PageInfo
+	27, // 41: marstack.govern.v1.ListRequestsResponse.freshness:type_name -> marstack.govern.v1.Freshness
+	3,  // 42: marstack.govern.v1.GetRequestResponse.request:type_name -> marstack.govern.v1.ResourceRequest
+	27, // 43: marstack.govern.v1.GetRequestResponse.freshness:type_name -> marstack.govern.v1.Freshness
+	3,  // 44: marstack.govern.v1.WithdrawRequestResponse.request:type_name -> marstack.govern.v1.ResourceRequest
+	11, // 45: marstack.govern.v1.RequestService.RecommendQuota:input_type -> marstack.govern.v1.RecommendQuotaRequest
+	13, // 46: marstack.govern.v1.RequestService.Preflight:input_type -> marstack.govern.v1.PreflightRequest
+	15, // 47: marstack.govern.v1.RequestService.SubmitRequest:input_type -> marstack.govern.v1.SubmitRequestRequest
+	17, // 48: marstack.govern.v1.RequestService.ListRequests:input_type -> marstack.govern.v1.ListRequestsRequest
+	19, // 49: marstack.govern.v1.RequestService.GetRequest:input_type -> marstack.govern.v1.GetRequestRequest
+	21, // 50: marstack.govern.v1.RequestService.WithdrawRequest:input_type -> marstack.govern.v1.WithdrawRequestRequest
+	12, // 51: marstack.govern.v1.RequestService.RecommendQuota:output_type -> marstack.govern.v1.RecommendQuotaResponse
+	14, // 52: marstack.govern.v1.RequestService.Preflight:output_type -> marstack.govern.v1.PreflightResponse
+	16, // 53: marstack.govern.v1.RequestService.SubmitRequest:output_type -> marstack.govern.v1.SubmitRequestResponse
+	18, // 54: marstack.govern.v1.RequestService.ListRequests:output_type -> marstack.govern.v1.ListRequestsResponse
+	20, // 55: marstack.govern.v1.RequestService.GetRequest:output_type -> marstack.govern.v1.GetRequestResponse
+	22, // 56: marstack.govern.v1.RequestService.WithdrawRequest:output_type -> marstack.govern.v1.WithdrawRequestResponse
+	51, // [51:57] is the sub-list for method output_type
+	45, // [45:51] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_marstack_govern_v1_requests_proto_init() }
@@ -1755,7 +1869,7 @@ func file_marstack_govern_v1_requests_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_marstack_govern_v1_requests_proto_rawDesc), len(file_marstack_govern_v1_requests_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -142,6 +142,7 @@ func projectRequest(request *governv1alpha1.QuotaRequest) (Request, error) {
 		Requester:       request.Spec.RequestedBy,
 		Reason:          request.Spec.Reason,
 		Phase:           phaseOf(request),
+		EvidenceDigest:  request.Status.EvidenceDigest,
 		Spec:            spec,
 		CreatedAt:       request.CreationTimestamp.Time,
 		ResourceVersion: request.ResourceVersion,
