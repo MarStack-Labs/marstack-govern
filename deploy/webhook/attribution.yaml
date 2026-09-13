@@ -1,0 +1,96 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: margov-attribution
+  annotations:
+    cert-manager.io/inject-ca-from: marstack-govern/margov-webhook
+webhooks:
+  - name: quotarequest.attribution.govern.marstack.io
+    admissionReviewVersions: [v1]
+    sideEffects: None
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    reinvocationPolicy: IfNeeded
+    clientConfig:
+      service:
+        name: margov-webhook
+        namespace: marstack-govern
+        path: /attribute/quotarequest
+        port: 443
+    rules:
+      - operations: [CREATE, UPDATE]
+        apiGroups: [govern.marstack.io]
+        apiVersions: [v1alpha1]
+        resources: [quotarequests]
+        scope: Namespaced
+  - name: decision.attribution.govern.marstack.io
+    admissionReviewVersions: [v1]
+    sideEffects: None
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    reinvocationPolicy: IfNeeded
+    clientConfig:
+      service:
+        name: margov-webhook
+        namespace: marstack-govern
+        path: /attribute/decision
+        port: 443
+    rules:
+      - operations: [CREATE, UPDATE]
+        apiGroups: [govern.marstack.io]
+        apiVersions: [v1alpha1]
+        resources: [decisions]
+        scope: Namespaced
+  - name: ephemeralenvironment.attribution.govern.marstack.io
+    admissionReviewVersions: [v1]
+    sideEffects: None
+    failurePolicy: Fail
+    matchPolicy: Equivalent
+    reinvocationPolicy: IfNeeded
+    clientConfig:
+      service:
+        name: margov-webhook
+        namespace: marstack-govern
+        path: /attribute/ephemeralenvironment
+        port: 443
+    rules:
+      - operations: [CREATE, UPDATE]
+        apiGroups: [govern.marstack.io]
+        apiVersions: [v1alpha1]
+        resources: [ephemeralenvironments]
+        scope: Cluster
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: margov-webhook
+  namespace: marstack-govern
+spec:
+  selector:
+    app.kubernetes.io/name: margov
+  ports:
+    - port: 443
+      targetPort: 9443
+      protocol: TCP
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: margov-webhook
+  namespace: marstack-govern
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: margov-webhook
+  namespace: marstack-govern
+spec:
+  secretName: margov-webhook-tls
+  dnsNames:
+    - margov-webhook.marstack-govern.svc
+    - margov-webhook.marstack-govern.svc.cluster.local
+  issuerRef:
+    name: margov-webhook
+    kind: Issuer

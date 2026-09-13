@@ -208,6 +208,34 @@ server, are stopped by the same RBAC, and land in the same audit log.
 
 This choice collapses what would otherwise be two audit trails into one. See below.
 
+### Who you are is never taken from the request body
+
+Having no mandatory gateway leaves one hole that has to be closed at the API server: `kubectl` can
+create a `QuotaRequest` with any `spec.requestedBy` it likes. The control plane setting that field
+correctly is not enough — it is only one of the paths in, and it is not the one an attacker would
+use.
+
+A mutating admission webhook stamps every attribution field from `userInfo.username` on the
+admission request itself, which is the authenticated identity the API server has already verified.
+A claimed value is overwritten, an empty one is filled in, and an unauthenticated request is
+refused outright.
+
+```
+spec.requestedBy   QuotaRequest, EphemeralEnvironment
+spec.decidedBy     Decision
+spec.renewals[].grantedBy   each entry, as it is appended
+```
+
+On update, the field is immutable: rewriting it is denied, naming the value it was created with.
+Renewals are append-only for the same reason — an existing entry cannot be edited and the list
+cannot shrink, so a lease extension cannot be quietly disowned or erased.
+
+Two consequences follow. Attribution is stored as the Kubernetes username, not the friendlier email
+claim, because that is the name that appears in the audit trail and the one RBAC actually evaluated;
+the control plane writes the same value so the record is stable whether or not the webhook is
+installed. And without a certificate the webhook is not served at all — the platform logs that
+attribution is written but *not enforced*, rather than implying a guarantee it is not providing.
+
 ## Data flow
 
 ```
@@ -255,6 +283,7 @@ kernel or through a contract a module publishes.
 | `simulate` | the shadow world: cluster snapshot and bin packing, with admission dry-run and cost projection to follow |
 | `timeline` | ordered events per workload: rollouts, Kubernetes events, alerts, audit entries |
 | `identity` | who the caller is, and what Kubernetes will let them see |
+| `admission` | the webhooks that make platform invariants hold for every client, not only ours |
 
 `simulate` and `timeline` exist as kernel modules because several features are the same machine
 pointed at different questions.

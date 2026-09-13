@@ -143,7 +143,7 @@ func (s *Service) RequestEnvironment(
 			},
 			Quota:       quotaFromProto(quota),
 			TTL:         ttl,
-			RequestedBy: actor.Label(),
+			RequestedBy: actor.Subject,
 		},
 	}
 
@@ -199,7 +199,7 @@ func (s *Service) RenewEnvironment(
 	patched.Spec.Renewals = append(patched.Spec.Renewals, governv1alpha1.Renewal{
 		Extend:    FormatTTL(extension),
 		Reason:    reason,
-		GrantedBy: actor.Label(),
+		GrantedBy: actor.Subject,
 		GrantedAt: metav1.NewTime(s.now()),
 	})
 

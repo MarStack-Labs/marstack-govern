@@ -47,6 +47,8 @@ type serveOptions struct {
 	auditArchive     string
 	registryToken    string
 	registryInsecure bool
+	webhookCertDir   string
+	webhookPort      int
 	auth             authOptions
 }
 
@@ -55,6 +57,7 @@ func newServeCommand() *cobra.Command {
 		addr:            ":8080",
 		resync:          10 * time.Minute,
 		recommendWindow: requests.DefaultWindow,
+		webhookPort:     9443,
 		auth:            authOptions{secureCookies: true},
 	}
 
@@ -84,6 +87,9 @@ func newServeCommand() *cobra.Command {
 
 	flags.StringVar(&opts.auditToken, "audit-token", "", "bearer token the Kubernetes audit webhook must present (falls back to GOVERN_AUDIT_TOKEN)")
 	flags.StringVar(&opts.auditArchive, "audit-archive", "", "directory for append-only audit segments, ideally backed by object storage with retention")
+
+	flags.StringVar(&opts.webhookCertDir, "webhook-cert-dir", "", "directory holding tls.crt and tls.key; without it the attribution webhook is not served")
+	flags.IntVar(&opts.webhookPort, "webhook-port", opts.webhookPort, "port the admission webhook listens on")
 
 	flags.StringVar(&opts.auth.sessionKey, "session-key", "", "32 byte session key, hex or base64 (falls back to GOVERN_SESSION_KEY)")
 	flags.BoolVar(&opts.auth.secureCookies, "secure-cookies", opts.auth.secureCookies, "only send the session cookie over https")
@@ -169,7 +175,8 @@ func runServe(ctx context.Context, opts serveOptions) error {
 
 	usageReader := cost.NewReader(metricsClient)
 
-	built, err := buildControllers(restConfig, divisions, requested, pricing, recommender, hub, logger)
+	built, err := buildControllers(restConfig, divisions, requested, pricing, recommender, hub,
+		webhookOptions{certDir: opts.webhookCertDir, port: opts.webhookPort}, logger)
 	if err != nil {
 		return err
 	}

@@ -67,6 +67,7 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 | [Kyverno](https://kyverno.io) | admission policy, and preflight evaluation | yes |
 | PostgreSQL | the read model | yes |
 | An OIDC provider (Keycloak, Dex) | identity and group claims | yes |
+| [cert-manager](https://cert-manager.io) | the certificate the attribution webhook is served with | strongly recommended |
 | [Cilium](https://cilium.io) | network policy, and Hubble flows for reachability | recommended |
 | [Trivy Operator](https://aquasecurity.github.io/trivy-operator) | vulnerability and SBOM reports | for supply chain features |
 | [Argo CD](https://argo-cd.readthedocs.io) | GitOps, and desired-versus-live for drift | for delivery features |
@@ -74,6 +75,11 @@ marstack-govern composes rather than reimplements. A target cluster is expected 
 
 Missing optional components degrade specific features and say so in the UI. They never produce a
 guess.
+
+Without `--webhook-cert-dir` the attribution webhook is not served: the control plane still records
+who asked for what, but a direct `kubectl` write can claim to be someone else. The platform logs a
+warning saying exactly that rather than implying a guarantee it is not providing. Apply
+`deploy/webhook/` once cert-manager is present.
 
 ## Quickstart
 

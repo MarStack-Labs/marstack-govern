@@ -210,7 +210,7 @@ func (d *DecisionService) Decide(
 			},
 			Outcome:   outcome,
 			Reason:    req.Msg.GetReason(),
-			DecidedBy: actor.Label(),
+			DecidedBy: actor.Subject,
 			Evidence: governv1alpha1.Evidence{
 				Recommendation: request.Status.Recommendation,
 				Preflight:      request.Status.Preflight,

@@ -157,7 +157,7 @@ func (s *Service) SubmitRequest(
 			Division:       division.Name,
 			Target:         quotaFromCompute(target),
 			Reason:         reason,
-			RequestedBy:    actor.Label(),
+			RequestedBy:    actor.Subject,
 			IdempotencyKey: req.Msg.GetIdempotencyKey(),
 		},
 	}
