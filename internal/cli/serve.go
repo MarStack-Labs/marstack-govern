@@ -15,6 +15,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/marstack-labs/marstack-govern/internal/api"
+	"github.com/marstack-labs/marstack-govern/internal/audit"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/db"
@@ -36,6 +37,8 @@ type serveOptions struct {
 	metricsURL      string
 	metricsTenant   string
 	recommendWindow time.Duration
+	auditToken      string
+	auditArchive    string
 	auth            authOptions
 }
 
@@ -67,6 +70,9 @@ func newServeCommand() *cobra.Command {
 	flags.StringVar(&opts.metricsURL, "metrics-url", "", "Prometheus or Mimir base url used to propose quota numbers")
 	flags.StringVar(&opts.metricsTenant, "metrics-tenant", "", "value for X-Scope-OrgID when querying Mimir")
 	flags.DurationVar(&opts.recommendWindow, "recommend-window", opts.recommendWindow, "how far back usage is read when proposing a quota")
+
+	flags.StringVar(&opts.auditToken, "audit-token", "", "bearer token the Kubernetes audit webhook must present (falls back to GOVERN_AUDIT_TOKEN)")
+	flags.StringVar(&opts.auditArchive, "audit-archive", "", "directory for append-only audit segments, ideally backed by object storage with retention")
 
 	flags.StringVar(&opts.auth.sessionKey, "session-key", "", "32 byte session key, hex or base64 (falls back to GOVERN_SESSION_KEY)")
 	flags.BoolVar(&opts.auth.secureCookies, "secure-cookies", opts.auth.secureCookies, "only send the session cookie over https")
@@ -172,6 +178,34 @@ func runServe(ctx context.Context, opts serveOptions) error {
 		built.preflight,
 	)
 
+	auditStore := audit.NewStore(pool)
+
+	archive, err := audit.NewFileArchive(opts.auditArchive)
+	if err != nil {
+		return err
+	}
+
+	auditToken := opts.auditToken
+	if auditToken == "" {
+		auditToken = os.Getenv("GOVERN_AUDIT_TOKEN")
+	}
+
+	var registerAudit func(*http.ServeMux)
+	if auditToken == "" {
+		logger.Warn("no audit token configured: the audit webhook is closed, so the trail will stay empty")
+	} else {
+		var sink audit.Archive
+		if archive != nil {
+			sink = archive
+		} else {
+			logger.Warn("no audit archive configured: the chain is verifiable but only against the database")
+		}
+
+		registerAudit = audit.NewReceiver(
+			audit.NewChain(auditStore, sink), auditToken, audit.DefaultFilter(), logger,
+		).Route
+	}
+
 	watcher := kube.NewWatcher(client, opts.resync, 512)
 	projector := catalog.NewProjector(store, watcher.Events(), hub, logger)
 
@@ -183,17 +217,19 @@ func runServe(ctx context.Context, opts serveOptions) error {
 	server := &http.Server{
 		Addr: opts.addr,
 		Handler: api.NewHandler(api.Options{
-			Catalog:      catalog.NewService(store).WithScope(sessions),
-			Tenancy:      tenancy.NewService(divisions).WithScope(sessions),
-			Session:      sessions,
-			Requests:     requestService,
-			Decisions:    requests.NewDecisionService(requestService),
-			FinOps:       cost.NewService(manager.GetClient(), usageReader, workloadRequests{store: store}),
-			Hub:          hub,
-			Web:          assets,
-			Logger:       logger,
-			Sealer:       sealer,
-			RegisterAuth: registerAuth,
+			Catalog:       catalog.NewService(store).WithScope(sessions),
+			Tenancy:       tenancy.NewService(divisions).WithScope(sessions),
+			Session:       sessions,
+			Requests:      requestService,
+			Decisions:     requests.NewDecisionService(requestService),
+			FinOps:        cost.NewService(manager.GetClient(), usageReader, workloadRequests{store: store}),
+			Audit:         audit.NewService(auditStore, archive),
+			RegisterAudit: registerAudit,
+			Hub:           hub,
+			Web:           assets,
+			Logger:        logger,
+			Sealer:        sealer,
+			RegisterAuth:  registerAuth,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,

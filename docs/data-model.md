@@ -102,6 +102,15 @@ rule that lives in the schema cannot be forgotten by a new code path.
 The same technique appears on `workloads`: a tier that came from a human override must carry
 `tier_override_until`, so a manual classification cannot quietly become permanent.
 
+### Identifiers on the audit path are text, not uuid
+
+`audit_id` and `object_uid` started as `uuid` and were widened in `0010`. They arrive from outside —
+from the API server, and through it from whatever client made the call. A format constraint on
+evidence buys nothing and costs everything: a value that does not parse would make the whole batch
+fail, and a dropped audit batch is exactly the failure the audit trail exists to prevent.
+
+Uniqueness is still enforced; only the shape is not.
+
 ### The audit table defends itself
 
 `audit_events` is append-only and chained:

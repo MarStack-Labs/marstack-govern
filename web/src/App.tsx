@@ -8,13 +8,14 @@ import { useLiveWorkloads } from "./useLiveWorkloads";
 import { useLiveDivisions } from "./useLiveDivisions";
 import { RequestsView } from "./RequestsView";
 import { CostView } from "./CostView";
+import { AuditView } from "./AuditView";
 import type { Workload } from "./gen/marstack/govern/v1/catalog_pb";
 import { Workload_Health } from "./gen/marstack/govern/v1/catalog_pb";
 import type { Freshness } from "./gen/marstack/govern/v1/common_pb";
 import type { Division, Namespace } from "./gen/marstack/govern/v1/tenancy_pb";
 import { Division_Phase } from "./gen/marstack/govern/v1/tenancy_pb";
 
-type View = "services" | "divisions" | "requests" | "cost";
+type View = "services" | "divisions" | "requests" | "cost" | "audit";
 
 const views: { id: View; label: string; subtitle: string }[] = [
   {
@@ -36,6 +37,11 @@ const views: { id: View; label: string; subtitle: string }[] = [
     id: "cost",
     label: "Cost",
     subtitle: "reserved capacity at signed rates, with the idle beside it",
+  },
+  {
+    id: "audit",
+    label: "Audit",
+    subtitle: "every mutation, chained so that a rewrite cannot hide",
   },
 ];
 
@@ -90,8 +96,10 @@ export function App() {
           <DivisionsView />
         ) : view === "requests" ? (
           <RequestsView session={session} />
-        ) : (
+        ) : view === "cost" ? (
           <CostView session={session} />
+        ) : (
+          <AuditView />
         )}
       </main>
     </div>

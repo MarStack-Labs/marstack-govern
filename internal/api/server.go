@@ -9,6 +9,7 @@ import (
 	"connectrpc.com/connect"
 
 	"github.com/marstack-labs/marstack-govern/gen/marstack/govern/v1/governv1connect"
+	"github.com/marstack-labs/marstack-govern/internal/audit"
 	"github.com/marstack-labs/marstack-govern/internal/catalog"
 	"github.com/marstack-labs/marstack-govern/internal/cost"
 	"github.com/marstack-labs/marstack-govern/internal/identity"
@@ -18,18 +19,20 @@ import (
 )
 
 type Options struct {
-	Catalog      *catalog.Service
-	Tenancy      *tenancy.Service
-	Session      *identity.Service
-	Requests     *requests.Service
-	Decisions    *requests.DecisionService
-	FinOps       *cost.Service
-	Hub          *Hub
-	Web          fs.FS
-	Logger       *slog.Logger
-	Heartbeat    time.Duration
-	Sealer       *identity.Sealer
-	RegisterAuth func(*http.ServeMux)
+	Catalog       *catalog.Service
+	Tenancy       *tenancy.Service
+	Session       *identity.Service
+	Requests      *requests.Service
+	Decisions     *requests.DecisionService
+	FinOps        *cost.Service
+	Audit         *audit.Service
+	RegisterAudit func(*http.ServeMux)
+	Hub           *Hub
+	Web           fs.FS
+	Logger        *slog.Logger
+	Heartbeat     time.Duration
+	Sealer        *identity.Sealer
+	RegisterAuth  func(*http.ServeMux)
 }
 
 func NewHandler(opts Options) http.Handler {
@@ -82,6 +85,15 @@ func NewHandler(opts Options) http.Handler {
 	if opts.FinOps != nil {
 		path, handler := governv1connect.NewFinOpsServiceHandler(opts.FinOps, options...)
 		mux.Handle(path, handler)
+	}
+
+	if opts.Audit != nil {
+		path, handler := governv1connect.NewAuditServiceHandler(opts.Audit, options...)
+		mux.Handle(path, handler)
+	}
+
+	if opts.RegisterAudit != nil {
+		opts.RegisterAudit(mux)
 	}
 
 	if opts.Hub != nil {

@@ -102,8 +102,8 @@ func TestAuditChainRejectsABrokenLink(t *testing.T) {
 	pool := dbtest.Migrated(t)
 	ctx := t.Context()
 
-	insert := `INSERT INTO audit_events (audit_id, event_at, stage, actor, verb, resource, payload, prev_hash, hash)
-	           VALUES (gen_random_uuid(), now(), 'ResponseComplete', 'a@example.test', $1, 'quotarequests', '{}'::jsonb, $2, $3)`
+	insert := `INSERT INTO audit_events (audit_id, event_at, stage, actor, verb, resource, payload, prev_hash, hash, canonical)
+	           VALUES (gen_random_uuid()::text, now(), 'ResponseComplete', 'a@example.test', $1, 'quotarequests', '{}'::jsonb, $2, $3, '{}'::bytea)`
 
 	if _, err := pool.Exec(ctx, insert, "create", []byte{}, sha256Of("first")); err != nil {
 		t.Fatalf("first event: %v", err)
